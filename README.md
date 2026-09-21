@@ -42,6 +42,10 @@ RealJaenData/
 directory of local reference `.veo` files; it is never assumed to be inside the
 repository.
 
+The Veo Chromium inspector runs headlessly by default, including when launched
+from the web application. Set `VEO_BROWSER_HEADLESS=false` to show the browser
+window while debugging an inspection.
+
 ## Run the web application
 
 Create a Python environment and install the backend requirements:

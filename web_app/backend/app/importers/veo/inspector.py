@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -37,6 +38,12 @@ MENU_LABEL = re.compile(
     r"standard|estándar|panoramic|panorámica|tracking|seguimiento",
     re.IGNORECASE,
 )
+
+
+def browser_headless() -> bool:
+    """Use headless Chromium unless explicitly disabled for local debugging."""
+    value = os.environ.get("VEO_BROWSER_HEADLESS", "").strip().lower()
+    return value not in {"0", "false", "no", "off"}
 
 
 def resource_links(value, limit=200) -> list[str]:
@@ -896,7 +903,7 @@ def inspect_match(match_url: str, diagnostics_dir: Path) -> VeoInspection:
     with sync_playwright() as playwright, tempfile.TemporaryDirectory(prefix="veo-inspection-") as profile_dir:
         context = playwright.chromium.launch_persistent_context(
             user_data_dir=profile_dir,
-            headless=False,
+            headless=browser_headless(),
             viewport={"width": 1600, "height": 1000},
         )
         page = context.pages[0] if context.pages else context.new_page()
