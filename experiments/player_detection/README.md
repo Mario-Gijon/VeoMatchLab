@@ -52,3 +52,25 @@ Cross-lens duplicates are intentionally **not fused**: a player visible in both
 lenses can appear twice. This lets the experiment validate detector and geometry
 behavior before any fusion heuristic. Team classification and tracking are not
 part of this stage.
+
+## Player-on-pitch debug tracker
+
+For a short visual check of the target match, run the separate diagnostic tool:
+
+```bash
+python experiments/player_detection/run_pitch_debug.py \
+  --match match_fc5f185c7710 \
+  --start 750 \
+  --duration 5 \
+  --threshold 0.25
+```
+
+It writes `pitch_debug.mp4`, composite still frames, raw detections, and merged
+pitch observations under `$VEO_MATCH_DATA_ROOT/experiments/player_detection/`.
+Only detections that existing RAW geometry places strictly inside the field are
+eligible for tracking. Nearby left/right field detections may be merged
+one-to-one (default 1.25 m); the two source boxes remain visible and receive the
+same global ID. The pitch tracker uses only distance and a simple motion
+prediction, so the IDs are diagnostic labels rather than identity or team
+recognition. `--cross-camera-distance`, `--track-distance`, and `--max-missed`
+make its deliberately simple association policy adjustable.
