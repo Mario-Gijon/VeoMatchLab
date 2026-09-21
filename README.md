@@ -35,8 +35,34 @@ RealJaenData/
   matches/         imported media, calibration files, .det resources and metadata
   analyses/        future derived match outputs
   models/          future model weights
+  experiments/     future experiment outputs
   veo-inspections/ importer diagnostics
 ```
+
+For local development, the intended separation is:
+
+```text
+~/Projects/VeoMatchLab/   application source
+~/RealJaenData/           persistent match data
+VeoMatchLab/data           optional local symlink to ~/RealJaenData
+```
+
+The `data` link is only a convenience; `VEO_MATCH_DATA_ROOT` remains the
+authoritative runtime setting. The application source can therefore be
+recloned or replaced without moving or affecting persistent data.
+
+For a future server deployment, keep the same boundary explicitly:
+
+```text
+/srv/veomatchlab/
+  app/       Git checkout
+  data/      persistent matches, analyses, models and experiments
+  logs/
+  config/
+```
+
+`/srv/veomatchlab/app` must be replaceable or recloneable without affecting
+`/srv/veomatchlab/data`.
 
 `VEO_REFERENCE_CALIBRATIONS_ROOT` is optional and points to an operator-managed
 directory of local reference `.veo` files; it is never assumed to be inside the
