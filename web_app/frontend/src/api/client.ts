@@ -1,7 +1,10 @@
 import type { Calibration, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
-const url = (path: string) => `${baseUrl}${path}`
+// Production and LAN development use the Vite origin. The optional override
+// remains useful for isolated development or an externally hosted API.
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '')
+const baseUrl = configuredBaseUrl ?? ''
+const url = (path: string) => `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url(path), init)

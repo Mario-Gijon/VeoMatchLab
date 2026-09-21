@@ -49,7 +49,7 @@ Create a Python environment and install the backend requirements:
 ```bash
 .venv/bin/pip install -r web_app/backend/requirements-dev.txt
 VEO_MATCH_DATA_ROOT=/srv/RealJaenData \
-  .venv/bin/uvicorn web_app.backend.app.main:app --host 0.0.0.0 --port 8000
+  .venv/bin/uvicorn web_app.backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal:
@@ -60,8 +60,17 @@ npm ci
 npm run dev
 ```
 
-Open the Vite URL from the tower or a LAN-connected laptop. For a production
-frontend check, run `npm run build` in `web_app/frontend`.
+Vite listens on `0.0.0.0:5173` and proxies `/api` to the localhost-only
+FastAPI process. Find the tower's LAN address with:
+
+```bash
+hostname -I
+```
+
+On the laptop, open `http://<tower-ip>:5173`. The browser uses that single
+origin for API calls and media playback; it does not need to know the backend
+address. For a production frontend check, run `npm run build` in
+`web_app/frontend`.
 
 ## Tests and reference material
 

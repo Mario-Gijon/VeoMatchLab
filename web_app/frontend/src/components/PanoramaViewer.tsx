@@ -1,6 +1,7 @@
 import { Box, Chip } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import type { GroundPoint, RenderedPanorama } from '../types'
+import { api } from '../api/client'
 
 interface Props {
   panorama: RenderedPanorama
@@ -32,7 +33,7 @@ export default function PanoramaViewer({ panorama, points, onPixelClick }: Props
     element.addEventListener('wheel', wheel, { passive: false })
     return () => element.removeEventListener('wheel', wheel)
   }, [])
-  const imageUrl = `${import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'}${panorama.url}`
+  const imageUrl = api.url(panorama.url)
 
   const updatePointer = (event: React.PointerEvent<HTMLDivElement>) => {
     if (ref.current) setPointer(cssToNaturalPixel(event, ref.current, panorama))
