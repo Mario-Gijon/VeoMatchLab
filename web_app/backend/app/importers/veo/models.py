@@ -15,8 +15,18 @@ def importable(candidate: VeoCandidate) -> bool:
         return path.endswith(".veo") and candidate.field_length is not None and candidate.field_width is not None
     if candidate.role == "ball_tracking" and not (candidate.filename.lower() == "video.mp4" and "initial" in candidate.discovery_phases) and not any(reason in candidate.reasons for reason in ("explicit Standard/Follow video metadata", "authoritative initial player video")):
         return False
-    if candidate.role == "panorama" and not (candidate.filename.lower().startswith("transcode-") and "after_interactive" in candidate.discovery_phases):
-        return False
+    if candidate.role == "panorama":
+        filename = candidate.filename.lower()
+        post_interactive = filename.startswith("transcode-") and filename.endswith(".mp4") and "after_interactive" in candidate.discovery_phases
+        initial_panorama = (
+            filename.startswith("transcode-")
+            and filename.endswith(".mp4")
+            and "/panorama/" in path
+            and path.endswith(".mp4")
+            and "initial" in candidate.discovery_phases
+        )
+        if not (post_interactive or initial_panorama):
+            return False
     if candidate.role == "camera_directions":
         return path.endswith("detections_constrained.det")
     return candidate.role in {"ball_tracking", "panorama", "veo_highlights"} and path.endswith(".mp4")

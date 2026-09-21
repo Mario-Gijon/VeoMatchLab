@@ -28,6 +28,75 @@ def test_url_sanitization_and_conservative_resource_classification():
     assert ranked_candidates([ball, panorama], "panorama") == [panorama]
 
 
+def test_initial_panorama_transcode_requires_strong_panorama_path_evidence():
+    preloaded = classify_resource(
+        "preloaded",
+        "https://cdn.veo.co/matches/abc/panorama/transcode-xxx.mp4",
+        "video/mp4",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    outside_panorama = classify_resource(
+        "outside",
+        "https://cdn.veo.co/matches/abc/transcode-xxx.mp4",
+        "video/mp4",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    post_interactive = classify_resource(
+        "post",
+        "https://cdn.veo.co/matches/abc/transcode-yyy.mp4",
+        "video/mp4",
+        discovery_phases=[AFTER_INTERACTIVE_PHASE],
+    )
+    generic = classify_resource(
+        "generic",
+        "https://cdn.veo.co/matches/abc/panorama/video.mp4",
+        "video/mp4",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    generic.role = "panorama"
+    assert preloaded.role == "panorama" and importable(preloaded)
+    assert outside_panorama.role == "panorama" and not importable(outside_panorama)
+    assert post_interactive.role == "panorama" and importable(post_interactive)
+    assert not importable(generic)
+
+
+def test_initial_panorama_transcode_can_make_inspection_ready_without_activation_evidence():
+    tracking = classify_resource(
+        "tracking",
+        "https://cdn.veo.co/matches/abc/video.mp4",
+        "video/mp4",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    panorama = classify_resource(
+        "panorama",
+        "https://cdn.veo.co/matches/abc/panorama/transcode-xxx.mp4",
+        "video/mp4",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    calibration = classify_resource(
+        "calibration",
+        "https://cdn.veo.co/matches/abc/camera_alignment.veo",
+        "application/json",
+        discovery_phases=[INITIAL_PHASE],
+    )
+    calibration.field_length, calibration.field_width = 105, 68
+    inspection = VeoInspection(
+        "preloaded_inspection",
+        "https://app.veo.co/matches/abc",
+        "https://app.veo.co/matches/abc",
+        candidates=[tracking, panorama, calibration],
+        interaction={
+            "interactive_activation_confirmed": False,
+            "post_interactive_transcode_found": False,
+            "post_interactive_calibration_found": False,
+        },
+    )
+    public = inspection.public_dict()
+    assert public["ready"] is True
+    assert public["resolved_assets"]["panorama"] == "panorama"
+    assert public["interaction"]["interactive_activation_confirmed"] is False
+
+
 def test_default_and_interactive_discovery_phases_drive_classification_and_diagnostics():
     tracking = classify_resource("tracking", "https://cdn.example/video.mp4?token=private", "video/mp4", discovery_phases=[INITIAL_PHASE])
     dual_lens = classify_resource("dual", "https://cdn.example/transcode-123.mp4?token=private", "video/mp4", {"width": 2048, "height": 2048}, [AFTER_INTERACTIVE_PHASE])
