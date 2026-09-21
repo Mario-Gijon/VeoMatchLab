@@ -56,6 +56,19 @@ def test_preview_exposes_existing_dual_lens_media_and_assets(tmp_path):
     assert Path(response.path) == library.dual_lens_path(match["id"])
 
 
+def test_tabbed_ui_and_browser_clip_storage_are_present():
+    root = Path(__file__).resolve().parents[1]
+    page = (root / "detection_lab/static/index.html").read_text(encoding="utf-8")
+    script = (root / "detection_lab/static/app.js").read_text(encoding="utf-8")
+
+    assert 'data-match-id="{{MATCH_ID}}"' in page
+    assert "Vista previa" in script
+    assert "Person" in script
+    assert "localStorage" in script
+    assert "detection-lab:clip:" in script
+    assert "DetectionLabClipStore" in script
+
+
 def test_missing_optional_assets_are_reported_without_crashing(tmp_path):
     store = WorkspaceStore(tmp_path)
     match = make_match(store, tmp_path, with_optional_assets=False)
