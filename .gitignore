@@ -1,0 +1,16 @@
+*.mp4
+*.det
+*.veo
+!tests/fixtures/calibrations/*.veo
+output/
+.venv/
+.pytest_cache/
+__pycache__/
+web_app/frontend/node_modules/
+web_app/frontend/dist/
+web_app/frontend/*.tsbuildinfo
+web_app/backend/runtime/
+runtime/
+matches/
+analyses/
+models/
