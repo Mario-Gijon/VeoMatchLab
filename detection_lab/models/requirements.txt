@@ -1,0 +1,4 @@
+# Install these only in .venv-detection, never the main web application environment.
+rfdetr>=1.10,<2
+rfdetr-plus>=1,<2
+ultralytics>=8.4,<9

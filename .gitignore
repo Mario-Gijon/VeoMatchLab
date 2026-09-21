@@ -5,6 +5,7 @@
 output/
 .venv/
 .venv-detection/
+.model-cache/
 .pytest_cache/
 __pycache__/
 web_app/frontend/node_modules/
@@ -15,5 +16,7 @@ runtime/
 matches/
 analyses/
 models/
+!detection_lab/models/
+!detection_lab/models/**
 data
 data/
