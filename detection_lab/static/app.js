@@ -318,6 +318,15 @@ function personTab(match, clip) {
   const sampleFps = element('input')
   sampleFps.type = 'number'; sampleFps.min = '0.1'; sampleFps.max = '30'; sampleFps.step = '0.5'; sampleFps.value = '5'
   sampleLabel.append(sampleFps)
+  const batchLabel = element('label', 'Tamaño de batch')
+  const batchSize = element('select')
+  for (const size of [1, 2, 4, 8]) {
+    const batchOption = element('option', String(size))
+    batchOption.value = String(size)
+    batchOption.selected = size === 8
+    batchSize.append(batchOption)
+  }
+  batchLabel.append(batchSize)
   const inferenceLabel = element('label', 'Umbral de inferencia')
   const inference = element('input')
   inference.type = 'number'; inference.min = '0'; inference.max = '1'; inference.step = '0.05'; inference.value = '0.10'
@@ -326,7 +335,7 @@ function personTab(match, clip) {
   const visible = element('input')
   visible.type = 'range'; visible.min = '0.10'; visible.max = '1'; visible.step = '0.05'; visible.value = '0.25'
   visibleLabel.append(visible)
-  controls.append(modelLabel, sampleLabel, inferenceLabel, visibleLabel)
+  controls.append(modelLabel, sampleLabel, batchLabel, inferenceLabel, visibleLabel)
   const status = element('p', 'Análisis no ejecutado para este clip.', 'analysis-status')
   const debug = element('p', 'Reproduce el clip para ver las detecciones analizadas más cercanas.', 'frame-debug')
   const media = clipVideo(match, clip)
@@ -367,7 +376,8 @@ function personTab(match, clip) {
     try {
       const response = await requestJson(`/api/matches/${encodeURIComponent(match.id)}/person/analyses`, 'POST', {
         model_id: model.value, start_s: clip.start_s, duration_s: clip.duration_s,
-        sample_fps: Number(sampleFps.value), inference_threshold: Number(inference.value),
+        sample_fps: Number(sampleFps.value), batch_size: Number(batchSize.value),
+        inference_threshold: Number(inference.value),
       })
       if (response.state === 'cached') {
         result = response.result; status.textContent = 'Resultado en caché reutilizado.'; status.className = 'analysis-status cached'; draw(); return
@@ -376,7 +386,11 @@ function personTab(match, clip) {
       polling = window.setInterval(async () => {
         try {
           const current = await request(`/api/person/analyses/${encodeURIComponent(jobId)}`)
-          if (current.state === 'processing') return
+          if (current.state === 'processing') {
+            const progress = current.progress
+            if (progress) status.textContent = `Procesando ${progress.processed_frames} / ${progress.total_frames} frames (${progress.percent}%)…`
+            return
+          }
           window.clearInterval(polling); polling = null
           if (current.state === 'error') throw new Error(current.error || 'El análisis falló.')
           result = current.result; status.textContent = 'Análisis completo.'; status.className = 'analysis-status complete'; analyze.disabled = false; draw()

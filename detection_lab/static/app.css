@@ -39,7 +39,7 @@ input { border: 1px solid #bdc9da; border-radius: 7px; padding: 9px 10px; }
 .clip-summary { background: #ecf1ff; border-radius: 8px; color: #243e7b; font-weight: 600; margin: 16px 0 0; padding: 12px; }
 .message { background: #f1f4f8; border-radius: 8px; color: #52637d; padding: 13px; }
 .message.error { background: #fff0ef; color: #b42318; }
-.analysis-controls { align-items: end; display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(140px, 1fr)); margin: 18px 0; }
+.analysis-controls { align-items: end; display: grid; gap: 14px; grid-template-columns: repeat(5, minmax(140px, 1fr)); margin: 18px 0; }
 select { border: 1px solid #bdc9da; border-radius: 7px; padding: 9px 10px; }
 .analysis-status { display: inline-block; margin: 0 0 0 10px; }
 .analysis-status.processing { color: #3157a8; }.analysis-status.cached { color: #7351a6; }.analysis-status.complete { color: #178243; }.analysis-status.error { color: #b42318; }

@@ -12,7 +12,6 @@ import json
 import math
 import os
 import subprocess
-import sys
 import threading
 import uuid
 from dataclasses import asdict, dataclass
@@ -21,7 +20,7 @@ from typing import Any, Callable
 
 
 CACHE_SCHEMA_VERSION = 1
-DETECTOR_CODE_VERSION = "rfdetr-large-person-v1"
+DETECTOR_CODE_VERSION = "rfdetr-large-person-v3"
 MODEL_ID = "rfdetr_large"
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,6 +33,8 @@ class AnalysisRequest:
     model_id: str = MODEL_ID
     sample_fps: float = 5.0
     inference_threshold: float = 0.10
+    batch_size: int = 8
+    inference_dtype: str = "float32"
 
     @classmethod
     def from_mapping(cls, match_id: str, value: dict[str, Any]) -> "AnalysisRequest":
@@ -45,6 +46,8 @@ class AnalysisRequest:
                 model_id=str(value.get("model_id", MODEL_ID)),
                 sample_fps=float(value.get("sample_fps", 5.0)),
                 inference_threshold=float(value.get("inference_threshold", 0.10)),
+                batch_size=int(value.get("batch_size", 8)),
+                inference_dtype=str(value.get("inference_dtype", "float32")),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError("Parámetros de análisis inválidos.") from exc
@@ -64,6 +67,10 @@ class AnalysisRequest:
             raise ValueError("sample_fps debe estar entre 0 y 30.")
         if not math.isfinite(self.inference_threshold) or not 0 <= self.inference_threshold <= 1:
             raise ValueError("El umbral de inferencia debe estar entre 0 y 1.")
+        if self.batch_size not in {1, 2, 4, 8}:
+            raise ValueError("batch_size debe ser 1, 2, 4 u 8.")
+        if self.inference_dtype != "float32":
+            raise ValueError("Por ahora el tipo de inferencia debe ser float32.")
 
     def cache_payload(self) -> dict[str, Any]:
         return {**asdict(self), "cache_schema_version": CACHE_SCHEMA_VERSION, "detector_code_version": DETECTOR_CODE_VERSION}
@@ -121,23 +128,46 @@ def stacked_overlay_bbox(detection: dict[str, Any]) -> list[float]:
 
 
 Runner = Callable[[AnalysisRequest, Path], dict[str, Any]]
+ProgressReporter = Callable[[dict[str, int]], None]
 
 
-def subprocess_runner(request: AnalysisRequest, video_path: Path) -> dict[str, Any]:
+def subprocess_runner(
+    request: AnalysisRequest,
+    video_path: Path,
+    report_progress: ProgressReporter | None = None,
+) -> dict[str, Any]:
     python = Path(os.getenv("VEO_MATCH_DETECTION_PYTHON", str(ROOT / ".venv-detection" / "bin" / "python"))).expanduser()
     if not python.is_file():
         raise RuntimeError(f"No se encontró el intérprete de detección: {python}")
     payload = {**asdict(request), "video_path": str(video_path)}
-    completed = subprocess.run(
+    process = subprocess.Popen(
         [str(python), "-m", "detection_lab.analysis.person.runner"],
-        input=json.dumps(payload), text=True, capture_output=True, cwd=ROOT,
-        env={**os.environ, "PYTHONPATH": str(ROOT)}, check=False,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, cwd=ROOT,
+        env={**os.environ, "PYTHONPATH": str(ROOT)},
     )
-    if completed.returncode:
-        detail = completed.stderr.strip() or completed.stdout.strip() or "falló el proceso de detección"
+    assert process.stdin is not None and process.stdout is not None and process.stderr is not None
+    process.stdin.write(json.dumps(payload))
+    process.stdin.close()
+    output: list[str] = []
+    progress_marker = "__DETECTION_LAB_PROGRESS__"
+    for line in process.stdout:
+        if line.startswith(progress_marker):
+            if report_progress is not None:
+                try:
+                    report_progress(json.loads(line[len(progress_marker):]))
+                except json.JSONDecodeError:
+                    pass
+        else:
+            output.append(line)
+    stderr = process.stderr.read()
+    returncode = process.wait()
+    stdout = "".join(output)
+    if returncode:
+        detail = stderr.strip() or stdout.strip() or "falló el proceso de detección"
         raise RuntimeError(detail)
     marker = "__DETECTION_LAB_RESULT__"
-    result_line = next((line[len(marker):] for line in reversed(completed.stdout.splitlines()) if line.startswith(marker)), "")
+    result_line = next((line[len(marker):] for line in reversed(stdout.splitlines()) if line.startswith(marker)), "")
     try:
         return json.loads(result_line)
     except json.JSONDecodeError as exc:
@@ -166,14 +196,32 @@ class PersonAnalysisService:
 
     def _run(self, job_id: str, request: AnalysisRequest, video_path: Path, path: Path) -> None:
         try:
-            result = normalize_result(self.runner(request, video_path), request)
+            def report_progress(progress: dict[str, int]) -> None:
+                with self._lock:
+                    current = self.jobs.get(job_id)
+                    if current is not None:
+                        current["progress"] = progress
+
+            runner_result = (
+                subprocess_runner(request, video_path, report_progress)
+                if self.runner is subprocess_runner
+                else self.runner(request, video_path)
+            )
+            result = normalize_result(runner_result, request)
             path.parent.mkdir(parents=True, exist_ok=True)
             temporary = path.with_suffix(".tmp")
             temporary.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             temporary.replace(path)
             state: dict[str, Any] = {"state": "complete", "cache_key": cache_key(request), "result": result}
         except Exception as exc:  # The API reports a clear local development error.
-            state = {"state": "error", "cache_key": cache_key(request), "error": str(exc)}
+            message = str(exc)
+            if "out of memory" in message.lower() or "cuda oom" in message.lower():
+                suggestion = request.batch_size // 2
+                message = (
+                    f"GPU memory exhausted. Try reducing batch size from {request.batch_size} to {suggestion}."
+                    if suggestion >= 1 else "GPU memory exhausted with batch size 1."
+                )
+            state = {"state": "error", "cache_key": cache_key(request), "error": message}
         with self._lock:
             self.jobs[job_id] = state
 
