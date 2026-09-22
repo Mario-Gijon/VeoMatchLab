@@ -16,9 +16,8 @@ runtime/
 matches/
 analyses/
 models/
-person_detect/models/
 !person_detect/models/
-person_detect/models/*
-!person_detect/models/.gitkeep
+!person_detect/models/**
+person_detect/model_weights/
 data
 data/

@@ -12,8 +12,8 @@ from collections.abc import Mapping
 import cv2
 import numpy as np
 
-from person_detect.backends.rfdetr_2xl import ModelDetection as RFDETR2XLModelDetection
-from person_detect.backends.rfdetr_large import ModelDetection
+from person_detect.models.rfdetr_2xl import ModelDetection as RFDETR2XLModelDetection
+from person_detect.models.rfdetr_large import ModelDetection
 
 
 INTERACTIVE_VIEWS = ("left", "center", "right")

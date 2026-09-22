@@ -37,7 +37,7 @@ from geometry.veo_metadata import load_veo_metadata  # noqa: E402
 MATCH_ID = "match_629890153a11"
 DEFAULT_VIDEO = ROOT / "person_detect" / "clips" / MATCH_ID / "clip_12m36s_90s.mp4"
 DEFAULT_CALIBRATION = ROOT / "person_detect" / "clips" / MATCH_ID / "camera_alignment.veo"
-DEFAULT_OUT = ROOT / "person_detect" / "outputs" / "interactive_renderer"
+DEFAULT_OUT = ROOT / "person_detect" / "outputs" / "interactive_view" / "diagnostics" / "interactive_renderer"
 
 SOURCE_W = 2048
 SOURCE_H = 2048

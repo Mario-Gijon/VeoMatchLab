@@ -39,19 +39,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from person_detect.backends.rfdetr_large import (  # noqa: E402
+from person_detect.models.rfdetr_large import (  # noqa: E402
     RFDETRBackend as RFDETRLargeBackend,
 )
-from person_detect.backends.rfdetr_2xl import (  # noqa: E402
+from person_detect.models.rfdetr_2xl import (  # noqa: E402
     RFDETR2XLBackend,
 )
-from person_detect.backends.dfine_x_coco import (  # noqa: E402
+from person_detect.models.dfine_x_coco import (  # noqa: E402
     DFineXCocoBackend,
 )
-from person_detect.backends.dfine_x_obj2coco import (  # noqa: E402
+from person_detect.models.dfine_x_obj2coco import (  # noqa: E402
     DFineXObj2CocoBackend,
 )
-from person_detect.backends.yolo26x import (  # noqa: E402
+from person_detect.models.yolo26x import (  # noqa: E402
     YOLO26XBackend,
 )
 from person_detect.inference_adapter import predict_views  # noqa: E402
@@ -78,40 +78,41 @@ from person_detect.views.two_lens_view.projection import (  # noqa: E402
 DEFAULT_RFDETR_LARGE = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "rfdetr"
     / "rf-detr-large-2026.pth"
 )
 DEFAULT_RFDETR_2XL = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "rfdetr"
     / "rf-detr-xxlarge.pth"
 )
 DEFAULT_DFINE_X_COCO = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "dfine"
     / "dfine_x_coco.pth"
 )
 DEFAULT_DFINE_X_OBJ2COCO = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "dfine"
     / "dfine_x_obj2coco.pth"
 )
 DEFAULT_YOLO26X = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "yolo"
     / "yolo26x.pt"
 )
 DEFAULT_CLIPS_ROOT = ROOT / "person_detect" / "clips"
-DEFAULT_RUNS = ROOT / "person_detect" / "outputs" / "runs"
+DEFAULT_DATA_MATCHES_ROOT = ROOT / "data" / "matches"
+DEFAULT_RUNS = ROOT / "person_detect" / "outputs"
 
 COMBINED_W = 1920
 COMBINED_H = 1080
@@ -506,16 +507,16 @@ def clip_identifier(video_path: Path) -> str:
     person_detect/clips/<match_id>/<clip>.mp4 -> <match_id>
     any other video path                         -> sanitized filename stem
     """
-    try:
-        relative = video_path.resolve().relative_to(
-            DEFAULT_CLIPS_ROOT.resolve()
-        )
+    resolved = video_path.expanduser().resolve()
+    for known_root in (DEFAULT_CLIPS_ROOT, DEFAULT_DATA_MATCHES_ROOT):
+        try:
+            relative = resolved.relative_to(known_root.resolve())
+        except (ValueError, OSError):
+            continue
         if len(relative.parts) >= 2:
             return _safe_identifier(relative.parts[0])
-    except (ValueError, OSError):
-        pass
 
-    return _safe_identifier(video_path.stem)
+    return _safe_identifier(resolved.stem)
 
 
 def parse_args() -> argparse.Namespace:
@@ -539,7 +540,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Optional model checkpoint override. When omitted, each model "
-            "uses its preserved checkpoint under person_detect/models/."
+            "uses its preserved checkpoint under person_detect/model_weights/."
         ),
     )
     parser.add_argument(

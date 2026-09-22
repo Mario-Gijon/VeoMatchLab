@@ -45,6 +45,7 @@ DEFAULT_OUT = (
     / "person_detect"
     / "outputs"
     / "two_lens_view"
+    / "diagnostics"
 )
 
 STACKED_W = 2048

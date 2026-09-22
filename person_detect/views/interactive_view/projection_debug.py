@@ -48,7 +48,7 @@ from person_detect.views.interactive_view.projection import (  # noqa: E402
 )
 
 
-DEFAULT_OUT_DIR = ROOT / "person_detect" / "outputs" / "projection_debug"
+DEFAULT_OUT_DIR = ROOT / "person_detect" / "outputs" / "interactive_view" / "diagnostics" / "projection_debug"
 
 
 def world_to_pixel(

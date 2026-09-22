@@ -50,7 +50,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from person_detect.backends.rfdetr_large import RFDETRBackend  # noqa: E402
+from person_detect.models.rfdetr_large import RFDETRBackend  # noqa: E402
 from person_detect.views.interactive_view.renderer import (  # noqa: E402
     DEFAULT_CALIBRATION,
     DEFAULT_VIDEO,
@@ -68,7 +68,7 @@ from person_detect.views.interactive_view.projection import (  # noqa: E402
 DEFAULT_WEIGHTS = (
     ROOT
     / "person_detect"
-    / "models"
+    / "model_weights"
     / "rfdetr"
     / "rf-detr-large-2026.pth"
 )
@@ -76,7 +76,8 @@ DEFAULT_OUT_DIR = (
     ROOT
     / "person_detect"
     / "outputs"
-    / "sync_debug"
+    / "shared_diagnostics"
+    / "lens_sync"
 )
 
 PANEL_W = 960
