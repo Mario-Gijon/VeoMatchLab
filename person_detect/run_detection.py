@@ -607,11 +607,6 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    if args.view == "two_lens_view" and args.model != "rfdetr_large":
-        raise ValueError(
-            "two_lens_view has only been validated with rfdetr_large so far."
-        )
-
     if args.duration <= 0.0:
         raise ValueError("--duration must be > 0")
     if not 0.0 <= args.threshold <= 1.0:

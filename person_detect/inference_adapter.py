@@ -12,6 +12,7 @@ from collections.abc import Mapping
 import cv2
 import numpy as np
 
+from person_detect.backends.rfdetr_2xl import ModelDetection as RFDETR2XLModelDetection
 from person_detect.backends.rfdetr_large import ModelDetection
 
 
@@ -80,6 +81,54 @@ def _predict_two_lens_rfdetr_large(backend, views_bgr, *, threshold: float):
     return result
 
 
+def _predict_two_lens_rfdetr_2xl(backend, views_bgr, *, threshold: float):
+    result = {}
+    for view_name in TWO_LENS_VIEWS:
+        image = views_bgr[view_name]
+        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        detections = backend._predict_one(rgb, threshold=threshold)
+        names = backend._class_names(detections)
+        xyxy = np.asarray(detections.xyxy, dtype=np.float64)
+        confidence = np.asarray(detections.confidence, dtype=np.float64)
+        if len(names) != len(xyxy) or len(confidence) != len(xyxy):
+            raise RuntimeError(f"Inconsistent RF-DETR 2XL output lengths for {view_name}")
+        persons = []
+        for box, score, class_name in zip(xyxy, confidence, names, strict=True):
+            if class_name.lower() != "person":
+                continue
+            values = [float(value) for value in box]
+            if not np.isfinite([*values, score]).all():
+                continue
+            x1, y1, x2, y2 = values
+            if x2 <= x1 or y2 <= y1:
+                continue
+            persons.append(RFDETR2XLModelDetection((x1, y1, x2, y2), float(score)))
+        result[view_name] = persons
+    return result
+
+
+def _predict_two_lens_dfine(backend, views_bgr, *, threshold: float):
+    return {
+        view_name: backend._predict_one(views_bgr[view_name], threshold=threshold)
+        for view_name in TWO_LENS_VIEWS
+    }
+
+
+def _predict_two_lens_dfine_x_coco(backend, views_bgr, *, threshold: float):
+    return _predict_two_lens_dfine(backend, views_bgr, threshold=threshold)
+
+
+def _predict_two_lens_dfine_x_obj2coco(backend, views_bgr, *, threshold: float):
+    return _predict_two_lens_dfine(backend, views_bgr, threshold=threshold)
+
+
+def _predict_two_lens_yolo(backend, views_bgr, *, threshold: float):
+    return {
+        view_name: backend._predict_one(views_bgr[view_name], threshold=threshold)
+        for view_name in TWO_LENS_VIEWS
+    }
+
+
 def predict_views(backend, views_bgr: Mapping[str, np.ndarray], *, threshold: float):
     """Run one already-loaded backend over an ordered view dictionary."""
     _validate_images(views_bgr)
@@ -87,9 +136,19 @@ def predict_views(backend, views_bgr: Mapping[str, np.ndarray], *, threshold: fl
     if names == INTERACTIVE_VIEWS:
         return backend.predict_views(dict(views_bgr), threshold=threshold)
     if names == TWO_LENS_VIEWS:
-        return _predict_two_lens_rfdetr_large(
-            backend,
-            views_bgr,
-            threshold=threshold,
-        )
+        if backend.name == "rfdetr_large":
+            return _predict_two_lens_rfdetr_large(backend, views_bgr, threshold=threshold)
+        if backend.name == "rfdetr_2xl":
+            return _predict_two_lens_rfdetr_2xl(backend, views_bgr, threshold=threshold)
+        if backend.name == "dfine_x_coco":
+            return _predict_two_lens_dfine_x_coco(
+                backend, views_bgr, threshold=threshold,
+            )
+        if backend.name == "dfine_x_obj2coco":
+            return _predict_two_lens_dfine_x_obj2coco(
+                backend, views_bgr, threshold=threshold,
+            )
+        if backend.name == "yolo26x":
+            return _predict_two_lens_yolo(backend, views_bgr, threshold=threshold)
+        raise ValueError(f"Unsupported two_lens_view backend: {backend.name!r}")
     raise ValueError(f"Unsupported detector view ordering: {names!r}")
