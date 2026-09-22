@@ -54,6 +54,7 @@ from person_detect.backends.dfine_x_obj2coco import (  # noqa: E402
 from person_detect.backends.yolo26x import (  # noqa: E402
     YOLO26XBackend,
 )
+from person_detect.inference_adapter import predict_views  # noqa: E402
 from person_detect.views.interactive_view.renderer import (  # noqa: E402
     DEFAULT_CALIBRATION,
     DEFAULT_VIDEO,
@@ -65,6 +66,12 @@ from person_detect.views.interactive_view.renderer import (  # noqa: E402
 from person_detect.views.interactive_view.projection import (  # noqa: E402
     DEFAULT_FAR_TOUCHLINE_MARGIN_M,
     FieldProjector,
+)
+from person_detect.views.two_lens_view.renderer import (  # noqa: E402
+    TwoLensRenderer,
+)
+from person_detect.views.two_lens_view.projection import (  # noqa: E402
+    TwoLensProjector,
 )
 
 
@@ -205,10 +212,10 @@ def draw_box(
     )
 
 
-def resize_panel(image: np.ndarray, name: str) -> np.ndarray:
+def resize_panel(image: np.ndarray, name: str, *, panel_width: int = PANEL_W) -> np.ndarray:
     panel = cv2.resize(
         image,
-        (PANEL_W, TOP_H),
+        (panel_width, TOP_H),
         interpolation=cv2.INTER_AREA,
     )
     cv2.putText(
@@ -391,18 +398,16 @@ def make_combined_frame(
     threshold: float,
     frame_number: int,
     time_s: float,
+    view_names: tuple[str, ...],
 ) -> np.ndarray:
     canvas = np.zeros(
         (COMBINED_H, COMBINED_W, 3),
         dtype=np.uint8,
     )
 
+    panel_width = COMBINED_W // len(view_names)
     top = np.concatenate(
-        [
-            resize_panel(annotated_views["left"], "left"),
-            resize_panel(annotated_views["center"], "center"),
-            resize_panel(annotated_views["right"], "right"),
-        ],
+        [resize_panel(annotated_views[name], name, panel_width=panel_width) for name in view_names],
         axis=1,
     )
     canvas[:TOP_H, :] = top
@@ -524,6 +529,11 @@ def parse_args() -> argparse.Namespace:
         default="rfdetr_large",
     )
     parser.add_argument(
+        "--view",
+        choices=("interactive_view", "two_lens_view"),
+        default="interactive_view",
+    )
+    parser.add_argument(
         "--weights",
         type=Path,
         default=None,
@@ -597,6 +607,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
+    if args.view == "two_lens_view" and args.model != "rfdetr_large":
+        raise ValueError(
+            "two_lens_view has only been validated with rfdetr_large so far."
+        )
+
     if args.duration <= 0.0:
         raise ValueError("--duration must be > 0")
     if not 0.0 <= args.threshold <= 1.0:
@@ -610,19 +625,28 @@ def main() -> None:
         raise FileNotFoundError(weights)
 
     print("Loading common geometry...")
-    renderer = InteractiveRenderer(
-        args.calibration,
-        width=args.width,
-        height=args.height,
-        overlap=args.overlap,
-    )
-    projector = FieldProjector(
-        args.calibration,
-        width=args.width,
-        height=args.height,
-        overlap=args.overlap,
-        far_touchline_margin_m=args.far_margin,
-    )
+    if args.view == "interactive_view":
+        renderer = InteractiveRenderer(
+            args.calibration,
+            width=args.width,
+            height=args.height,
+            overlap=args.overlap,
+        )
+        projector = FieldProjector(
+            args.calibration,
+            width=args.width,
+            height=args.height,
+            overlap=args.overlap,
+            far_touchline_margin_m=args.far_margin,
+        )
+        view_names = ("left", "center", "right")
+    else:
+        renderer = TwoLensRenderer(args.calibration)
+        projector = TwoLensProjector(
+            args.calibration,
+            far_touchline_margin_m=args.far_margin,
+        )
+        view_names = ("left", "right")
 
     print(f"Loading model: {args.model}")
     backend = build_backend(args)
@@ -630,7 +654,7 @@ def main() -> None:
 
     timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
     clip_id = clip_identifier(args.video)
-    run_dir = args.runs_dir / backend.name / clip_id / timestamp
+    run_dir = args.runs_dir / args.view / backend.name / clip_id / timestamp
     run_dir.mkdir(parents=True, exist_ok=False)
 
     result_video = run_dir / "result.mp4"
@@ -660,6 +684,7 @@ def main() -> None:
 
     config = {
         "model": backend.info(),
+        "view": args.view,
         "clip_id": clip_id,
         "video": str(args.video),
         "calibration": str(args.calibration),
@@ -671,7 +696,7 @@ def main() -> None:
         "far_touchline_margin_m": args.far_margin,
         "output_video": str(result_video),
         "pipeline": (
-            "dual_lens -> L/C/R -> person detector -> bbox footpoint -> "
+            f"dual_lens -> {args.view} -> person detector -> bbox footpoint -> "
             "ground X/Z -> field filter -> ownership -> video + 2D pitch"
         ),
     }
@@ -698,7 +723,8 @@ def main() -> None:
                 time_s = absolute_frame / fps
 
                 views = renderer.render(frame)
-                predictions = backend.predict_views(
+                predictions = predict_views(
+                    backend,
                     views,
                     threshold=args.threshold,
                 )
@@ -710,7 +736,7 @@ def main() -> None:
 
                 accepted: list[dict] = []
 
-                for view_name in ("left", "center", "right"):
+                for view_name in view_names:
                     raw_person_total += len(predictions[view_name])
 
                     for detection in predictions[view_name]:
@@ -769,6 +795,7 @@ def main() -> None:
                     threshold=args.threshold,
                     frame_number=absolute_frame,
                     time_s=time_s,
+                    view_names=view_names,
                 )
 
                 if writer.stdin is None:
@@ -805,6 +832,7 @@ def main() -> None:
 
     summary = {
         "model": backend.info(),
+        "view": args.view,
         "processed_frames": processed,
         "processed_duration_s": processed / fps if fps > 0 else None,
         "wall_time_s": elapsed,
