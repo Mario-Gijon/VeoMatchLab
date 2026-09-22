@@ -1,0 +1,25 @@
+{
+  "video": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "calibration": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/camera_alignment.veo",
+  "frame": {
+    "fps": 29.97002997002997,
+    "frame_count": 2698,
+    "requested_time_s": 10.0,
+    "requested_frame": 300,
+    "actual_frame": 300,
+    "actual_time_s": 10.01
+  },
+  "stacked_source_size": [
+    2048,
+    2048
+  ],
+  "lens_size": [
+    2048,
+    1024
+  ],
+  "views": [
+    "left",
+    "right"
+  ],
+  "resampling_before_detection": false
+}
