@@ -61,6 +61,15 @@ async function request(path) {
   return response.json()
 }
 
+async function requestJson(path, method, body) {
+  const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null)
+    throw new Error(detail?.detail || 'No se pudo iniciar el análisis.')
+  }
+  return response.json()
+}
+
 function appHeader(title, description) {
   const header = element('header', undefined, 'page-header')
   header.append(element('p', 'VeoMatchLab · desarrollo', 'eyebrow'), element('h1', title), element('p', description, 'subtitle'))
@@ -167,25 +176,142 @@ function clipSelection(match, initialClip, onSaved) {
   return section
 }
 
+function visibleDetections(sample, threshold) {
+  return (sample?.detections || []).filter((detection) => detection.confidence >= threshold)
+}
+
+function stackedBox(detection) {
+  const [x1, y1, x2, y2] = detection.bbox
+  const offset = detection.lens === 'right' ? 1024 : 0
+  return [x1, y1 + offset, x2, y2 + offset]
+}
+
+function personPageState(clip, analysis) {
+  if (!clip) return 'no-clip'
+  return analysis?.state || 'not-run'
+}
+
+window.DetectionLabPersonView = { visibleDetections, stackedBox, personPageState }
+
+function closestSample(samples, timestamp, tolerance) {
+  let nearest = null
+  let difference = Infinity
+  for (const sample of samples || []) {
+    const current = Math.abs(sample.timestamp_s - timestamp)
+    if (current < difference) { nearest = sample; difference = current }
+  }
+  return difference <= tolerance ? nearest : null
+}
+
+function clipVideo(match, clip) {
+  const video = previewVideo(match, clip)
+  if (video.tagName !== 'VIDEO') return { video, wrap: video }
+  const wrap = element('div', undefined, 'analysis-video-wrap')
+  const canvas = element('canvas', undefined, 'detection-overlay')
+  canvas.setAttribute('aria-hidden', 'true')
+  wrap.append(video, canvas)
+  const end = clip.start_s + clip.duration_s
+  video.addEventListener('loadedmetadata', () => { video.currentTime = clip.start_s }, { once: true })
+  video.addEventListener('timeupdate', () => {
+    if (video.currentTime > end) { video.pause(); video.currentTime = end }
+  })
+  video.addEventListener('seeking', () => {
+    if (video.currentTime < clip.start_s || video.currentTime > end) video.currentTime = clip.start_s
+  })
+  return { video, canvas, wrap }
+}
+
 function personTab(match, clip) {
   const panel = element('section', undefined, 'person-workspace')
-  panel.append(element('h2', 'Person'), element('p', 'Espacio de preparación para el futuro análisis de personas.', 'help-text'))
+  panel.append(element('h2', 'Person'), element('p', 'Detección espacial por lente sobre el clip lógico seleccionado. No incluye tracking ni proyección.', 'help-text'))
   panel.append(clipSummary(clip))
-  if (!clip) {
+  if (personPageState(clip) === 'no-clip') {
     panel.append(element('p', 'Primero selecciona y guarda un clip en la pestaña Vista previa.', 'message'))
     return panel
   }
-  panel.append(previewVideo(match, clip))
-  const future = element('div', undefined, 'future-panel')
-  future.append(element('h3', 'Próximos controles'), element('p', 'Aquí se añadirán modelo, umbral y ejecución de análisis. Todavía no se carga ningún detector.'))
-  const controls = element('div', undefined, 'future-controls')
-  const model = element('button', 'Modelo (próximamente)')
-  const threshold = element('button', 'Umbral (próximamente)')
-  model.disabled = true
-  threshold.disabled = true
-  controls.append(model, threshold)
-  future.append(controls)
-  panel.append(future)
+  const controls = element('div', undefined, 'analysis-controls')
+  const modelLabel = element('label', 'Modelo')
+  const model = element('select')
+  const option = element('option', 'RF-DETR Large')
+  option.value = 'rfdetr_large'
+  model.append(option)
+  modelLabel.append(model)
+  const sampleLabel = element('label', 'Muestreo (FPS)')
+  const sampleFps = element('input')
+  sampleFps.type = 'number'; sampleFps.min = '0.1'; sampleFps.max = '30'; sampleFps.step = '0.5'; sampleFps.value = '5'
+  sampleLabel.append(sampleFps)
+  const inferenceLabel = element('label', 'Umbral de inferencia')
+  const inference = element('input')
+  inference.type = 'number'; inference.min = '0'; inference.max = '1'; inference.step = '0.05'; inference.value = '0.10'
+  inferenceLabel.append(inference)
+  const visibleLabel = element('label', 'Confianza visible: 0.25')
+  const visible = element('input')
+  visible.type = 'range'; visible.min = '0.10'; visible.max = '1'; visible.step = '0.05'; visible.value = '0.25'
+  visibleLabel.append(visible)
+  controls.append(modelLabel, sampleLabel, inferenceLabel, visibleLabel)
+  const status = element('p', 'Análisis no ejecutado para este clip.', 'analysis-status')
+  const debug = element('p', 'Reproduce el clip para ver las detecciones analizadas más cercanas.', 'frame-debug')
+  const media = clipVideo(match, clip)
+  let result = null
+  let polling = null
+
+  function draw() {
+    if (!media.canvas || !result || !media.video.videoWidth) return
+    const canvas = media.canvas
+    canvas.width = media.video.videoWidth; canvas.height = media.video.videoHeight
+    const context = canvas.getContext('2d')
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    const analysis = result.analysis || {}
+    const sample = closestSample(result.samples, media.video.currentTime, Math.max(0.2, 0.6 / (analysis.sample_fps || 5)))
+    const detections = visibleDetections(sample, Number(visible.value))
+    let left = 0; let right = 0
+    context.lineWidth = 3; context.font = '20px system-ui'; context.textBaseline = 'top'
+    for (const detection of detections) {
+      const [x1, y1, x2, y2] = stackedBox(detection)
+      if (detection.lens === 'left') left += 1; else right += 1
+      context.strokeStyle = '#56e08a'; context.fillStyle = '#56e08a'
+      context.strokeRect(x1, y1, x2 - x1, y2 - y1)
+      context.fillText(detection.confidence.toFixed(2), x1 + 3, Math.max(0, y1 - 22))
+    }
+    const timestamp = sample ? formatTime(sample.timestamp_s) : 'sin muestra cercana'
+    debug.textContent = `Muestra: ${timestamp} · izquierda: ${left} · derecha: ${right} · total visible: ${detections.length} · ${analysis.sample_fps || '?'} FPS`
+  }
+  visible.addEventListener('input', () => { visibleLabel.firstChild.textContent = `Confianza visible: ${Number(visible.value).toFixed(2)}`; draw() })
+  if (media.video.tagName === 'VIDEO') {
+    media.video.addEventListener('timeupdate', draw)
+    media.video.addEventListener('seeked', draw)
+    media.video.addEventListener('loadedmetadata', draw)
+  }
+  const analyze = button('Analizar clip', async () => {
+    analyze.disabled = true; status.textContent = 'Procesando análisis de personas…'; status.className = 'analysis-status processing'
+    try {
+      const response = await requestJson(`/api/matches/${encodeURIComponent(match.id)}/person/analyses`, 'POST', {
+        model_id: model.value, start_s: clip.start_s, duration_s: clip.duration_s,
+        sample_fps: Number(sampleFps.value), inference_threshold: Number(inference.value),
+      })
+      if (response.state === 'cached') {
+        result = response.result; status.textContent = 'Resultado en caché reutilizado.'; status.className = 'analysis-status cached'; draw(); return
+      }
+      const jobId = response.job_id
+      polling = window.setInterval(async () => {
+        try {
+          const current = await request(`/api/person/analyses/${encodeURIComponent(jobId)}`)
+          if (current.state === 'processing') return
+          window.clearInterval(polling); polling = null
+          if (current.state === 'error') throw new Error(current.error || 'El análisis falló.')
+          result = current.result; status.textContent = 'Análisis completo.'; status.className = 'analysis-status complete'; analyze.disabled = false; draw()
+        } catch (error) {
+          if (polling) window.clearInterval(polling)
+          polling = null; status.textContent = error.message; status.className = 'analysis-status error'; analyze.disabled = false
+        }
+      }, 800)
+    } catch (error) {
+      status.textContent = error.message; status.className = 'analysis-status error'
+    } finally {
+      if (!polling) analyze.disabled = false
+    }
+  }, 'primary-action')
+  panel.append(controls, analyze, status, media.wrap, debug)
   return panel
 }
 

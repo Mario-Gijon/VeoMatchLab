@@ -25,3 +25,19 @@ assert.equal(
   JSON.stringify(context.DetectionLabClipStore.loadClip('match_for_test')),
   JSON.stringify({ match_id: 'match_for_test', ...clip }),
 )
+
+const sample = { detections: [
+  { lens: 'left', bbox: [1, 2, 3, 4], confidence: 0.1 },
+  { lens: 'right', bbox: [5, 6, 7, 8], confidence: 0.3 },
+] }
+assert.equal(context.DetectionLabPersonView.visibleDetections(sample, 0.25).length, 1)
+assert.equal(
+  JSON.stringify(context.DetectionLabPersonView.stackedBox(sample.detections[1])),
+  JSON.stringify([5, 1030, 7, 1032]),
+)
+assert.equal(context.DetectionLabPersonView.personPageState(null), 'no-clip')
+assert.equal(context.DetectionLabPersonView.personPageState(clip), 'not-run')
+assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'processing' }), 'processing')
+assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'cached' }), 'cached')
+assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'complete' }), 'complete')
+assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'error' }), 'error')

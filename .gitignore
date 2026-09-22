@@ -6,6 +6,7 @@ output/
 .venv/
 .venv-detection/
 .model-cache/
+.detection-lab-cache/
 .pytest_cache/
 __pycache__/
 web_app/frontend/node_modules/

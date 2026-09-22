@@ -1,7 +1,7 @@
 :root { background: #f5f7fb; color: #172033; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
 * { box-sizing: border-box; }
 body { margin: 0; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 #app { margin: 0 auto; max-width: 1120px; padding: 40px 24px 64px; }
 .page-header { margin: 20px 0 28px; }
 .eyebrow { color: #52637d; font-size: .8rem; font-weight: 700; letter-spacing: .08em; margin: 0 0 8px; text-transform: uppercase; }
@@ -39,7 +39,12 @@ input { border: 1px solid #bdc9da; border-radius: 7px; padding: 9px 10px; }
 .clip-summary { background: #ecf1ff; border-radius: 8px; color: #243e7b; font-weight: 600; margin: 16px 0 0; padding: 12px; }
 .message { background: #f1f4f8; border-radius: 8px; color: #52637d; padding: 13px; }
 .message.error { background: #fff0ef; color: #b42318; }
-.future-panel { background: #f5f7fb; border: 1px dashed #b9c6d9; border-radius: 10px; margin-top: 18px; padding: 16px; }
-.future-controls { display: flex; flex-wrap: wrap; gap: 8px; }
-.future-controls button { background: #fff; border: 1px solid #c8d2e1; border-radius: 7px; color: #70809a; padding: 8px 11px; }
-@media (max-width: 640px) { #app { padding: 24px 16px 48px; } .clip-controls { align-items: stretch; grid-template-columns: 1fr; } .derived-time { margin: 0; } .form-feedback { display: block; margin: 12px 0 0; } }
+.analysis-controls { align-items: end; display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(140px, 1fr)); margin: 18px 0; }
+select { border: 1px solid #bdc9da; border-radius: 7px; padding: 9px 10px; }
+.analysis-status { display: inline-block; margin: 0 0 0 10px; }
+.analysis-status.processing { color: #3157a8; }.analysis-status.cached { color: #7351a6; }.analysis-status.complete { color: #178243; }.analysis-status.error { color: #b42318; }
+.analysis-video-wrap { background: #0c111b; border-radius: 12px; margin-top: 18px; overflow: hidden; position: relative; }
+.analysis-video-wrap .video-player { border-radius: 0; }
+.detection-overlay { height: 100%; left: 0; pointer-events: none; position: absolute; top: 0; width: 100%; }
+.frame-debug { background: #f1f4f8; border-radius: 8px; color: #33425c; margin: 14px 0 0; padding: 12px; }
+@media (max-width: 640px) { #app { padding: 24px 16px 48px; } .clip-controls, .analysis-controls { align-items: stretch; grid-template-columns: 1fr; } .derived-time { margin: 0; } .form-feedback, .analysis-status { display: block; margin: 12px 0 0; } }
