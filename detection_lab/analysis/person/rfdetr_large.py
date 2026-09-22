@@ -5,7 +5,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Sequence
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 DEFAULT_THRESHOLD = 0.25
 MODEL_FILENAME = "rf-detr-large-2026.pth"
+DETECTOR_VERSION = "3"
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +71,7 @@ class RFDETRLargePersonDetector:
 
     model_name = "RF-DETR Large"
     model_id = "rfdetr_large"
+    detector_version = DETECTOR_VERSION
 
     def __init__(
         self,
@@ -84,6 +86,10 @@ class RFDETRLargePersonDetector:
         ).resolve()
 
         self._model = None
+        self._inference_prepared = False
+        self._compiled_batch_size: int | None = None
+        self._inference_dtype: str | None = None
+        self._inference_compile = False
 
     @staticmethod
     def _validate_threshold(value: float) -> float:
@@ -145,6 +151,10 @@ class RFDETRLargePersonDetector:
         Libera el modelo y, si existe CUDA, intenta liberar la caché.
         """
         self._model = None
+        self._inference_prepared = False
+        self._compiled_batch_size = None
+        self._inference_dtype = None
+        self._inference_compile = False
 
         gc.collect()
 
@@ -156,6 +166,49 @@ class RFDETRLargePersonDetector:
         except ImportError:
             pass
 
+    @property
+    def inference_prepared(self) -> bool:
+        return self._inference_prepared
+
+    def prepare_inference(
+        self,
+        *,
+        batch_size: int = 8,
+        dtype: str = "float16",
+        compile: bool = False,
+    ) -> None:
+        """
+        Prepara RF-DETR para inferencia prolongada.
+
+        Por defecto usa FP16 sin compilación fija. Esta modalidad conserva
+        batches dinámicos y es una buena base para Detection Lab.
+
+        Si compile=True, RF-DETR compila para un batch fijo. detect_batch()
+        se encarga de trocear y rellenar el último batch para respetar ese
+        tamaño.
+
+        Debe llamarse una sola vez después de cargar el modelo y antes de
+        procesar un clip.
+        """
+        if not self.loaded:
+            self.load()
+
+        batch_size = int(batch_size)
+        if batch_size < 1:
+            raise ValueError("batch_size debe ser >= 1")
+
+        # API oficial RF-DETR: inference(compile=..., batch_size=..., dtype=...)
+        self._model.inference(
+            compile=bool(compile),
+            batch_size=batch_size,
+            dtype=dtype,
+        )
+
+        self._inference_prepared = True
+        self._inference_compile = bool(compile)
+        self._compiled_batch_size = batch_size if compile else None
+        self._inference_dtype = str(dtype)
+
     def detect(
         self,
         image: np.ndarray | Image.Image,
@@ -166,26 +219,8 @@ class RFDETRLargePersonDetector:
         """
         Detecta únicamente personas en una imagen.
 
-        Parameters
-        ----------
-        image:
-            PIL Image o ndarray HxWx3.
-
-        threshold:
-            Confianza mínima para RF-DETR.
-            Si es None se utiliza self.threshold.
-
-        color_space:
-            Solo afecta a ndarray:
-                "rgb" -> la imagen ya está en RGB.
-                "bgr" -> imagen proveniente normalmente de OpenCV.
-
-            PIL siempre se transforma a RGB.
-
-        Returns
-        -------
-        list[PersonDetection]
-            Lista normalizada de personas detectadas.
+        Para clips largos usa detect_batch(), que agrupa varias imágenes en
+        un único forward pass.
         """
         if not self.loaded:
             self.load()
@@ -206,11 +241,122 @@ class RFDETRLargePersonDetector:
             threshold=current_threshold,
         )
 
+        return self._normalize_detections(detections)
+
+    def detect_batch(
+        self,
+        images: Sequence[np.ndarray | Image.Image],
+        *,
+        threshold: float | None = None,
+        color_space: Literal["rgb", "bgr"] = "rgb",
+    ) -> list[list[PersonDetection]]:
+        """
+        Detecta personas en varias imágenes mediante batch inference.
+
+        RF-DETR acepta una lista de imágenes en predict() y procesa cada
+        lote en un único forward pass.
+
+        Returns
+        -------
+        list[list[PersonDetection]]
+            Una lista de detecciones por cada imagen de entrada, conservando
+            exactamente el mismo orden.
+        """
+        if not images:
+            return []
+
+        if not self.loaded:
+            self.load()
+
+        current_threshold = (
+            self.threshold
+            if threshold is None
+            else self._validate_threshold(threshold)
+        )
+
+        prepared = [
+            self._prepare_image(image, color_space=color_space)
+            for image in images
+        ]
+
+        if self._inference_compile and self._compiled_batch_size is not None:
+            return self._detect_batch_compiled(
+                prepared,
+                threshold=current_threshold,
+                compiled_batch_size=self._compiled_batch_size,
+            )
+
+        detections_list = self._model.predict(
+            prepared,
+            threshold=current_threshold,
+        )
+
+        # RF-DETR devuelve una detección por imagen cuando recibe una lista.
+        if len(detections_list) != len(prepared):
+            raise RuntimeError(
+                "RF-DETR devolvió un número inesperado de resultados: "
+                f"{len(detections_list)} para {len(prepared)} imágenes."
+            )
+
+        return [
+            self._normalize_detections(detections)
+            for detections in detections_list
+        ]
+
+    def _detect_batch_compiled(
+        self,
+        prepared: Sequence[np.ndarray],
+        *,
+        threshold: float,
+        compiled_batch_size: int,
+    ) -> list[list[PersonDetection]]:
+        """
+        Ejecuta inferencia cuando RF-DETR fue compilado para batch fijo.
+
+        El último lote se rellena repitiendo su última imagen; las salidas
+        añadidas se descartan después. Así el runner puede enviar cualquier
+        cantidad de imágenes sin romper el modelo compilado.
+        """
+        output: list[list[PersonDetection]] = []
+
+        for offset in range(0, len(prepared), compiled_batch_size):
+            chunk = list(
+                prepared[offset : offset + compiled_batch_size]
+            )
+            real_size = len(chunk)
+
+            if real_size < compiled_batch_size:
+                chunk.extend(
+                    [chunk[-1]] * (compiled_batch_size - real_size)
+                )
+
+            detections_list = self._model.predict(
+                chunk,
+                threshold=threshold,
+            )
+
+            if len(detections_list) != compiled_batch_size:
+                raise RuntimeError(
+                    "RF-DETR compilado devolvió un número inesperado "
+                    f"de resultados: {len(detections_list)}; "
+                    f"esperados: {compiled_batch_size}."
+                )
+
+            output.extend(
+                self._normalize_detections(detections)
+                for detections in detections_list[:real_size]
+            )
+
+        return output
+
+    def _normalize_detections(
+        self,
+        detections,
+    ) -> list[PersonDetection]:
         if len(detections) == 0:
             return []
 
         person_mask = self._person_mask(detections)
-
         results: list[PersonDetection] = []
 
         for index in np.flatnonzero(person_mask):
@@ -232,7 +378,6 @@ class RFDETRLargePersonDetector:
                 )
             )
 
-        # Orden determinista y cómodo para inspección.
         results.sort(
             key=lambda detection: detection.confidence,
             reverse=True,
@@ -435,7 +580,8 @@ def detect_people(
     Atajo funcional para pruebas pequeñas.
 
     Para vídeo/clips conviene reutilizar una instancia de
-    RFDETRLargePersonDetector y no cargar/descargar el modelo por frame.
+    RFDETRLargePersonDetector, llamar prepare_inference() una vez y usar
+    detect_batch() sobre lotes de frames.
     """
     detector = RFDETRLargePersonDetector(
         threshold=threshold,
