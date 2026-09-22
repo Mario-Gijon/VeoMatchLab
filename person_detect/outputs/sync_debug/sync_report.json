@@ -1,0 +1,44 @@
+{
+  "video": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "model": {
+    "backend": "rfdetr",
+    "variant": "large",
+    "name": "rfdetr_large",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/models/rfdetr/rf-detr-large-2026.pth",
+    "device": "cuda",
+    "native_resolution": 704
+  },
+  "source_fps": 29.97002997002997,
+  "start_frame": 300,
+  "start_s": 10.0,
+  "duration_s": 6.0,
+  "stride_frames": 3,
+  "diagnostic_sample_fps": 9.99000999000999,
+  "samples": 60,
+  "common_center_right_longitude_deg": [
+    17.25507718799103,
+    43.42412546302147
+  ],
+  "zero_offset": {
+    "offset_samples": 0,
+    "frame_pairs": 60,
+    "median_score_m": 1.3087658871717642,
+    "mean_score_m": 1.3224162816350384,
+    "matches": 627,
+    "unmatched": 153,
+    "offset_source_frames": 0,
+    "offset_seconds": 0.0
+  },
+  "best_offset": {
+    "offset_samples": 0,
+    "frame_pairs": 60,
+    "median_score_m": 1.3087658871717642,
+    "mean_score_m": 1.3224162816350384,
+    "matches": 627,
+    "unmatched": 153,
+    "offset_source_frames": 0,
+    "offset_seconds": 0.0
+  },
+  "interpretation": "No measurable CENTER/RIGHT temporal lag was preferred.",
+  "wall_time_s": 23.62661113699869
+}

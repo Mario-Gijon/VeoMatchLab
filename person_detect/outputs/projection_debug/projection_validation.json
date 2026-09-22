@@ -1,0 +1,158 @@
+{
+  "video": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "frame": {
+    "fps": 29.97002997002997,
+    "requested_time_s": 10.0,
+    "actual_frame": 300,
+    "actual_time_s": 10.01
+  },
+  "renderer": {
+    "source_size": [
+      2048,
+      2048
+    ],
+    "output_size_per_view": [
+      2048,
+      1152
+    ],
+    "field_length_m": 105.0,
+    "field_width_m": 64.70645141601562,
+    "field_envelope": {
+      "field_lon_min_deg": -81.60577185101283,
+      "field_lon_max_deg": 92.8545499825234,
+      "field_lat_min_deg": -37.08665677798361,
+      "field_lat_max_deg": 4.103220815643514,
+      "logical_sector_deg": 58.153440611178745,
+      "visual_overlap_fraction_each_side": 0.15,
+      "edge_inset_deg": 0.35,
+      "veo_safe_lon_min_deg": -93.38783035795682,
+      "veo_safe_lon_max_deg": 92.65701377714379
+    },
+    "views": [
+      {
+        "name": "left",
+        "longitude": -0.916804902417455,
+        "latitude": -0.2878347780817696,
+        "vfov": 0.8228317463997222,
+        "hfov": 1.3194597130364685,
+        "owner_min": -1.4242894074314814,
+        "owner_max": -0.40932039740342874,
+        "rendered_min": -1.5765347589356893,
+        "rendered_max": -0.2570750458992208,
+        "longitude_deg": -52.52905154542346,
+        "latitude_deg": -16.49171798117005,
+        "vfov_deg": 47.14478631808296,
+        "hfov_deg": 75.59947279453237,
+        "owner_min_deg": -81.60577185101283,
+        "owner_max_deg": -23.452331239834088,
+        "rendered_min_deg": -90.32878794268964,
+        "rendered_max_deg": -14.729315148157273,
+        "left_valid_fraction": 1.0,
+        "right_valid_fraction": 0.042163848876953125,
+        "either_lens_valid_fraction": 1.0,
+        "both_lenses_valid_fraction": 0.042163848876953125
+      },
+      {
+        "name": "center",
+        "longitude": 0.09816410761059757,
+        "latitude": -0.2878347780817696,
+        "vfov": 0.8228317463997222,
+        "hfov": 1.3194597130364685,
+        "owner_min": -0.40932039740342874,
+        "owner_max": 0.6056486126246239,
+        "rendered_min": -0.5615657489076367,
+        "rendered_max": 0.7578939641288318,
+        "longitude_deg": 5.624389065755285,
+        "latitude_deg": -16.49171798117005,
+        "vfov_deg": 47.14478631808296,
+        "hfov_deg": 75.59947279453237,
+        "owner_min_deg": -23.452331239834088,
+        "owner_max_deg": 34.70110937134466,
+        "rendered_min_deg": -32.1753473315109,
+        "rendered_max_deg": 43.42412546302147,
+        "left_valid_fraction": 0.5070207383897569,
+        "right_valid_fraction": 0.6467963324652778,
+        "either_lens_valid_fraction": 0.9933437771267362,
+        "both_lenses_valid_fraction": 0.1604732937282986
+      },
+      {
+        "name": "right",
+        "longitude": 0.9608877661344423,
+        "latitude": -0.2878347780817696,
+        "vfov": 0.8228317463997222,
+        "hfov": 1.3194597130364685,
+        "owner_min": 0.6056486126246239,
+        "owner_max": 1.6206176226526765,
+        "rendered_min": 0.30115790961620803,
+        "rendered_max": 1.6206176226526765,
+        "longitude_deg": 55.054813585257214,
+        "latitude_deg": -16.49171798117005,
+        "vfov_deg": 47.14478631808296,
+        "hfov_deg": 75.59947279453237,
+        "owner_min_deg": 34.70110937134466,
+        "owner_max_deg": 92.8545499825234,
+        "rendered_min_deg": 17.25507718799103,
+        "rendered_max_deg": 92.8545499825234,
+        "left_valid_fraction": 0.0646455552842882,
+        "right_valid_fraction": 1.0,
+        "either_lens_valid_fraction": 1.0,
+        "both_lenses_valid_fraction": 0.0646455552842882
+      }
+    ]
+  },
+  "projector": {
+    "calibration": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/camera_alignment.veo",
+    "image_size": [
+      2048,
+      1152
+    ],
+    "field_length_m": 105.0,
+    "field_width_m": 64.70645141601562,
+    "camera_world_xyz": [
+      -0.26846886,
+      -4.76267099,
+      -36.12551117
+    ],
+    "far_touchline": {
+      "axis": "z",
+      "name": "+Z",
+      "z": 32.35322570800781,
+      "margin_outward_m": 0.5
+    },
+    "ownership": [
+      {
+        "view": "left",
+        "min_rad": -1.4242894074314814,
+        "max_rad": -0.40932039740342874,
+        "min_deg": -81.60577185101283,
+        "max_deg": -23.452331239834088,
+        "right_edge_inclusive": false
+      },
+      {
+        "view": "center",
+        "min_rad": -0.40932039740342874,
+        "max_rad": 0.6056486126246239,
+        "min_deg": -23.452331239834088,
+        "max_deg": 34.70110937134466,
+        "right_edge_inclusive": false
+      },
+      {
+        "view": "right",
+        "min_rad": 0.6056486126246239,
+        "max_rad": 1.6206176226526765,
+        "min_deg": 34.70110937134466,
+        "max_deg": 92.8545499825234,
+        "right_edge_inclusive": true
+      }
+    ]
+  },
+  "diagnostic": {
+    "strict_field_boundary": true,
+    "far_touchline_margin_m": 0.5,
+    "ownership_masks": true,
+    "ground_grid": {
+      "x_samples": 11,
+      "z_samples": 7
+    }
+  }
+}
