@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Run one detector through the common Veo LEFT/CENTER/RIGHT geometry.
 
-First clean benchmark runner.
+Common clean benchmark runner.
 
-Current V1 model:
+Current models:
     RF-DETR Large
+    RF-DETR 2XL
 
 Pipeline:
     stacked dual-lens clip
@@ -24,7 +25,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 import subprocess
 import sys
 import time
@@ -39,8 +39,22 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from person_detect.backends.rfdetr_large import RFDETRBackend  # noqa: E402
-from person_detect.interactive_renderer import (  # noqa: E402
+from person_detect.backends.rfdetr_large import (  # noqa: E402
+    RFDETRBackend as RFDETRLargeBackend,
+)
+from person_detect.backends.rfdetr_2xl import (  # noqa: E402
+    RFDETR2XLBackend,
+)
+from person_detect.backends.dfine_x_coco import (  # noqa: E402
+    DFineXCocoBackend,
+)
+from person_detect.backends.dfine_x_obj2coco import (  # noqa: E402
+    DFineXObj2CocoBackend,
+)
+from person_detect.backends.yolo26x import (  # noqa: E402
+    YOLO26XBackend,
+)
+from person_detect.views.interactive_view.renderer import (  # noqa: E402
     DEFAULT_CALIBRATION,
     DEFAULT_VIDEO,
     OUTPUT_H,
@@ -48,7 +62,7 @@ from person_detect.interactive_renderer import (  # noqa: E402
     OVERLAP,
     InteractiveRenderer,
 )
-from person_detect.projection import (  # noqa: E402
+from person_detect.views.interactive_view.projection import (  # noqa: E402
     DEFAULT_FAR_TOUCHLINE_MARGIN_M,
     FieldProjector,
 )
@@ -61,6 +75,35 @@ DEFAULT_RFDETR_LARGE = (
     / "rfdetr"
     / "rf-detr-large-2026.pth"
 )
+DEFAULT_RFDETR_2XL = (
+    ROOT
+    / "person_detect"
+    / "models"
+    / "rfdetr"
+    / "rf-detr-xxlarge.pth"
+)
+DEFAULT_DFINE_X_COCO = (
+    ROOT
+    / "person_detect"
+    / "models"
+    / "dfine"
+    / "dfine_x_coco.pth"
+)
+DEFAULT_DFINE_X_OBJ2COCO = (
+    ROOT
+    / "person_detect"
+    / "models"
+    / "dfine"
+    / "dfine_x_obj2coco.pth"
+)
+DEFAULT_YOLO26X = (
+    ROOT
+    / "person_detect"
+    / "models"
+    / "yolo"
+    / "yolo26x.pt"
+)
+DEFAULT_CLIPS_ROOT = ROOT / "person_detect" / "clips"
 DEFAULT_RUNS = ROOT / "person_detect" / "outputs" / "runs"
 
 COMBINED_W = 1920
@@ -384,32 +427,90 @@ def make_combined_frame(
     return canvas
 
 
-def build_backend(args):
+def selected_weights(args) -> Path:
+    if args.weights is not None:
+        return args.weights
+
     if args.model == "rfdetr_large":
-        return RFDETRBackend(
-            args.weights,
+        return DEFAULT_RFDETR_LARGE
+
+    if args.model == "rfdetr_2xl":
+        return DEFAULT_RFDETR_2XL
+
+    if args.model == "dfine_x_coco":
+        return DEFAULT_DFINE_X_COCO
+
+    if args.model == "dfine_x_obj2coco":
+        return DEFAULT_DFINE_X_OBJ2COCO
+
+    if args.model == "yolo26x":
+        return DEFAULT_YOLO26X
+
+    raise ValueError(f"Unsupported model: {args.model}")
+
+
+def build_backend(args):
+    weights = selected_weights(args)
+
+    if args.model == "rfdetr_large":
+        return RFDETRLargeBackend(
+            weights,
             variant="large",
+            device=args.device,
+        )
+
+    if args.model == "rfdetr_2xl":
+        return RFDETR2XLBackend(
+            weights,
+            device=args.device,
+        )
+
+    if args.model == "dfine_x_coco":
+        return DFineXCocoBackend(
+            weights,
+            device=args.device,
+        )
+
+    if args.model == "dfine_x_obj2coco":
+        return DFineXObj2CocoBackend(
+            weights,
+            device=args.device,
+        )
+
+    if args.model == "yolo26x":
+        return YOLO26XBackend(
+            weights,
             device=args.device,
         )
 
     raise ValueError(f"Unsupported model: {args.model}")
 
 
-def derive_clip_id(video_path: Path) -> str:
-    """Return a stable output namespace from a clip path without hardcoding IDs."""
-    resolved = video_path.expanduser().resolve()
-    parts = resolved.parts
-    clips_positions = [index for index, part in enumerate(parts) if part == "clips"]
-    if clips_positions:
-        clips_index = clips_positions[-1]
-        if clips_index + 1 < len(parts) - 1:
-            candidate = parts[clips_index + 1]
-            safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", candidate).strip("._")
-            if safe:
-                return safe
+def _safe_identifier(value: str) -> str:
+    safe = "".join(
+        char if char.isalnum() or char in ("-", "_", ".") else "_"
+        for char in value.strip()
+    )
+    safe = safe.strip("._")
+    return safe or "clip"
 
-    safe_stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", resolved.stem).strip("._")
-    return safe_stem or "clip"
+
+def clip_identifier(video_path: Path) -> str:
+    """Stable run grouping for benchmark clips and arbitrary input videos.
+
+    person_detect/clips/<match_id>/<clip>.mp4 -> <match_id>
+    any other video path                         -> sanitized filename stem
+    """
+    try:
+        relative = video_path.resolve().relative_to(
+            DEFAULT_CLIPS_ROOT.resolve()
+        )
+        if len(relative.parts) >= 2:
+            return _safe_identifier(relative.parts[0])
+    except (ValueError, OSError):
+        pass
+
+    return _safe_identifier(video_path.stem)
 
 
 def parse_args() -> argparse.Namespace:
@@ -419,13 +520,17 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--model",
-        choices=("rfdetr_large",),
+        choices=("rfdetr_large", "rfdetr_2xl", "dfine_x_coco", "dfine_x_obj2coco", "yolo26x"),
         default="rfdetr_large",
     )
     parser.add_argument(
         "--weights",
         type=Path,
-        default=DEFAULT_RFDETR_LARGE,
+        default=None,
+        help=(
+            "Optional model checkpoint override. When omitted, each model "
+            "uses its preserved checkpoint under person_detect/models/."
+        ),
     )
     parser.add_argument(
         "--video",
@@ -500,8 +605,9 @@ def main() -> None:
         raise FileNotFoundError(args.video)
     if not args.calibration.exists():
         raise FileNotFoundError(args.calibration)
-    if not args.weights.exists():
-        raise FileNotFoundError(args.weights)
+    weights = selected_weights(args)
+    if not weights.exists():
+        raise FileNotFoundError(weights)
 
     print("Loading common geometry...")
     renderer = InteractiveRenderer(
@@ -523,7 +629,7 @@ def main() -> None:
     print(json.dumps(backend.info(), indent=2))
 
     timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
-    clip_id = derive_clip_id(args.video)
+    clip_id = clip_identifier(args.video)
     run_dir = args.runs_dir / backend.name / clip_id / timestamp
     run_dir.mkdir(parents=True, exist_ok=False)
 
@@ -554,6 +660,7 @@ def main() -> None:
 
     config = {
         "model": backend.info(),
+        "clip_id": clip_id,
         "video": str(args.video),
         "calibration": str(args.calibration),
         "start_s": args.start,

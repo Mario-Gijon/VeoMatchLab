@@ -51,7 +51,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from person_detect.backends.rfdetr_large import RFDETRBackend  # noqa: E402
-from person_detect.interactive_renderer import (  # noqa: E402
+from person_detect.views.interactive_view.renderer import (  # noqa: E402
     DEFAULT_CALIBRATION,
     DEFAULT_VIDEO,
     OUTPUT_H,
@@ -59,7 +59,7 @@ from person_detect.interactive_renderer import (  # noqa: E402
     OVERLAP,
     InteractiveRenderer,
 )
-from person_detect.projection import (  # noqa: E402
+from person_detect.views.interactive_view.projection import (  # noqa: E402
     DEFAULT_FAR_TOUCHLINE_MARGIN_M,
     FieldProjector,
 )

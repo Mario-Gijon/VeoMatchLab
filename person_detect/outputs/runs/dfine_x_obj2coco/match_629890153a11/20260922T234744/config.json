@@ -1,0 +1,29 @@
+{
+  "model": {
+    "backend": "dfine",
+    "variant": "x_obj2coco",
+    "name": "dfine_x_obj2coco",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/models/dfine/dfine_x_obj2coco.pth",
+    "device": "cuda",
+    "native_resolution": 640,
+    "inference_mode": "sequential_views",
+    "implementation": "Peterande/D-FINE official",
+    "dfine_root": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE",
+    "config": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE/configs/dfine/objects365/dfine_hgnetv2_x_obj2coco.yml",
+    "checkpoint_state": "model"
+  },
+  "clip_id": "match_629890153a11",
+  "video": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "calibration": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/camera_alignment.veo",
+  "start_s": 10.0,
+  "duration_s": 3.0,
+  "threshold": 0.25,
+  "render_size_per_view": [
+    2048,
+    1152
+  ],
+  "overlap": 0.15,
+  "far_touchline_margin_m": 0.5,
+  "output_video": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/runs/dfine_x_obj2coco/match_629890153a11/20260922T234744/result.mp4",
+  "pipeline": "dual_lens -> L/C/R -> person detector -> bbox footpoint -> ground X/Z -> field filter -> ownership -> video + 2D pitch"
+}

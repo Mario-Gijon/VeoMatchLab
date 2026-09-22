@@ -1,0 +1,28 @@
+{
+  "model": {
+    "backend": "ultralytics_yolo",
+    "variant": "yolo26x",
+    "name": "yolo26x",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/models/yolo/yolo26x.pt",
+    "device": "cuda:0",
+    "native_resolution": 640,
+    "inference_mode": "sequential_views",
+    "person_class_id": 0,
+    "iou_threshold": 0.7,
+    "head": "default_one_to_many_with_nms"
+  },
+  "clip_id": "match_629890153a11",
+  "video": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "calibration": "/home/mario/Projects/VeoMatchLab/person_detect/clips/match_629890153a11/camera_alignment.veo",
+  "start_s": 10.0,
+  "duration_s": 3.0,
+  "threshold": 0.25,
+  "render_size_per_view": [
+    2048,
+    1152
+  ],
+  "overlap": 0.15,
+  "far_touchline_margin_m": 0.5,
+  "output_video": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/runs/yolo26x/match_629890153a11/20260922T235153/result.mp4",
+  "pipeline": "dual_lens -> L/C/R -> person detector -> bbox footpoint -> ground X/Z -> field filter -> ownership -> video + 2D pitch"
+}

@@ -26,11 +26,11 @@ import cv2
 import numpy as np
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from person_detect.interactive_renderer import (  # noqa: E402
+from person_detect.views.interactive_view.renderer import (  # noqa: E402
     DEFAULT_CALIBRATION,
     DEFAULT_VIDEO,
     OUTPUT_H,
@@ -42,7 +42,7 @@ from person_detect.interactive_renderer import (  # noqa: E402
     rot_x,
     rot_y,
 )
-from person_detect.projection import (  # noqa: E402
+from person_detect.views.interactive_view.projection import (  # noqa: E402
     DEFAULT_FAR_TOUCHLINE_MARGIN_M,
     FieldProjector,
 )
