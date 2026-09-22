@@ -18,6 +18,7 @@ from person_detect.models.rfdetr_large import ModelDetection
 
 INTERACTIVE_VIEWS = ("left", "center", "right")
 TWO_LENS_VIEWS = ("left", "right")
+PANORAMA_VIEWS = ("panorama",)
 
 
 def _validate_images(views_bgr: Mapping[str, np.ndarray]) -> None:
@@ -129,12 +130,82 @@ def _predict_two_lens_yolo(backend, views_bgr, *, threshold: float):
     }
 
 
+def _filter_rfdetr_persons(backend, detections, detection_type):
+    names = backend._class_names(detections)
+    xyxy = np.asarray(detections.xyxy, dtype=np.float64)
+    confidence = np.asarray(detections.confidence, dtype=np.float64)
+    if len(names) != len(xyxy) or len(confidence) != len(xyxy):
+        raise RuntimeError("Inconsistent RF-DETR panorama output lengths")
+
+    persons = []
+    for box, score, class_name in zip(xyxy, confidence, names, strict=True):
+        if class_name.lower() != "person":
+            continue
+        values = [float(value) for value in box]
+        if not np.isfinite([*values, score]).all():
+            continue
+        x1, y1, x2, y2 = values
+        if x2 <= x1 or y2 <= y1:
+            continue
+        persons.append(detection_type((x1, y1, x2, y2), float(score)))
+    return persons
+
+
+def _predict_panorama_rfdetr_large(backend, image_bgr, *, threshold: float):
+    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    try:
+        prediction = backend.model.predict(
+            [image_rgb],
+            threshold=threshold,
+            include_source_image=False,
+        )
+    except TypeError:
+        prediction = backend.model.predict([image_rgb], threshold=threshold)
+    if isinstance(prediction, (list, tuple)):
+        if len(prediction) != 1:
+            raise RuntimeError(
+                "Expected exactly one RF-DETR panorama prediction set, "
+                f"got {len(prediction)}"
+            )
+        prediction = prediction[0]
+    return _filter_rfdetr_persons(backend, prediction, ModelDetection)
+
+
+def _predict_panorama_rfdetr_2xl(backend, image_bgr, *, threshold: float):
+    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+    prediction = backend._predict_one(image_rgb, threshold=threshold)
+    return _filter_rfdetr_persons(backend, prediction, RFDETR2XLModelDetection)
+
+
+def _predict_panorama(backend, views_bgr, *, threshold: float):
+    image = views_bgr["panorama"]
+    if backend.name == "rfdetr_large":
+        persons = _predict_panorama_rfdetr_large(
+            backend,
+            image,
+            threshold=threshold,
+        )
+    elif backend.name == "rfdetr_2xl":
+        persons = _predict_panorama_rfdetr_2xl(
+            backend,
+            image,
+            threshold=threshold,
+        )
+    elif backend.name in {"dfine_x_coco", "dfine_x_obj2coco", "yolo26x"}:
+        persons = backend._predict_one(image, threshold=threshold)
+    else:
+        raise ValueError(f"Unsupported panorama_view backend: {backend.name!r}")
+    return {"panorama": persons}
+
+
 def predict_views(backend, views_bgr: Mapping[str, np.ndarray], *, threshold: float):
     """Run one already-loaded backend over an ordered view dictionary."""
     _validate_images(views_bgr)
     names = tuple(views_bgr)
     if names == INTERACTIVE_VIEWS:
         return backend.predict_views(dict(views_bgr), threshold=threshold)
+    if names == PANORAMA_VIEWS:
+        return _predict_panorama(backend, views_bgr, threshold=threshold)
     if names == TWO_LENS_VIEWS:
         if backend.name == "rfdetr_large":
             return _predict_two_lens_rfdetr_large(backend, views_bgr, threshold=threshold)

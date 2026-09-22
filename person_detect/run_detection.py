@@ -73,6 +73,12 @@ from person_detect.views.two_lens_view.renderer import (  # noqa: E402
 from person_detect.views.two_lens_view.projection import (  # noqa: E402
     TwoLensProjector,
 )
+from person_detect.views.panorama_view.renderer import (  # noqa: E402
+    PanoramaRenderer,
+)
+from person_detect.views.panorama_view.projection import (  # noqa: E402
+    PanoramaProjector,
+)
 
 
 DEFAULT_RFDETR_LARGE = (
@@ -531,7 +537,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--view",
-        choices=("interactive_view", "two_lens_view"),
+        choices=("interactive_view", "two_lens_view", "panorama_view"),
         default="interactive_view",
     )
     parser.add_argument(
@@ -587,6 +593,18 @@ def parse_args() -> argparse.Namespace:
         default=OUTPUT_H,
     )
     parser.add_argument(
+        "--panorama-width",
+        type=int,
+        default=None,
+        help="Optional panorama width override; default is calibration-derived.",
+    )
+    parser.add_argument(
+        "--panorama-height",
+        type=int,
+        default=None,
+        help="Optional panorama height override; default is source-faithful 1024.",
+    )
+    parser.add_argument(
         "--overlap",
         type=float,
         default=OVERLAP,
@@ -636,13 +654,26 @@ def main() -> None:
             far_touchline_margin_m=args.far_margin,
         )
         view_names = ("left", "center", "right")
-    else:
+    elif args.view == "two_lens_view":
         renderer = TwoLensRenderer(args.calibration)
         projector = TwoLensProjector(
             args.calibration,
             far_touchline_margin_m=args.far_margin,
         )
         view_names = ("left", "right")
+    else:
+        renderer = PanoramaRenderer(
+            args.calibration,
+            width=args.panorama_width,
+            height=args.panorama_height,
+        )
+        projector = PanoramaProjector(
+            far_touchline_margin_m=args.far_margin,
+            calibration=args.calibration,
+            width=renderer.width,
+            height=renderer.height,
+        )
+        view_names = ("panorama",)
 
     print(f"Loading model: {args.model}")
     backend = build_backend(args)
@@ -688,6 +719,11 @@ def main() -> None:
         "duration_s": args.duration,
         "threshold": args.threshold,
         "render_size_per_view": [args.width, args.height],
+        "panorama_size": (
+            [renderer.width, renderer.height]
+            if args.view == "panorama_view"
+            else None
+        ),
         "overlap": args.overlap,
         "far_touchline_margin_m": args.far_margin,
         "output_video": str(result_video),
@@ -829,6 +865,11 @@ def main() -> None:
     summary = {
         "model": backend.info(),
         "view": args.view,
+        "panorama_size": (
+            [renderer.width, renderer.height]
+            if args.view == "panorama_view"
+            else None
+        ),
         "processed_frames": processed,
         "processed_duration_s": processed / fps if fps > 0 else None,
         "wall_time_s": elapsed,
