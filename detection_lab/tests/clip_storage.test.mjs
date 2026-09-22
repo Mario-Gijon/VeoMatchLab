@@ -41,3 +41,25 @@ assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'proc
 assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'cached' }), 'cached')
 assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'complete' }), 'complete')
 assert.equal(context.DetectionLabPersonView.personPageState(clip, { state: 'error' }), 'error')
+
+const scopedClip = { start_s: 755, duration_s: 90 }
+const player = context.DetectionLabClipPlayer
+assert.equal(player.relativeToAbsoluteTime(scopedClip, 30), 785)
+assert.equal(player.relativeToAbsoluteTime(scopedClip, -5), 755)
+assert.equal(player.relativeToAbsoluteTime(scopedClip, 100), 845)
+assert.equal(player.absoluteToRelativeTime(scopedClip, 785), 30)
+assert.equal(player.clampToClip(scopedClip, 700), 755)
+assert.equal(player.clampToClip(scopedClip, 900), 845)
+assert.equal(
+  JSON.stringify(player.clipPlaybackState(scopedClip, 845)),
+  JSON.stringify({ absoluteTime: 845, relativeTime: 90, shouldPause: true }),
+)
+assert.equal(
+  JSON.stringify(player.clipPlaybackState(scopedClip, 784)),
+  JSON.stringify({ absoluteTime: 784, relativeTime: 29, shouldPause: false }),
+)
+const absoluteSample = player.sampleAtClipTime([
+  { timestamp_s: 784.9, frame_index: 1, detections: [] },
+  { timestamp_s: 755.1, frame_index: 2, detections: [] },
+], scopedClip, 30, 0.2)
+assert.equal(absoluteSample.frame_index, 1)

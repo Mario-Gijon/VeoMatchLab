@@ -193,6 +193,35 @@ function personPageState(clip, analysis) {
 
 window.DetectionLabPersonView = { visibleDetections, stackedBox, personPageState }
 
+function clipEnd(clip) {
+  return clip.start_s + clip.duration_s
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value))
+}
+
+function relativeToAbsoluteTime(clip, relativeTime) {
+  return clip.start_s + clamp(Number(relativeTime) || 0, 0, clip.duration_s)
+}
+
+function absoluteToRelativeTime(clip, absoluteTime) {
+  return clamp((Number(absoluteTime) || 0) - clip.start_s, 0, clip.duration_s)
+}
+
+function clampToClip(clip, absoluteTime) {
+  return clamp(Number(absoluteTime) || 0, clip.start_s, clipEnd(clip))
+}
+
+function clipPlaybackState(clip, absoluteTime) {
+  const clampedTime = clampToClip(clip, absoluteTime)
+  return {
+    absoluteTime: clampedTime,
+    relativeTime: absoluteToRelativeTime(clip, clampedTime),
+    shouldPause: Number(absoluteTime) >= clipEnd(clip),
+  }
+}
+
 function closestSample(samples, timestamp, tolerance) {
   let nearest = null
   let difference = Infinity
@@ -203,22 +232,71 @@ function closestSample(samples, timestamp, tolerance) {
   return difference <= tolerance ? nearest : null
 }
 
+function sampleAtClipTime(samples, clip, relativeTime, tolerance) {
+  return closestSample(samples, relativeToAbsoluteTime(clip, relativeTime), tolerance)
+}
+
+window.DetectionLabClipPlayer = {
+  relativeToAbsoluteTime,
+  absoluteToRelativeTime,
+  clampToClip,
+  clipPlaybackState,
+  sampleAtClipTime,
+}
+
 function clipVideo(match, clip) {
-  const video = previewVideo(match, clip)
-  if (video.tagName !== 'VIDEO') return { video, wrap: video }
+  if (!match.video_url) {
+    const unavailable = element('p', 'El vídeo de doble lente no está disponible.', 'message error')
+    return { video: unavailable, wrap: unavailable }
+  }
+  const video = element('video', undefined, 'video-player')
+  video.controls = false
+  video.preload = 'metadata'
+  video.playsInline = true
+  video.src = match.video_url
+  video.textContent = 'Tu navegador no puede reproducir este vídeo.'
   const wrap = element('div', undefined, 'analysis-video-wrap')
+  const stage = element('div', undefined, 'analysis-video-stage')
   const canvas = element('canvas', undefined, 'detection-overlay')
   canvas.setAttribute('aria-hidden', 'true')
-  wrap.append(video, canvas)
-  const end = clip.start_s + clip.duration_s
-  video.addEventListener('loadedmetadata', () => { video.currentTime = clip.start_s }, { once: true })
-  video.addEventListener('timeupdate', () => {
-    if (video.currentTime > end) { video.pause(); video.currentTime = end }
-  })
-  video.addEventListener('seeking', () => {
-    if (video.currentTime < clip.start_s || video.currentTime > end) video.currentTime = clip.start_s
-  })
-  return { video, canvas, wrap }
+  stage.append(video, canvas)
+  const controls = element('div', undefined, 'clip-player-controls')
+  const play = button('Reproducir', () => {
+    if (video.currentTime >= clipEnd(clip)) video.currentTime = clip.start_s
+    if (video.paused) video.play(); else video.pause()
+  }, 'clip-play-button')
+  const timeline = element('span', `00:00 / ${formatTime(clip.duration_s)}`, 'clip-player-time')
+  const matchTimestamp = element('span', `Partido: ${formatTime(clip.start_s)}`, 'match-timestamp')
+  const seek = element('input', undefined, 'clip-seek')
+  seek.type = 'range'; seek.min = '0'; seek.max = String(clip.duration_s); seek.step = '0.01'; seek.value = '0'
+  seek.setAttribute('aria-label', 'Posición dentro del clip')
+  const volume = element('input', undefined, 'clip-volume')
+  volume.type = 'range'; volume.min = '0'; volume.max = '1'; volume.step = '0.05'; volume.value = String(video.volume)
+  volume.setAttribute('aria-label', 'Volumen')
+  function updateControls(absoluteTime = video.currentTime) {
+    const state = clipPlaybackState(clip, absoluteTime)
+    timeline.textContent = `${formatTime(state.relativeTime)} / ${formatTime(clip.duration_s)}`
+    matchTimestamp.textContent = `Partido: ${formatTime(state.absoluteTime)}`
+    seek.value = String(state.relativeTime)
+    play.textContent = video.paused ? 'Reproducir' : 'Pausa'
+    return state
+  }
+  function enforceBounds() {
+    const state = updateControls()
+    if (video.currentTime !== state.absoluteTime) video.currentTime = state.absoluteTime
+    if (state.shouldPause) video.pause()
+  }
+  video.addEventListener('loadedmetadata', () => { video.currentTime = clip.start_s; updateControls(clip.start_s) }, { once: true })
+  video.addEventListener('timeupdate', enforceBounds)
+  video.addEventListener('seeking', enforceBounds)
+  video.addEventListener('play', () => { if (video.currentTime >= clipEnd(clip)) video.currentTime = clip.start_s; updateControls() })
+  video.addEventListener('play', () => updateControls())
+  video.addEventListener('pause', () => updateControls())
+  seek.addEventListener('input', () => { video.currentTime = relativeToAbsoluteTime(clip, Number(seek.value)); updateControls(video.currentTime) })
+  volume.addEventListener('input', () => { video.volume = Number(volume.value) })
+  controls.append(play, timeline, seek, matchTimestamp, volume)
+  wrap.append(stage, controls)
+  return { video, canvas, wrap, controls }
 }
 
 function personTab(match, clip) {
@@ -262,7 +340,9 @@ function personTab(match, clip) {
     const context = canvas.getContext('2d')
     context.clearRect(0, 0, canvas.width, canvas.height)
     const analysis = result.analysis || {}
-    const sample = closestSample(result.samples, media.video.currentTime, Math.max(0.2, 0.6 / (analysis.sample_fps || 5)))
+    // video.currentTime remains the real match timestamp; only the player UI is relative.
+    const matchTime = clampToClip(clip, media.video.currentTime)
+    const sample = closestSample(result.samples, matchTime, Math.max(0.2, 0.6 / (analysis.sample_fps || 5)))
     const detections = visibleDetections(sample, Number(visible.value))
     let left = 0; let right = 0
     context.lineWidth = 3; context.font = '20px system-ui'; context.textBaseline = 'top'
