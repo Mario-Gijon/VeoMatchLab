@@ -6,6 +6,7 @@ import { api } from '../api/client'
 import { createPanoramaGL } from './panoramaGL'
 import { dragCamera, initialCamera, interactiveTransform, isDrag, wheelCamera } from './interactiveCamera'
 import type { InteractiveCamera } from './interactiveCamera'
+import { ultraPanoramaSize } from './workspaceGeometry'
 import type { ViewMode } from './workspaceGeometry'
 import { naturalPixel, nativeVideoPixel, stackedPixel } from './viewCoordinates'
 
@@ -32,11 +33,12 @@ export default function MatchViewer({ media, mode, crop, context, width, videoRe
   const rendered = useRef<{ camera: InteractiveCamera; width: number; height: number; timestamp: number } | null>(null)
   const [error, setError] = useState('')
   const [hover, setHover] = useState(false)
-  const live = useRef({ mode, crop, width })
-  useEffect(() => { live.current = { mode, crop, width }; gesture.current = null; pointer.current = null; setHover(false) }, [mode, crop, width])
+  const panoramaSize = mode === 'ultra_panorama' ? ultraPanoramaSize(context) : null
+  const outputWidth = mode === 'panorama' ? width : mode === 'ultra_panorama' ? panoramaSize!.width : 2048
+  const outputHeight = mode === 'panorama' ? width * 9 / 16 : mode === 'ultra_panorama' ? panoramaSize!.height : crop === 'stacked' ? 2048 : 1024
+  const live = useRef({ mode, crop, width, outputWidth, outputHeight })
+  useEffect(() => { live.current = { mode, crop, width, outputWidth, outputHeight }; gesture.current = null; pointer.current = null; setHover(false) }, [mode, crop, width, outputWidth, outputHeight])
   const sourceUrl = api.url(media.url)
-  const outputWidth = mode === 'panorama' ? width : 2048
-  const outputHeight = mode === 'panorama' ? width * 9 / 16 : crop === 'stacked' ? 2048 : 1024
 
   useEffect(() => {
     const element = surface.current
@@ -77,8 +79,8 @@ export default function MatchViewer({ media, mode, crop, context, width, videoRe
           const interactive = view.mode === 'interactive'
           const camera = cameraRef.current ?? (context ? initialCamera(context) : null)
           if (camera && !cameraRef.current) cameraRef.current = camera
-          const w = interactive ? size.width : view.mode === 'panorama' ? view.width : 2048
-          const h = interactive ? size.height : view.mode === 'panorama' ? view.width * 9 / 16 : view.crop === 'stacked' ? 2048 : 1024
+          const w = interactive ? size.width : view.mode === 'panorama' || view.mode === 'ultra_panorama' ? view.outputWidth : 2048
+          const h = interactive ? size.height : view.mode === 'panorama' || view.mode === 'ultra_panorama' ? view.outputHeight : view.crop === 'stacked' ? 2048 : 1024
           const target = view.mode === 'dual_lens' ? rawCanvas : destination
           if (target.width !== w || target.height !== h) { target.width = w; target.height = h }
           const signature = `${view.mode}/${view.crop}/${w}/${h}/${video.currentTime}/${interactive ? JSON.stringify(camera) : ''}`
@@ -178,12 +180,12 @@ export default function MatchViewer({ media, mode, crop, context, width, videoRe
         const source = mode === 'dual_lens' ? stackedPixel(pixel.x, pixel.y, crop) : pixel
         onClick(source.x, source.y, { width: outputWidth, height: mode === 'dual_lens' ? 2048 : outputHeight, timestamp: videoRef.current!.currentTime })
       }}>
-      <canvas ref={canvas} aria-label={mode === 'interactive' ? 'Vista interactiva' : 'Vista panorámica'}
+      <canvas ref={canvas} aria-label={mode === 'interactive' ? 'Vista interactiva' : mode === 'ultra_panorama' ? 'Vista ultra panorámica' : 'Vista panorámica'}
         style={{ width: '100%', display: mode === 'dual_lens' ? 'none' : 'block', background: '#080a0c',
-          aspectRatio: '16 / 9', height: mode === 'interactive' ? 'auto' : undefined, maxHeight: mode === 'interactive' ? '65vh' : undefined }} />
+          aspectRatio: mode === 'ultra_panorama' ? `${outputWidth} / ${outputHeight}` : '16 / 9', height: mode === 'interactive' ? 'auto' : undefined, maxHeight: mode === 'interactive' ? '65vh' : undefined }} />
       <canvas ref={raw} aria-label="Vista de doble lente" width={2048} height={crop === 'stacked' ? 2048 : 1024}
         style={{ width: '100%', display: mode === 'dual_lens' ? 'block' : 'none', background: '#080a0c' }} />
-      {selectionEnabled && mode !== 'interactive' && <svg aria-label={mode === 'dual_lens' ? 'Marcadores de doble lente' : 'Marcadores panorámicos'} viewBox={`0 0 ${outputWidth} ${outputHeight}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      {selectionEnabled && mode !== 'interactive' && <svg aria-label={mode === 'dual_lens' ? 'Marcadores de doble lente' : mode === 'ultra_panorama' ? 'Marcadores ultra panorámicos' : 'Marcadores panorámicos'} viewBox={`0 0 ${outputWidth} ${outputHeight}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {points.map((point) => {
           const y = point.pixel_y - (mode === 'dual_lens' && crop === 'right' ? 1024 : 0)
           if (y < 0 || y >= outputHeight) return null

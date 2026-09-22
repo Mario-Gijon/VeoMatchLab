@@ -282,8 +282,6 @@ def view_point(payload: ViewPointRequest) -> dict:
                 raise ValueError("RAW view coordinates must use the stacked 2048×2048 source")
             point = raw_pixel_to_ground(metadata, payload.x, payload.y)
         else:
-            if (payload.width, payload.height) not in {(1920, 1080), (3840, 2160)}:
-                raise ValueError("Unsupported panorama resolution")
             point = ground_intersection_for_pixel(metadata, payload.x, payload.y, payload.width, payload.height)
         response = point.to_dict()
         if payload.landmark_id:

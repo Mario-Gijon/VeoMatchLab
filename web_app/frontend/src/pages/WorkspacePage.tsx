@@ -10,7 +10,7 @@ import MatchViewer from '../components/MatchViewer'
 import type { ViewerPick, ViewMode } from '../components/MatchViewer'
 import { interactiveGroundPoint } from '../components/interactiveCamera'
 import type { InteractiveCamera } from '../components/interactiveCamera'
-import { appendMeasurement, matchTimestamp, pitchPoints, viewLabel, VIEW_MODES } from '../components/workspaceGeometry'
+import { appendMeasurement, matchTimestamp, pitchPoints, ultraPanoramaSize, viewLabel, VIEW_MODES } from '../components/workspaceGeometry'
 import { clampMediaTime, formatMediaTime } from '../components/mediaTime'
 import PanoramaViewer from '../components/PanoramaViewer'
 import PitchSvg from '../components/PitchSvg'
@@ -71,7 +71,10 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
   const highlights = match?.media.find((item) => item.role === 'veo_highlights')
   const duration = source?.duration_s ?? 0
   const playbackDisabled = !source || !!frameRender || !!stillImage
-  const canSeekEvent = !!source && (!['panorama', 'interactive'].includes(mode) || !!context)
+  const canSeekEvent = !!source && (!['panorama', 'ultra_panorama', 'interactive'].includes(mode) || !!context)
+  const ultraSize = mode === 'ultra_panorama' ? ultraPanoramaSize(context) : null
+  const renderedViewWidth = mode === 'ultra_panorama' ? ultraSize!.width : width
+  const renderedViewHeight = mode === 'ultra_panorama' ? ultraSize!.height : width * 9 / 16
   const seek = (value: number) => {
     const next = clampMediaTime(value, duration)
     if (video.current && video.current.readyState >= 1) video.current.currentTime = next
@@ -105,13 +108,13 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
         ? (pick ? await api.trackingPoint(matchId, timestamp, x, y, pick.width, pick.height) : null)
         : frameRender
         ? await api.groundPoint(frameRender.id, x, y, landmark || null)
-        : await api.viewPoint(context.id, mode, x, y, mode === 'dual_lens' ? 2048 : width, mode === 'dual_lens' ? 2048 : width * 9 / 16, landmark || null)
+        : await api.viewPoint(context.id, mode === 'ultra_panorama' ? 'panorama' : mode, x, y, mode === 'dual_lens' ? 2048 : renderedViewWidth, mode === 'dual_lens' ? 2048 : renderedViewHeight, landmark || null)
       if (!result || generation.current !== currentGeneration || sequence !== measurementSequence.current) return
-      setPoints((items) => appendMeasurement(items, { ...result, timestamp_s: timestamp, view: mode, view_width: width, media_id: frameRender?.id ?? source?.id }))
+      setPoints((items) => appendMeasurement(items, { ...result, timestamp_s: timestamp, view: mode, view_width: renderedViewWidth, media_id: frameRender?.id ?? source?.id }))
     } catch (e) { if (mode !== 'tracking' && mode !== 'interactive') setError(e instanceof Error ? e.message : 'No se pudo medir el punto.') }
   }
   if (!match) return <Typography sx={{ p: 3 }}>{error || 'Cargando partido…'}</Typography>
-  const displayPoints = points.filter((point) => point.view === mode && point.media_id === (frameRender?.id ?? source?.id) && (mode === 'tracking' || point.view_width === width))
+  const displayPoints = points.filter((point) => point.view === mode && point.media_id === (frameRender?.id ?? source?.id) && (mode === 'tracking' || point.view_width === renderedViewWidth))
   return <Box sx={{ p: { xs: 1, md: 2 } }}>
     <Stack direction="row" alignItems="center" gap={2} mb={1}><Button onClick={onBack}>← Partidos</Button><Typography variant="h6">{match.name}</Typography><Box flex={1} /><Button variant="outlined" size="small" onClick={() => setFilesOpen(true)}>Gestionar archivos</Button></Stack>
     {error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{busy && <LinearProgress />}
@@ -126,7 +129,7 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
     </Stack>
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 7fr) minmax(280px, 3fr)' }, gap: 2 }}>
       <Box minWidth={0}>
-        {stillImage ? <Box><img src={api.url(stillImage.url)} alt={stillImage.name} style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain' }} /><Button onClick={() => setStillImage(null)}>Volver al vídeo</Button></Box> : frameRender ? <PanoramaViewer panorama={frameRender} points={selectionEnabled ? displayPoints : []} onPixelClick={(x, y) => selectionEnabled && void measure(x, y)} /> : source && (!['panorama', 'interactive'].includes(mode) || context) ? <MatchViewer key={source.id} media={source} mode={mode} crop={crop} context={context} width={width} initialTime={time} videoRef={video} cameraRef={interactiveCamera} onTime={setTime} onPlayback={setPlaying} points={selectionEnabled ? displayPoints : []} selectionEnabled={selectionEnabled} trackingAvailable={!!context?.tracking_geometry.available} onClick={(x, y, pick) => void measure(x, y, pick)} /> : <Alert severity="info">{['panorama', 'interactive'].includes(mode) && !context ? 'Falta la calibración.' : 'Falta el vídeo. Añádelo en Gestionar archivos.'}</Alert>}
+        {stillImage ? <Box><img src={api.url(stillImage.url)} alt={stillImage.name} style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain' }} /><Button onClick={() => setStillImage(null)}>Volver al vídeo</Button></Box> : frameRender ? <PanoramaViewer panorama={frameRender} points={selectionEnabled ? displayPoints : []} onPixelClick={(x, y) => selectionEnabled && void measure(x, y)} /> : source && (!['panorama', 'ultra_panorama', 'interactive'].includes(mode) || context) ? <MatchViewer key={source.id} media={source} mode={mode} crop={crop} context={context} width={width} initialTime={time} videoRef={video} cameraRef={interactiveCamera} onTime={setTime} onPlayback={setPlaying} points={selectionEnabled ? displayPoints : []} selectionEnabled={selectionEnabled} trackingAvailable={!!context?.tracking_geometry.available} onClick={(x, y, pick) => void measure(x, y, pick)} /> : <Alert severity="info">{['panorama', 'ultra_panorama', 'interactive'].includes(mode) && !context ? 'Falta la calibración.' : 'Falta el vídeo. Añádelo en Gestionar archivos.'}</Alert>}
         <Stack direction="row" alignItems="center" gap={1} mt={1} flexWrap="wrap">
           <Tooltip title="Retroceder 10 segundos"><span><IconButton aria-label="Retroceder 10 segundos" disabled={playbackDisabled} onClick={() => { video.current?.pause(); seek(time - 10) }}><Replay10Icon /></IconButton></span></Tooltip>
           <Tooltip title={playing ? 'Pausar' : 'Reproducir'}><span><IconButton aria-label={playing ? 'Pausar' : 'Reproducir'} disabled={playbackDisabled} onClick={() => { if (video.current?.paused) void video.current.play().catch((e: Error) => setError(e.message)); else video.current?.pause() }}>{playing ? <PauseIcon /> : <PlayArrowIcon />}</IconButton></span></Tooltip>

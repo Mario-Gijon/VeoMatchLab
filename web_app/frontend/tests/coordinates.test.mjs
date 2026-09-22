@@ -8,6 +8,12 @@ test('responsive clicks select the same natural pixel center', () => {
     assert.deepEqual(naturalPixel(20 + 2345.5 * scale, 50 + 1456.5 * scale, bounds, 3840, 2160), {x: 2345, y: 1456})
   }
 })
+test('ultra panorama display clicks map to its natural calibrated pixel grid', () => {
+  const width = 4077
+  const height = 1024
+  const bounds = { left: 20, top: 50, width: 1200, height: 302 }
+  assert.deepEqual(naturalPixel(20 + 600.5 * 1200 / width, 50 + 512.5 * 302 / height, bounds, width, height), { x: 600, y: 512 })
+})
 test('edges clamp and crop clicks use stacked coordinates', () => {
   assert.deepEqual(naturalPixel(100, 100, {left: 0, top: 0, width: 100, height: 100}, 2048, 2048), {x: 2047, y: 2047})
   assert.deepEqual(stackedPixel(100, 500, 'left'), {x: 100, y: 500})

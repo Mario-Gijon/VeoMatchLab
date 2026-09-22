@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { dragCamera, initialCamera, interactiveGroundPoint, interactiveRay, interactiveShader, isDrag, MAX_FOV, MIN_FOV, PITCH_LIMIT, safeCamera, wheelCamera } from '../src/components/interactiveCamera.ts'
-import { appendMeasurement, canSelect, latestSelectedPitchPoint, matchTimestamp, pitchPoints, validationStatistics, viewLabel, VIEW_MODES } from '../src/components/workspaceGeometry.ts'
+import { appendMeasurement, canSelect, latestSelectedPitchPoint, matchTimestamp, pitchPoints, ultraPanoramaSize, validationStatistics, viewLabel, VIEW_MODES } from '../src/components/workspaceGeometry.ts'
 import { projectGroundPoint, interactiveTransform } from '../src/components/interactiveCamera.ts'
 import { nativeVideoPixel } from '../src/components/viewCoordinates.ts'
 import { clampMediaTime, formatMediaTime } from '../src/components/mediaTime.ts'
@@ -14,12 +14,20 @@ const context = { uniforms: { camera2world: { value: world }, camera2presentatio
 const camera = { longitude: 0, latitude: Math.PI / 4, fov: Math.PI / 3 }
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`)
 
-test('four independent modes retain the media clock, not stale React time', () => {
-  assert.deepEqual(VIEW_MODES, ['tracking', 'interactive', 'panorama', 'dual_lens'])
+test('five independent modes retain the media clock, not stale React time', () => {
+  assert.deepEqual(VIEW_MODES, ['tracking', 'interactive', 'panorama', 'ultra_panorama', 'dual_lens'])
   assert.equal(viewLabel('tracking'), 'Seguimiento de balón')
+  assert.equal(viewLabel('ultra_panorama'), 'Ultra panorámica')
   assert.equal(VIEW_MODES.includes('tracking'), true)
   for (const _mode of VIEW_MODES) close(matchTimestamp({ currentTime: 71.23456 }, 70), 71.23456)
   close(matchTimestamp(null, 71.23456), 71.23456)
+})
+test('ultra panorama derives calibrated natural dimensions with safe fallback and clamp', () => {
+  assert.deepEqual(ultraPanoramaSize(context), { width: 2731, height: 1024 })
+  const wide = { ...context, uniforms: { ...context.uniforms, va_right: { value: 10 }, va_left: { value: -10 } } }
+  assert.deepEqual(ultraPanoramaSize(wide), { width: 4096, height: 1024 })
+  assert.deepEqual(ultraPanoramaSize({ ...context, uniforms: { ...context.uniforms, va_top: { value: NaN } } }), { width: 1920, height: 1080 })
+  assert.deepEqual(ultraPanoramaSize(null), { width: 1920, height: 1080 })
 })
 test('media controls clamp seeking and format standard zero-padded time', () => {
   assert.equal(clampMediaTime(-10, 120), 0)
@@ -93,7 +101,7 @@ test('both new views replace the shared marker and reject invalid Tracking resul
   for (const invalid of [{ status: 'camera_state_unavailable', measured_x: null }, { status: 'outside_field' }, { measured_z: NaN }]) {
     assert.equal(appendMeasurement(history, { ...point, ...invalid, view: 'tracking' }), history)
   }
-  for (const view of ['panorama', 'dual_lens']) {
+  for (const view of ['panorama', 'ultra_panorama', 'dual_lens']) {
     history = appendMeasurement(history, { ...point, view })
     assert.equal(latestSelectedPitchPoint(history).view, view)
   }
@@ -169,14 +177,21 @@ test('Interactive world anchor forward-projection follows camera movement, zoom 
 })
 test('Tracking and Interactive keep click-to-pitch without projected image markers', () => {
   const viewer = readFileSync(new URL('../src/components/MatchViewer.tsx', import.meta.url), 'utf8')
+  const workspace = readFileSync(new URL('../src/pages/WorkspacePage.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(viewer, /projectTrackingGroundPoint|parseCameraDirections|Projected pitch marker/)
   assert.match(viewer, /onClick\(pixel\.x, pixel\.y/)
   assert.match(viewer, /selectionEnabled && mode !== 'interactive'/)
   assert.match(viewer, /Marcadores de doble lente/)
   assert.match(viewer, /Marcadores panorámicos/)
+  assert.match(viewer, /mode === 'ultra_panorama'/)
   assert.match(viewer, /points\.map\(\(point\) =>/)
   assert.match(viewer, /display: mode === 'tracking' \? 'none' : 'block'/)
   assert.match(viewer, /cursor: mode === 'interactive' \? \(selectionEnabled \? 'crosshair' : 'grab'\)/)
+  assert.match(workspace, /mode === 'ultra_panorama' \? 'panorama' : mode/)
+  assert.match(workspace, /renderedViewWidth/)
+  assert.match(workspace, /renderedViewHeight/)
+  assert.match(workspace, /mode === 'dual_lens' \? 2048 : renderedViewWidth/)
+  assert.match(workspace, /mode === 'dual_lens' \? 2048 : renderedViewHeight/)
 })
 test('Workspace keeps the optional highlights role and Spanish compact playback controls', () => {
   const workspace = readFileSync(new URL('../src/pages/WorkspacePage.tsx', import.meta.url), 'utf8')

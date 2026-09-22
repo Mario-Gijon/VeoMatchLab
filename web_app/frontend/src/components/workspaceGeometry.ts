@@ -1,10 +1,32 @@
-import type { GroundPoint } from '../types'
+import type { GroundPoint, ViewContext } from '../types'
 
-export const VIEW_MODES = ['tracking', 'interactive', 'panorama', 'dual_lens'] as const
+export const VIEW_MODES = ['tracking', 'interactive', 'panorama', 'ultra_panorama', 'dual_lens'] as const
 export type ViewMode = typeof VIEW_MODES[number]
 
 export function viewLabel(view: ViewMode) {
-  return view === 'tracking' ? 'Seguimiento de balón' : view === 'interactive' ? 'Interactivo' : view === 'panorama' ? 'Panorámica' : 'Doble lente'
+  return view === 'tracking' ? 'Seguimiento de balón' : view === 'interactive' ? 'Interactivo' : view === 'panorama' ? 'Panorámica' : view === 'ultra_panorama' ? 'Ultra panorámica' : 'Doble lente'
+}
+
+export const ULTRA_PANORAMA_HEIGHT = 1024
+export const ULTRA_PANORAMA_MAX_WIDTH = 4096
+export const PANORAMA_FALLBACK_SIZE = { width: 1920, height: 1080 } as const
+
+function uniformNumber(context: ViewContext | null | undefined, name: string) {
+  const value = context?.uniforms[`va_${name}`]?.value
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+/** Source-faithful panorama dimensions derived from the captured calibration. */
+export function ultraPanoramaSize(context: ViewContext | null | undefined) {
+  const left = uniformNumber(context, 'left')
+  const right = uniformNumber(context, 'right')
+  const top = uniformNumber(context, 'top')
+  const bottom = uniformNumber(context, 'bottom')
+  const horizontalSpan = left !== null && right !== null ? right - left : NaN
+  const verticalSpan = top !== null && bottom !== null ? top - bottom : NaN
+  if (!(horizontalSpan > 0) || !(verticalSpan > 0)) return PANORAMA_FALLBACK_SIZE
+  const width = Math.min(ULTRA_PANORAMA_MAX_WIDTH, Math.max(1, Math.round(ULTRA_PANORAMA_HEIGHT * horizontalSpan / verticalSpan)))
+  return { width, height: ULTRA_PANORAMA_HEIGHT }
 }
 
 /** The media element is the Workspace clock, not React's timeupdate cadence. */

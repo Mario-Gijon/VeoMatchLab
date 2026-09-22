@@ -4,7 +4,7 @@ import { validationStatistics } from './workspaceGeometry'
 
 const coordinate = (x: number | null, z: number | null) => x === null || z === null ? '—' : `${x.toFixed(2)}, ${z.toFixed(2)}`
 const statusColor = (status: GroundPoint['status']) => status === 'inside_field' ? 'success' : status === 'outside_field' ? 'warning' : 'default'
-const viewLabel = (view?: string) => ({ tracking: 'seguimiento', interactive: 'interactivo', panorama: 'panorámica', dual_lens: 'doble lente' }[view || 'panorama'] || view || 'panorámica')
+const viewLabel = (view?: string) => ({ tracking: 'seguimiento', interactive: 'interactivo', panorama: 'panorámica', ultra_panorama: 'ultra panorámica', dual_lens: 'doble lente' }[view || 'panorama'] || view || 'panorámica')
 const statusLabel = (status: GroundPoint['status']) => ({ inside_field: 'dentro del campo', outside_field: 'fuera del campo', no_ground_intersection: 'sin intersección', camera_state_unavailable: 'estado de cámara no disponible', ray_parallel_to_ground: 'rayo paralelo al suelo', invalid_ground_intersection: 'intersección no válida' }[status])
 
 export default function ValidationTable({ points }: { points: GroundPoint[] }) {

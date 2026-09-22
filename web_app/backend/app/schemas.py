@@ -27,8 +27,8 @@ class ViewPointRequest(BaseModel):
     view: Literal["panorama", "dual_lens"]
     x: int = Field(ge=0)
     y: int = Field(ge=0)
-    width: Literal[1920, 3840, 2048] = 1920
-    height: Literal[1080, 2160, 2048] = 1080
+    width: int = Field(default=1920, gt=0, le=4096)
+    height: int = Field(default=1080, gt=0, le=2160)
     landmark_id: str | None = None
 
 
