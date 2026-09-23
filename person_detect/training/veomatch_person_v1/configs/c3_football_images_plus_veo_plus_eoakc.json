@@ -1,0 +1,10 @@
+{
+  "experiment": "c3_football_images_plus_veo_plus_eoakc",
+  "dataset_dir": "person_detect/training/veomatch_person_v1/datasets/c3_football_images_plus_veo_plus_eoakc",
+  "composition": ["football_images", "veo_ball_detection", "football_eoakc"],
+  "base_checkpoint": "person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth",
+  "class_names": ["person"],
+  "training": {"epochs": 50, "batch_size": 2, "grad_accum_steps": 4, "learning_rate": 0.00001},
+  "best_epoch": null,
+  "validation_metrics": {}
+}

@@ -19,5 +19,25 @@ models/
 !person_detect/models/
 !person_detect/models/**
 person_detect/model_weights/
+!person_detect/model_weights/
+person_detect/model_weights/*
+!person_detect/model_weights/rfdetr_finetuned/
+person_detect/model_weights/rfdetr_finetuned/*
+!person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/
+person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/*
+!person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/*/
+person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/*/best.pth
+!person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/*/.gitkeep
 data
 data/
+
+# VeoMatch person-detector training data, runs and checkpoints are local-only.
+person_detect/training/veomatch_person_v1/sources/*
+!person_detect/training/veomatch_person_v1/sources/.gitkeep
+!person_detect/training/veomatch_person_v1/sources/*/.gitkeep
+person_detect/training/veomatch_person_v1/datasets/*
+!person_detect/training/veomatch_person_v1/datasets/.gitkeep
+!person_detect/training/veomatch_person_v1/datasets/*/.gitkeep
+person_detect/training/veomatch_person_v1/runs/*
+!person_detect/training/veomatch_person_v1/runs/.gitkeep
+person_detect/training/veomatch_person_v1/.staging/
