@@ -79,6 +79,12 @@ from person_detect.views.panorama_view.renderer import (  # noqa: E402
 from person_detect.views.panorama_view.projection import (  # noqa: E402
     PanoramaProjector,
 )
+from person_detect.views.ultra_panorama_view.renderer import (  # noqa: E402
+    PanoramaRenderer as UltraPanoramaRenderer,
+)
+from person_detect.views.ultra_panorama_view.projection import (  # noqa: E402
+    PanoramaProjector as UltraPanoramaProjector,
+)
 
 
 DEFAULT_RFDETR_LARGE = (
@@ -537,7 +543,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--view",
-        choices=("interactive_view", "two_lens_view", "panorama_view"),
+        choices=("interactive_view", "two_lens_view", "panorama_view", "ultra_panorama_view"),
         default="interactive_view",
     )
     parser.add_argument(
@@ -596,13 +602,13 @@ def parse_args() -> argparse.Namespace:
         "--panorama-width",
         type=int,
         default=None,
-        help="Optional panorama width override; default is calibration-derived.",
+        help="Optional panorama width override for either panorama view.",
     )
     parser.add_argument(
         "--panorama-height",
         type=int,
         default=None,
-        help="Optional panorama height override; default is source-faithful 1024.",
+        help="Optional panorama height override for either panorama view.",
     )
     parser.add_argument(
         "--overlap",
@@ -661,13 +667,26 @@ def main() -> None:
             far_touchline_margin_m=args.far_margin,
         )
         view_names = ("left", "right")
-    else:
+    elif args.view == "panorama_view":
         renderer = PanoramaRenderer(
             args.calibration,
             width=args.panorama_width,
             height=args.panorama_height,
         )
         projector = PanoramaProjector(
+            far_touchline_margin_m=args.far_margin,
+            calibration=args.calibration,
+            width=renderer.width,
+            height=renderer.height,
+        )
+        view_names = ("panorama",)
+    else:
+        renderer = UltraPanoramaRenderer(
+            args.calibration,
+            width=args.panorama_width,
+            height=args.panorama_height,
+        )
+        projector = UltraPanoramaProjector(
             far_touchline_margin_m=args.far_margin,
             calibration=args.calibration,
             width=renderer.width,
@@ -721,7 +740,7 @@ def main() -> None:
         "render_size_per_view": [args.width, args.height],
         "panorama_size": (
             [renderer.width, renderer.height]
-            if args.view == "panorama_view"
+            if args.view in {"panorama_view", "ultra_panorama_view"}
             else None
         ),
         "overlap": args.overlap,
@@ -772,10 +791,13 @@ def main() -> None:
                     raw_person_total += len(predictions[view_name])
 
                     for detection in predictions[view_name]:
-                        projection = projector.project_bbox(
-                            view_name,
-                            *detection.xyxy,
-                        )
+                        if args.view in {"panorama_view", "ultra_panorama_view"}:
+                            projection = projector.project_bbox(*detection.xyxy)
+                        else:
+                            projection = projector.project_bbox(
+                                view_name,
+                                *detection.xyxy,
+                            )
 
                         if projection.status != "accepted":
                             if projection.status == "rejected_outside_field":
@@ -867,7 +889,7 @@ def main() -> None:
         "view": args.view,
         "panorama_size": (
             [renderer.width, renderer.height]
-            if args.view == "panorama_view"
+            if args.view in {"panorama_view", "ultra_panorama_view"}
             else None
         ),
         "processed_frames": processed,

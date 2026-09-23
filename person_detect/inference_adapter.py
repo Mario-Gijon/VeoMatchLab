@@ -18,6 +18,8 @@ from person_detect.models.rfdetr_large import ModelDetection
 
 INTERACTIVE_VIEWS = ("left", "center", "right")
 TWO_LENS_VIEWS = ("left", "right")
+# Both panorama_view and ultra_panorama_view expose the same single-image
+# contract; the selected benchmark view is retained by run_detection.py.
 PANORAMA_VIEWS = ("panorama",)
 
 
@@ -194,7 +196,7 @@ def _predict_panorama(backend, views_bgr, *, threshold: float):
     elif backend.name in {"dfine_x_coco", "dfine_x_obj2coco", "yolo26x"}:
         persons = backend._predict_one(image, threshold=threshold)
     else:
-        raise ValueError(f"Unsupported panorama_view backend: {backend.name!r}")
+        raise ValueError(f"Unsupported panorama backend: {backend.name!r}")
     return {"panorama": persons}
 
 

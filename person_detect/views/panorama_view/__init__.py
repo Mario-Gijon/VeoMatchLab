@@ -1,4 +1,4 @@
-"""Calibrated stitched Veo panorama benchmark view."""
+"""Fixed 16:9 calibrated Veo panorama benchmark view."""
 
 from .projection import PanoramaProjector
 from .renderer import PanoramaRenderer
