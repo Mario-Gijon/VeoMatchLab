@@ -1,0 +1,77 @@
+{
+  "processed_frames": 1798,
+  "processed_duration_s": 59.959898897143376,
+  "input_observations": 38455,
+  "field_length_m": 105.0,
+  "field_width_m": 72.47016906738281,
+  "v2_proposal": {
+    "trajectory_count": 256,
+    "tracklet_count": 3873,
+    "anchor_tracklet_count": 859,
+    "weak_tracklet_count": 3014,
+    "accepted_tracklet_links": 603
+  },
+  "v4_identity_resolution": {
+    "duplicate_pairs": 27,
+    "duplicate_components": 22,
+    "blocked_duplicate_merges": 0,
+    "fragment_count": 229,
+    "core_fragments": 150,
+    "bridge_fragments": 7,
+    "ephemeral_fragments": 72,
+    "raw_global_link_candidates": 27,
+    "retained_topk_link_candidates": 27,
+    "candidate_handoff_modes": {
+      "gap": 26,
+      "observed_overlap": 1
+    },
+    "accepted_global_links": 23,
+    "accepted_handoff_modes": {
+      "gap": 22,
+      "observed_overlap": 1
+    },
+    "final_identity_count": 135,
+    "boundary_birth_identities": 5,
+    "boundary_death_identities": 3
+  },
+  "full_clip": {
+    "frames": 1798,
+    "start_time_s": 1199.9987779281394,
+    "end_time_s": 1259.9586768252827,
+    "unique_identity_ids": 135,
+    "visible_count_min": 11,
+    "visible_count_max": 25,
+    "visible_count_mean": 19.52836484983315,
+    "visible_count_median": 20.0,
+    "frames_at_visible_cap": 28,
+    "observed_track_frames": 28961,
+    "interpolated_track_frames": 6151,
+    "maximum_rendered_speed_mps": 8.984892228576586
+  },
+  "evaluation_tail": {
+    "requested_tail_s": 20.0,
+    "frames": 600,
+    "start_time_s": 1239.9586768252827,
+    "end_time_s": 1259.9586768252827,
+    "unique_identity_ids": 70,
+    "visible_count_min": 11,
+    "visible_count_max": 23,
+    "visible_count_mean": 18.631666666666668,
+    "visible_count_median": 19.0,
+    "frames_at_visible_cap": 0,
+    "observed_track_frames": 9085,
+    "interpolated_track_frames": 2094,
+    "maximum_rendered_speed_mps": 8.984892228576586
+  },
+  "output_paths": {
+    "duplicate_evidence_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/duplicate_evidence_V4.json",
+    "identity_fragments_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/identity_fragments_V4.json",
+    "identity_links_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/identity_links_V4.json",
+    "global_identities_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/global_identities_V4.json",
+    "global_tracks_V4.jsonl": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/global_tracks_V4.jsonl",
+    "summary.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/summary.json",
+    "global_identity_V4_config.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/global_identity_V4_config.json",
+    "result_global_identity_V4_2d.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/result_global_identity_V4_2d.mp4",
+    "debug_raw_vs_global_identity_V4.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T185542/debug_raw_vs_global_identity_V4.mp4"
+  }
+}

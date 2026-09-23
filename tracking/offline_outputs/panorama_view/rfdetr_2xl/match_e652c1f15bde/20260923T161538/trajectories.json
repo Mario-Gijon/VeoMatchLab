@@ -1,0 +1,5048 @@
+[
+  {
+    "trajectory_id": 1,
+    "tracklet_ids": [
+      1,
+      927,
+      1277,
+      1304,
+      1305,
+      1307,
+      1308,
+      1641,
+      1484,
+      1712
+    ],
+    "source_track_ids": [
+      1,
+      403,
+      600,
+      617,
+      617,
+      617,
+      617,
+      765,
+      697,
+      799
+    ],
+    "mean_confidence": 0.8207446764534545,
+    "observed_count": 751,
+    "observed_span_s": 26.993632836833058,
+    "fragment_count": 10,
+    "max_observed_gap_s": 0.9008999834295537,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 2,
+    "tracklet_ids": [
+      3,
+      4
+    ],
+    "source_track_ids": [
+      3,
+      3
+    ],
+    "mean_confidence": 0.7058274218052492,
+    "observed_count": 223,
+    "observed_span_s": 8.508499843501113,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2669333284234199,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 3,
+    "tracklet_ids": [
+      8
+    ],
+    "source_track_ids": [
+      4
+    ],
+    "mean_confidence": 0.7609523410765117,
+    "observed_count": 149,
+    "observed_span_s": 5.438766566630193,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 4,
+    "tracklet_ids": [
+      11,
+      480
+    ],
+    "source_track_ids": [
+      5,
+      192
+    ],
+    "mean_confidence": 0.6555641467978315,
+    "observed_count": 82,
+    "observed_span_s": 3.9372665942476033,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.9342666494824243,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 5,
+    "tracklet_ids": [
+      15,
+      16,
+      17,
+      19,
+      21,
+      22,
+      293,
+      1197
+    ],
+    "source_track_ids": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      99,
+      555
+    ],
+    "mean_confidence": 0.6422730956388556,
+    "observed_count": 276,
+    "observed_span_s": 14.414399734872632,
+    "fragment_count": 8,
+    "max_observed_gap_s": 1.0677333136941343,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 6,
+    "tracklet_ids": [
+      23,
+      24,
+      295,
+      296,
+      1419,
+      1420
+    ],
+    "source_track_ids": [
+      6,
+      6,
+      99,
+      99,
+      676,
+      676
+    ],
+    "mean_confidence": 0.5703010377558795,
+    "observed_count": 220,
+    "observed_span_s": 11.611599786425131,
+    "fragment_count": 6,
+    "max_observed_gap_s": 1.000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 7,
+    "tracklet_ids": [
+      25,
+      26,
+      27,
+      28
+    ],
+    "source_track_ids": [
+      7,
+      7,
+      7,
+      7
+    ],
+    "mean_confidence": 0.5341631213339364,
+    "observed_count": 205,
+    "observed_span_s": 11.478133122213421,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.735066634753366,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 8,
+    "tracklet_ids": [
+      30,
+      31,
+      32
+    ],
+    "source_track_ids": [
+      7,
+      7,
+      7
+    ],
+    "mean_confidence": 0.47257700765674765,
+    "observed_count": 44,
+    "observed_span_s": 2.469133287918112,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 9,
+    "tracklet_ids": [
+      33,
+      35,
+      1039,
+      1105
+    ],
+    "source_track_ids": [
+      8,
+      8,
+      465,
+      498
+    ],
+    "mean_confidence": 0.6324161817964989,
+    "observed_count": 267,
+    "observed_span_s": 12.479133103801587,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.5348666384354601,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 10,
+    "tracklet_ids": [
+      37,
+      386,
+      388,
+      1043,
+      1045,
+      1046,
+      1047,
+      1049,
+      1050,
+      1051,
+      1465,
+      1603,
+      1604,
+      1606,
+      1607
+    ],
+    "source_track_ids": [
+      9,
+      145,
+      145,
+      468,
+      468,
+      468,
+      468,
+      468,
+      468,
+      468,
+      691,
+      747,
+      747,
+      747,
+      747
+    ],
+    "mean_confidence": 0.4924162831721884,
+    "observed_count": 528,
+    "observed_span_s": 30.730699434762982,
+    "fragment_count": 15,
+    "max_observed_gap_s": 1.9018999650179467,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 11,
+    "tracklet_ids": [
+      39,
+      665,
+      40,
+      1429,
+      1548,
+      1550,
+      1551
+    ],
+    "source_track_ids": [
+      9,
+      277,
+      9,
+      683,
+      720,
+      720,
+      720
+    ],
+    "mean_confidence": 0.5772477665117809,
+    "observed_count": 644,
+    "observed_span_s": 24.391032884703236,
+    "fragment_count": 7,
+    "max_observed_gap_s": 0.9676333155355223,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 12,
+    "tracklet_ids": [
+      51
+    ],
+    "source_track_ids": [
+      11
+    ],
+    "mean_confidence": 0.5487608625445255,
+    "observed_count": 129,
+    "observed_span_s": 4.771433245571188,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 13,
+    "tracklet_ids": [
+      66
+    ],
+    "source_track_ids": [
+      14
+    ],
+    "mean_confidence": 0.5852317988872529,
+    "observed_count": 15,
+    "observed_span_s": 0.8007999852707144,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 14,
+    "tracklet_ids": [
+      77,
+      78
+    ],
+    "source_track_ids": [
+      16,
+      16
+    ],
+    "mean_confidence": 0.3445258488257726,
+    "observed_count": 36,
+    "observed_span_s": 2.3356666237061745,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.9342666494824243,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 15,
+    "tracklet_ids": [
+      79
+    ],
+    "source_track_ids": [
+      17
+    ],
+    "mean_confidence": 0.3066417761147022,
+    "observed_count": 8,
+    "observed_span_s": 0.23356666237054924,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 16,
+    "tracklet_ids": [
+      85,
+      208,
+      357,
+      211,
+      358,
+      360
+    ],
+    "source_track_ids": [
+      19,
+      63,
+      128,
+      63,
+      128,
+      128
+    ],
+    "mean_confidence": 0.6022170779138508,
+    "observed_count": 101,
+    "observed_span_s": 6.206199885847809,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.7674333192178437,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 17,
+    "tracklet_ids": [
+      88,
+      222,
+      644,
+      645,
+      697,
+      698,
+      650,
+      940,
+      942
+    ],
+    "source_track_ids": [
+      19,
+      67,
+      270,
+      270,
+      292,
+      292,
+      270,
+      409,
+      409
+    ],
+    "mean_confidence": 0.4485917710467597,
+    "observed_count": 181,
+    "observed_span_s": 12.679333100119266,
+    "fragment_count": 9,
+    "max_observed_gap_s": 2.302299957653304,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 18,
+    "tracklet_ids": [
+      97
+    ],
+    "source_track_ids": [
+      23
+    ],
+    "mean_confidence": 0.4097435548901558,
+    "observed_count": 12,
+    "observed_span_s": 0.6339666550059064,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 19,
+    "tracklet_ids": [
+      100
+    ],
+    "source_track_ids": [
+      26
+    ],
+    "mean_confidence": 0.36009145421641214,
+    "observed_count": 14,
+    "observed_span_s": 0.8675333173764557,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 20,
+    "tracklet_ids": [
+      102
+    ],
+    "source_track_ids": [
+      27
+    ],
+    "mean_confidence": 0.2865563387220556,
+    "observed_count": 11,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 21,
+    "tracklet_ids": [
+      108
+    ],
+    "source_track_ids": [
+      29
+    ],
+    "mean_confidence": 0.3209039159119129,
+    "observed_count": 8,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 22,
+    "tracklet_ids": [
+      123,
+      124,
+      127,
+      128
+    ],
+    "source_track_ids": [
+      32,
+      32,
+      32,
+      32
+    ],
+    "mean_confidence": 0.4702552746060074,
+    "observed_count": 186,
+    "observed_span_s": 8.842166504030502,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.3346666421177815,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 23,
+    "tracklet_ids": [
+      131,
+      427,
+      674,
+      676,
+      677
+    ],
+    "source_track_ids": [
+      33,
+      164,
+      282,
+      282,
+      282
+    ],
+    "mean_confidence": 0.6164902686062506,
+    "observed_count": 177,
+    "observed_span_s": 13.413399753284239,
+    "fragment_count": 5,
+    "max_observed_gap_s": 2.369033289759045,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 24,
+    "tracklet_ids": [
+      135,
+      189
+    ],
+    "source_track_ids": [
+      33,
+      56
+    ],
+    "mean_confidence": 0.39861250751548344,
+    "observed_count": 18,
+    "observed_span_s": 1.000999981588393,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 25,
+    "tracklet_ids": [
+      150,
+      152,
+      637,
+      200,
+      639
+    ],
+    "source_track_ids": [
+      37,
+      37,
+      266,
+      56,
+      266
+    ],
+    "mean_confidence": 0.4381588898599148,
+    "observed_count": 80,
+    "observed_span_s": 6.606599878483394,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.9008999834295537,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 26,
+    "tracklet_ids": [
+      178
+    ],
+    "source_track_ids": [
+      54
+    ],
+    "mean_confidence": 0.32367783039808273,
+    "observed_count": 12,
+    "observed_span_s": 0.46713332474132585,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 27,
+    "tracklet_ids": [
+      182
+    ],
+    "source_track_ids": [
+      55
+    ],
+    "mean_confidence": 0.7996194779872894,
+    "observed_count": 10,
+    "observed_span_s": 0.4671333247410985,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 28,
+    "tracklet_ids": [
+      186
+    ],
+    "source_track_ids": [
+      56
+    ],
+    "mean_confidence": 0.5430190153419971,
+    "observed_count": 8,
+    "observed_span_s": 0.33366666052938854,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 29,
+    "tracklet_ids": [
+      206
+    ],
+    "source_track_ids": [
+      61
+    ],
+    "mean_confidence": 0.6710787038008372,
+    "observed_count": 15,
+    "observed_span_s": 0.7006999871118751,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 30,
+    "tracklet_ids": [
+      214,
+      397,
+      398,
+      760,
+      761
+    ],
+    "source_track_ids": [
+      64,
+      149,
+      149,
+      325,
+      325
+    ],
+    "mean_confidence": 0.5447821034151211,
+    "observed_count": 684,
+    "observed_span_s": 28.42839947710968,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.3012999760649109,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 31,
+    "tracklet_ids": [
+      218,
+      341,
+      12,
+      13,
+      89,
+      880,
+      881,
+      882,
+      883,
+      884,
+      1699,
+      885,
+      886,
+      2276,
+      2606
+    ],
+    "source_track_ids": [
+      67,
+      119,
+      5,
+      5,
+      19,
+      394,
+      394,
+      394,
+      394,
+      394,
+      789,
+      394,
+      394,
+      1086,
+      1236
+    ],
+    "mean_confidence": 0.6567163669489284,
+    "observed_count": 935,
+    "observed_span_s": 40.473765922223265,
+    "fragment_count": 15,
+    "max_observed_gap_s": 1.4013999742235228,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 32,
+    "tracklet_ids": [
+      236,
+      315,
+      316,
+      520,
+      780,
+      1055,
+      1056
+    ],
+    "source_track_ids": [
+      77,
+      104,
+      104,
+      209,
+      340,
+      469,
+      469
+    ],
+    "mean_confidence": 0.4401535656816231,
+    "observed_count": 334,
+    "observed_span_s": 13.246566423019658,
+    "fragment_count": 7,
+    "max_observed_gap_s": 0.43376665868822784,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 33,
+    "tracklet_ids": [
+      244,
+      929,
+      991,
+      1134,
+      1136
+    ],
+    "source_track_ids": [
+      81,
+      405,
+      435,
+      518,
+      518
+    ],
+    "mean_confidence": 0.6059732242866799,
+    "observed_count": 135,
+    "observed_span_s": 11.644966452478002,
+    "fragment_count": 5,
+    "max_observed_gap_s": 2.402399955812143,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 34,
+    "tracklet_ids": [
+      252
+    ],
+    "source_track_ids": [
+      81
+    ],
+    "mean_confidence": 0.4353942317622049,
+    "observed_count": 14,
+    "observed_span_s": 0.5338666568470671,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 35,
+    "tracklet_ids": [
+      256,
+      38,
+      629
+    ],
+    "source_track_ids": [
+      83,
+      9,
+      263
+    ],
+    "mean_confidence": 0.4102809578180313,
+    "observed_count": 84,
+    "observed_span_s": 4.3710332529360585,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.7340666531649731,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 36,
+    "tracklet_ids": [
+      269
+    ],
+    "source_track_ids": [
+      87
+    ],
+    "mean_confidence": 0.3812941180335151,
+    "observed_count": 9,
+    "observed_span_s": 0.43376665868822784,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 37,
+    "tracklet_ids": [
+      274,
+      276
+    ],
+    "source_track_ids": [
+      90,
+      90
+    ],
+    "mean_confidence": 0.6396086845757827,
+    "observed_count": 53,
+    "observed_span_s": 3.1698332750297595,
+    "fragment_count": 2,
+    "max_observed_gap_s": 1.3012999760649109,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 38,
+    "tracklet_ids": [
+      286,
+      288,
+      289,
+      290,
+      291
+    ],
+    "source_track_ids": [
+      99,
+      99,
+      99,
+      99,
+      99
+    ],
+    "mean_confidence": 0.6215951420805034,
+    "observed_count": 136,
+    "observed_span_s": 9.275933162718957,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.4013999742237502,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 39,
+    "tracklet_ids": [
+      300,
+      302
+    ],
+    "source_track_ids": [
+      99,
+      99
+    ],
+    "mean_confidence": 0.42130525708198546,
+    "observed_count": 20,
+    "observed_span_s": 1.8685332989648487,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.867533317376683,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 40,
+    "tracklet_ids": [
+      333,
+      646,
+      48,
+      863
+    ],
+    "source_track_ids": [
+      117,
+      270,
+      10,
+      383
+    ],
+    "mean_confidence": 0.3823975489689754,
+    "observed_count": 65,
+    "observed_span_s": 4.3376665868829605,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.9676333155355223,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 41,
+    "tracklet_ids": [
+      348,
+      258,
+      351,
+      262,
+      754,
+      265,
+      1263,
+      1617,
+      1264,
+      1618,
+      1619
+    ],
+    "source_track_ids": [
+      125,
+      83,
+      125,
+      83,
+      320,
+      83,
+      591,
+      752,
+      591,
+      752,
+      752
+    ],
+    "mean_confidence": 0.34567796958412494,
+    "observed_count": 687,
+    "observed_span_s": 29.996632781598237,
+    "fragment_count": 11,
+    "max_observed_gap_s": 1.7350666347531387,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 42,
+    "tracklet_ids": [
+      353
+    ],
+    "source_track_ids": [
+      125
+    ],
+    "mean_confidence": 0.32743896105710196,
+    "observed_count": 17,
+    "observed_span_s": 0.6673333210587771,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 43,
+    "tracklet_ids": [
+      409,
+      410,
+      460,
+      707,
+      740,
+      868,
+      1003,
+      791,
+      792,
+      793,
+      1265,
+      1775,
+      1266,
+      1830,
+      1777,
+      1831,
+      1832,
+      1834,
+      1835,
+      2296
+    ],
+    "source_track_ids": [
+      156,
+      156,
+      179,
+      297,
+      317,
+      385,
+      444,
+      342,
+      342,
+      342,
+      592,
+      820,
+      592,
+      844,
+      820,
+      844,
+      844,
+      844,
+      844,
+      1097
+    ],
+    "mean_confidence": 0.61334782076624,
+    "observed_count": 739,
+    "observed_span_s": 34.53449936479865,
+    "fragment_count": 20,
+    "max_observed_gap_s": 1.868533298965076,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 44,
+    "tracklet_ids": [
+      499,
+      647,
+      336,
+      850,
+      937,
+      1106,
+      652,
+      653,
+      654,
+      655,
+      1693
+    ],
+    "source_track_ids": [
+      201,
+      270,
+      117,
+      379,
+      409,
+      499,
+      270,
+      270,
+      270,
+      270,
+      787
+    ],
+    "mean_confidence": 0.4508450737813624,
+    "observed_count": 410,
+    "observed_span_s": 23.857166227856396,
+    "fragment_count": 11,
+    "max_observed_gap_s": 2.135466627388496,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 45,
+    "tracklet_ids": [
+      504,
+      529
+    ],
+    "source_track_ids": [
+      202,
+      217
+    ],
+    "mean_confidence": 0.8498276695609093,
+    "observed_count": 16,
+    "observed_span_s": 0.6339666550061338,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 46,
+    "tracklet_ids": [
+      530,
+      1654,
+      533,
+      1766,
+      1656,
+      1872
+    ],
+    "source_track_ids": [
+      218,
+      766,
+      218,
+      817,
+      766,
+      865
+    ],
+    "mean_confidence": 0.6846934513456987,
+    "observed_count": 733,
+    "observed_span_s": 28.128099482633388,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.9676333155355223,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 47,
+    "tracklet_ids": [
+      551,
+      552,
+      553,
+      554,
+      555,
+      556,
+      558,
+      75,
+      1283,
+      1284,
+      961,
+      1990,
+      2121
+    ],
+    "source_track_ids": [
+      234,
+      234,
+      234,
+      234,
+      234,
+      234,
+      234,
+      14,
+      601,
+      601,
+      415,
+      930,
+      1001
+    ],
+    "mean_confidence": 0.596668161622204,
+    "observed_count": 481,
+    "observed_span_s": 27.99463281842145,
+    "fragment_count": 13,
+    "max_observed_gap_s": 2.1688332934413665,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 48,
+    "tracklet_ids": [
+      570
+    ],
+    "source_track_ids": [
+      236
+    ],
+    "mean_confidence": 0.6523829334312015,
+    "observed_count": 18,
+    "observed_span_s": 0.8675333173764557,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 49,
+    "tracklet_ids": [
+      580
+    ],
+    "source_track_ids": [
+      240
+    ],
+    "mean_confidence": 0.47202783624331157,
+    "observed_count": 15,
+    "observed_span_s": 0.46713332474132585,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 50,
+    "tracklet_ids": [
+      632
+    ],
+    "source_track_ids": [
+      266
+    ],
+    "mean_confidence": 0.6422970503568649,
+    "observed_count": 30,
+    "observed_span_s": 1.0343666476412636,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 51,
+    "tracklet_ids": [
+      667,
+      668
+    ],
+    "source_track_ids": [
+      279,
+      279
+    ],
+    "mean_confidence": 0.2695732350860323,
+    "observed_count": 28,
+    "observed_span_s": 1.4681333063297188,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 52,
+    "tracklet_ids": [
+      687,
+      197,
+      250,
+      692
+    ],
+    "source_track_ids": [
+      290,
+      56,
+      81,
+      290
+    ],
+    "mean_confidence": 0.46104925799937474,
+    "observed_count": 42,
+    "observed_span_s": 5.3386665684713535,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.8017999668591074,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 53,
+    "tracklet_ids": [
+      736,
+      970
+    ],
+    "source_track_ids": [
+      314,
+      420
+    ],
+    "mean_confidence": 0.36937786089746577,
+    "observed_count": 19,
+    "observed_span_s": 1.2345666439589422,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 54,
+    "tracklet_ids": [
+      751
+    ],
+    "source_track_ids": [
+      319
+    ],
+    "mean_confidence": 0.48075081408023834,
+    "observed_count": 8,
+    "observed_span_s": 0.46713332474132585,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 55,
+    "tracklet_ids": [
+      774,
+      906,
+      130,
+      907,
+      1178
+    ],
+    "source_track_ids": [
+      335,
+      400,
+      32,
+      400,
+      542
+    ],
+    "mean_confidence": 0.2983801841121359,
+    "observed_count": 97,
+    "observed_span_s": 5.83916655926555,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.5682333044885581,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 56,
+    "tracklet_ids": [
+      778,
+      430,
+      432,
+      433,
+      1278,
+      619,
+      563,
+      564
+    ],
+    "source_track_ids": [
+      338,
+      164,
+      164,
+      164,
+      601,
+      255,
+      234,
+      234
+    ],
+    "mean_confidence": 0.6024422895076663,
+    "observed_count": 172,
+    "observed_span_s": 13.313299755125172,
+    "fragment_count": 8,
+    "max_observed_gap_s": 2.302299957653304,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 57,
+    "tracklet_ids": [
+      782,
+      785
+    ],
+    "source_track_ids": [
+      340,
+      340
+    ],
+    "mean_confidence": 0.3956552225000718,
+    "observed_count": 85,
+    "observed_span_s": 6.339666550059746,
+    "fragment_count": 2,
+    "max_observed_gap_s": 2.402399955812143,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 58,
+    "tracklet_ids": [
+      807
+    ],
+    "source_track_ids": [
+      352
+    ],
+    "mean_confidence": 0.4272325299680233,
+    "observed_count": 8,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 59,
+    "tracklet_ids": [
+      834,
+      1005,
+      837,
+      1193
+    ],
+    "source_track_ids": [
+      374,
+      445,
+      374,
+      551
+    ],
+    "mean_confidence": 0.4782846408391074,
+    "observed_count": 319,
+    "observed_span_s": 14.914899725666828,
+    "fragment_count": 4,
+    "max_observed_gap_s": 2.369033289759045,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 60,
+    "tracklet_ids": [
+      841
+    ],
+    "source_track_ids": [
+      374
+    ],
+    "mean_confidence": 0.403359333674113,
+    "observed_count": 18,
+    "observed_span_s": 0.8341666513238124,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 61,
+    "tracklet_ids": [
+      854
+    ],
+    "source_track_ids": [
+      381
+    ],
+    "mean_confidence": 0.30116860213733854,
+    "observed_count": 42,
+    "observed_span_s": 1.3680333081706522,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 62,
+    "tracklet_ids": [
+      856,
+      857,
+      858,
+      859,
+      860,
+      861
+    ],
+    "source_track_ids": [
+      381,
+      381,
+      381,
+      381,
+      381,
+      381
+    ],
+    "mean_confidence": 0.31670584064677243,
+    "observed_count": 133,
+    "observed_span_s": 9.209199830612988,
+    "fragment_count": 6,
+    "max_observed_gap_s": 1.2679333100120402,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 63,
+    "tracklet_ids": [
+      895
+    ],
+    "source_track_ids": [
+      398
+    ],
+    "mean_confidence": 0.3101815149188042,
+    "observed_count": 20,
+    "observed_span_s": 1.134466645800103,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 64,
+    "tracklet_ids": [
+      901,
+      1061,
+      1474,
+      1476
+    ],
+    "source_track_ids": [
+      398,
+      469,
+      694,
+      694
+    ],
+    "mean_confidence": 0.5348377853690524,
+    "observed_count": 509,
+    "observed_span_s": 20.38703295834989,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.4013999742237502,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 65,
+    "tracklet_ids": [
+      909,
+      1206,
+      1164
+    ],
+    "source_track_ids": [
+      400,
+      561,
+      537
+    ],
+    "mean_confidence": 0.2804544520378113,
+    "observed_count": 50,
+    "observed_span_s": 5.705699895053613,
+    "fragment_count": 3,
+    "max_observed_gap_s": 2.235566625547335,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 66,
+    "tracklet_ids": [
+      921,
+      922,
+      923,
+      1956,
+      2259
+    ],
+    "source_track_ids": [
+      400,
+      400,
+      400,
+      911,
+      1074
+    ],
+    "mean_confidence": 0.3739137304834573,
+    "observed_count": 332,
+    "observed_span_s": 16.149466369625543,
+    "fragment_count": 5,
+    "max_observed_gap_s": 2.2355666255475626,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 67,
+    "tracklet_ids": [
+      947,
+      1095,
+      948,
+      1140
+    ],
+    "source_track_ids": [
+      412,
+      493,
+      412,
+      522
+    ],
+    "mean_confidence": 0.8894096915684049,
+    "observed_count": 126,
+    "observed_span_s": 4.804799911624286,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 68,
+    "tracklet_ids": [
+      952,
+      953,
+      954,
+      71,
+      72,
+      957,
+      1665,
+      959,
+      1666,
+      2206,
+      2282,
+      2302
+    ],
+    "source_track_ids": [
+      415,
+      415,
+      415,
+      14,
+      14,
+      415,
+      773,
+      415,
+      773,
+      1045,
+      1088,
+      1102
+    ],
+    "mean_confidence": 0.6254636274273918,
+    "observed_count": 702,
+    "observed_span_s": 27.62759949183919,
+    "fragment_count": 12,
+    "max_observed_gap_s": 0.43376665868822784,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 69,
+    "tracklet_ids": [
+      963,
+      2013,
+      2596
+    ],
+    "source_track_ids": [
+      415,
+      946,
+      1230
+    ],
+    "mean_confidence": 0.5464912264550467,
+    "observed_count": 211,
+    "observed_span_s": 7.474133195859849,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 70,
+    "tracklet_ids": [
+      1002,
+      573
+    ],
+    "source_track_ids": [
+      444,
+      236
+    ],
+    "mean_confidence": 0.5168458677828311,
+    "observed_count": 40,
+    "observed_span_s": 1.6683333026473974,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 71,
+    "tracklet_ids": [
+      1010
+    ],
+    "source_track_ids": [
+      445
+    ],
+    "mean_confidence": 0.5261871029030193,
+    "observed_count": 11,
+    "observed_span_s": 0.4337666586884552,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 72,
+    "tracklet_ids": [
+      1035
+    ],
+    "source_track_ids": [
+      461
+    ],
+    "mean_confidence": 0.3351868838071823,
+    "observed_count": 40,
+    "observed_span_s": 2.3356666237061745,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 73,
+    "tracklet_ids": [
+      1040,
+      1254,
+      1356,
+      1757,
+      1359,
+      1759,
+      1735,
+      1761,
+      1362,
+      1762,
+      1364,
+      1739,
+      1366,
+      2365
+    ],
+    "source_track_ids": [
+      465,
+      586,
+      646,
+      815,
+      646,
+      815,
+      810,
+      815,
+      646,
+      815,
+      646,
+      810,
+      646,
+      1118
+    ],
+    "mean_confidence": 0.6887451207656042,
+    "observed_count": 653,
+    "observed_span_s": 26.22619951761544,
+    "fragment_count": 14,
+    "max_observed_gap_s": 0.6005999889530358,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 74,
+    "tracklet_ids": [
+      1053,
+      1723,
+      1724,
+      1844,
+      1845,
+      304,
+      1846,
+      1847,
+      2344,
+      2345,
+      2475,
+      2495,
+      2636
+    ],
+    "source_track_ids": [
+      468,
+      801,
+      801,
+      852,
+      852,
+      99,
+      852,
+      852,
+      1114,
+      1114,
+      1170,
+      1184,
+      1257
+    ],
+    "mean_confidence": 0.5348788576719423,
+    "observed_count": 438,
+    "observed_span_s": 21.05436627940867,
+    "fragment_count": 13,
+    "max_observed_gap_s": 1.5014999723825895,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 75,
+    "tracklet_ids": [
+      1082,
+      1083
+    ],
+    "source_track_ids": [
+      481,
+      481
+    ],
+    "mean_confidence": 0.40179010951656036,
+    "observed_count": 87,
+    "observed_span_s": 4.037366592406443,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.4337666586884552,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 76,
+    "tracklet_ids": [
+      1097,
+      949,
+      1257,
+      1332,
+      1333,
+      1334,
+      1534,
+      1535,
+      1338,
+      1689,
+      1690,
+      1770,
+      1771
+    ],
+    "source_track_ids": [
+      493,
+      412,
+      588,
+      630,
+      630,
+      630,
+      714,
+      714,
+      630,
+      786,
+      786,
+      819,
+      819
+    ],
+    "mean_confidence": 0.8274356320621522,
+    "observed_count": 369,
+    "observed_span_s": 16.716699692525935,
+    "fragment_count": 13,
+    "max_observed_gap_s": 0.5338666568470671,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 77,
+    "tracklet_ids": [
+      1120,
+      1162
+    ],
+    "source_track_ids": [
+      507,
+      537
+    ],
+    "mean_confidence": 0.3315798434946272,
+    "observed_count": 45,
+    "observed_span_s": 4.504499917147541,
+    "fragment_count": 2,
+    "max_observed_gap_s": 2.3690332897592725,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 78,
+    "tracklet_ids": [
+      1152
+    ],
+    "source_track_ids": [
+      530
+    ],
+    "mean_confidence": 0.3501993641257286,
+    "observed_count": 8,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 79,
+    "tracklet_ids": [
+      1160,
+      1204,
+      1325,
+      1406
+    ],
+    "source_track_ids": [
+      537,
+      561,
+      628,
+      669
+    ],
+    "mean_confidence": 0.31931277541887193,
+    "observed_count": 63,
+    "observed_span_s": 7.974633186654046,
+    "fragment_count": 4,
+    "max_observed_gap_s": 2.235566625547335,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 80,
+    "tracklet_ids": [
+      1174,
+      1233,
+      1175,
+      1235,
+      1237,
+      1684,
+      1239,
+      1780,
+      1999,
+      1781,
+      2000,
+      2119,
+      2134,
+      2163,
+      2230
+    ],
+    "source_track_ids": [
+      539,
+      577,
+      539,
+      577,
+      577,
+      784,
+      577,
+      821,
+      938,
+      821,
+      938,
+      999,
+      1006,
+      1022,
+      1061
+    ],
+    "mean_confidence": 0.7509571163721804,
+    "observed_count": 530,
+    "observed_span_s": 21.721699600467446,
+    "fragment_count": 15,
+    "max_observed_gap_s": 0.8007999852707144,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 81,
+    "tracklet_ids": [
+      1181
+    ],
+    "source_track_ids": [
+      542
+    ],
+    "mean_confidence": 0.3012157777945201,
+    "observed_count": 15,
+    "observed_span_s": 0.7340666531647457,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 82,
+    "tracklet_ids": [
+      1211
+    ],
+    "source_track_ids": [
+      562
+    ],
+    "mean_confidence": 0.6379800832697323,
+    "observed_count": 140,
+    "observed_span_s": 4.637966581359478,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 83,
+    "tracklet_ids": [
+      1216,
+      1217,
+      1219
+    ],
+    "source_track_ids": [
+      566,
+      566,
+      566
+    ],
+    "mean_confidence": 0.42798152773879294,
+    "observed_count": 43,
+    "observed_span_s": 3.236566607135728,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.6005999889530358,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 84,
+    "tracklet_ids": [
+      1225
+    ],
+    "source_track_ids": [
+      571
+    ],
+    "mean_confidence": 0.41659367746777004,
+    "observed_count": 9,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 85,
+    "tracklet_ids": [
+      1286,
+      1287
+    ],
+    "source_track_ids": [
+      603,
+      603
+    ],
+    "mean_confidence": 0.35321218413966043,
+    "observed_count": 28,
+    "observed_span_s": 1.3012999760649109,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 86,
+    "tracklet_ids": [
+      1311
+    ],
+    "source_track_ids": [
+      620
+    ],
+    "mean_confidence": 0.3072846233844757,
+    "observed_count": 8,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 87,
+    "tracklet_ids": [
+      1312
+    ],
+    "source_track_ids": [
+      621
+    ],
+    "mean_confidence": 0.3365737423300743,
+    "observed_count": 12,
+    "observed_span_s": 0.5672333229001651,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 88,
+    "tracklet_ids": [
+      1314,
+      1315,
+      1317,
+      1318
+    ],
+    "source_track_ids": [
+      623,
+      623,
+      623,
+      623
+    ],
+    "mean_confidence": 0.6968410685658455,
+    "observed_count": 56,
+    "observed_span_s": 3.837166596088764,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.8675333173764557,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 89,
+    "tracklet_ids": [
+      1324
+    ],
+    "source_track_ids": [
+      627
+    ],
+    "mean_confidence": 0.3293114962677161,
+    "observed_count": 24,
+    "observed_span_s": 1.4013999742235228,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 90,
+    "tracklet_ids": [
+      1327,
+      916,
+      917,
+      919,
+      1168,
+      1674,
+      1863
+    ],
+    "source_track_ids": [
+      628,
+      400,
+      400,
+      400,
+      537,
+      779,
+      860
+    ],
+    "mean_confidence": 0.4086538333466599,
+    "observed_count": 179,
+    "observed_span_s": 10.043366481936573,
+    "fragment_count": 7,
+    "max_observed_gap_s": 1.134466645800103,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 91,
+    "tracklet_ids": [
+      1347
+    ],
+    "source_track_ids": [
+      638
+    ],
+    "mean_confidence": 0.30157014998522674,
+    "observed_count": 11,
+    "observed_span_s": 0.6005999889528084,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 92,
+    "tracklet_ids": [
+      1371,
+      1372,
+      1425,
+      1680
+    ],
+    "source_track_ids": [
+      651,
+      651,
+      681,
+      781
+    ],
+    "mean_confidence": 0.4377389234304428,
+    "observed_count": 200,
+    "observed_span_s": 8.074733184812885,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.2011999779060716,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 93,
+    "tracklet_ids": [
+      1379
+    ],
+    "source_track_ids": [
+      658
+    ],
+    "mean_confidence": 0.32678107142448426,
+    "observed_count": 25,
+    "observed_span_s": 1.1678333118529736,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 94,
+    "tracklet_ids": [
+      1382,
+      1398,
+      1399,
+      1400,
+      1401,
+      2450
+    ],
+    "source_track_ids": [
+      658,
+      665,
+      665,
+      665,
+      665,
+      1152
+    ],
+    "mean_confidence": 0.3142253096287067,
+    "observed_count": 325,
+    "observed_span_s": 16.449766364102288,
+    "fragment_count": 6,
+    "max_observed_gap_s": 1.2679333100120402,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 95,
+    "tracklet_ids": [
+      1392
+    ],
+    "source_track_ids": [
+      664
+    ],
+    "mean_confidence": 0.3998855627500094,
+    "observed_count": 13,
+    "observed_span_s": 0.4337666586884552,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 96,
+    "tracklet_ids": [
+      1417,
+      1539,
+      1540,
+      1541,
+      1542
+    ],
+    "source_track_ids": [
+      676,
+      717,
+      717,
+      717,
+      717
+    ],
+    "mean_confidence": 0.44474501126296034,
+    "observed_count": 143,
+    "observed_span_s": 9.709699821407185,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.66833330264717,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 97,
+    "tracklet_ids": [
+      1426,
+      1806,
+      1807
+    ],
+    "source_track_ids": [
+      681,
+      838,
+      838
+    ],
+    "mean_confidence": 0.46208413842633284,
+    "observed_count": 362,
+    "observed_span_s": 13.613599749601917,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.6339666550059064,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 98,
+    "tracklet_ids": [
+      1431,
+      1432,
+      1433,
+      1553
+    ],
+    "source_track_ids": [
+      683,
+      683,
+      683,
+      720
+    ],
+    "mean_confidence": 0.6965996584993728,
+    "observed_count": 94,
+    "observed_span_s": 7.0069998711185235,
+    "fragment_count": 4,
+    "max_observed_gap_s": 1.4681333063297188,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 99,
+    "tracklet_ids": [
+      1453
+    ],
+    "source_track_ids": [
+      685
+    ],
+    "mean_confidence": 0.36190859973430634,
+    "observed_count": 8,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 100,
+    "tracklet_ids": [
+      1460,
+      1461,
+      656,
+      657,
+      1933,
+      1695,
+      1972,
+      2049,
+      1973,
+      2109,
+      2140
+    ],
+    "source_track_ids": [
+      690,
+      690,
+      270,
+      270,
+      900,
+      787,
+      922,
+      959,
+      922,
+      993,
+      1009
+    ],
+    "mean_confidence": 0.5216738619455477,
+    "observed_count": 205,
+    "observed_span_s": 11.277933125895515,
+    "fragment_count": 11,
+    "max_observed_gap_s": 1.5348666384354601,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 101,
+    "tracklet_ids": [
+      1463
+    ],
+    "source_track_ids": [
+      691
+    ],
+    "mean_confidence": 0.3666642407576243,
+    "observed_count": 9,
+    "observed_span_s": 0.5338666568470671,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 102,
+    "tracklet_ids": [
+      1469
+    ],
+    "source_track_ids": [
+      693
+    ],
+    "mean_confidence": 0.8497643007172478,
+    "observed_count": 9,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 103,
+    "tracklet_ids": [
+      1481,
+      1482
+    ],
+    "source_track_ids": [
+      697,
+      697
+    ],
+    "mean_confidence": 0.8109903371695316,
+    "observed_count": 33,
+    "observed_span_s": 1.66833330264717,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2669333284234199,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 104,
+    "tracklet_ids": [
+      1502,
+      1504,
+      1505
+    ],
+    "source_track_ids": [
+      699,
+      699,
+      699
+    ],
+    "mean_confidence": 0.36065670520731763,
+    "observed_count": 583,
+    "observed_span_s": 21.78843293257364,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.9676333155355223,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 105,
+    "tracklet_ids": [
+      1508,
+      1525
+    ],
+    "source_track_ids": [
+      701,
+      711
+    ],
+    "mean_confidence": 0.28543794932572736,
+    "observed_count": 23,
+    "observed_span_s": 0.967633315535295,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 106,
+    "tracklet_ids": [
+      1559,
+      1444,
+      1445,
+      1561,
+      1446,
+      1447,
+      1563,
+      1448
+    ],
+    "source_track_ids": [
+      720,
+      683,
+      683,
+      720,
+      683,
+      683,
+      720,
+      683
+    ],
+    "mean_confidence": 0.8378944788660322,
+    "observed_count": 140,
+    "observed_span_s": 5.939266557424389,
+    "fragment_count": 8,
+    "max_observed_gap_s": 0.43376665868822784,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 107,
+    "tracklet_ids": [
+      1565
+    ],
+    "source_track_ids": [
+      720
+    ],
+    "mean_confidence": 0.8454679432842467,
+    "observed_count": 36,
+    "observed_span_s": 1.3346666421177815,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 108,
+    "tracklet_ids": [
+      1578,
+      1587,
+      1783,
+      1824,
+      1825
+    ],
+    "source_track_ids": [
+      726,
+      733,
+      822,
+      842,
+      842
+    ],
+    "mean_confidence": 0.5270630099064062,
+    "observed_count": 121,
+    "observed_span_s": 6.539866546377425,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.6005999889530358,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 109,
+    "tracklet_ids": [
+      1585
+    ],
+    "source_track_ids": [
+      731
+    ],
+    "mean_confidence": 0.2703295879893833,
+    "observed_count": 9,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 110,
+    "tracklet_ids": [
+      1624
+    ],
+    "source_track_ids": [
+      756
+    ],
+    "mean_confidence": 0.2714465260505676,
+    "observed_count": 12,
+    "observed_span_s": 0.5672333228999378,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 111,
+    "tracklet_ids": [
+      1627
+    ],
+    "source_track_ids": [
+      759
+    ],
+    "mean_confidence": 0.3977172507180108,
+    "observed_count": 9,
+    "observed_span_s": 0.43376665868822784,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 112,
+    "tracklet_ids": [
+      1630,
+      1631,
+      1927,
+      1634,
+      1928,
+      2160
+    ],
+    "source_track_ids": [
+      759,
+      759,
+      897,
+      759,
+      897,
+      1021
+    ],
+    "mean_confidence": 0.5477017011753348,
+    "observed_count": 129,
+    "observed_span_s": 5.97263322347726,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.5004999907941965,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 113,
+    "tracklet_ids": [
+      1696
+    ],
+    "source_track_ids": [
+      788
+    ],
+    "mean_confidence": 0.4538332624094827,
+    "observed_count": 35,
+    "observed_span_s": 1.4347666402768482,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 114,
+    "tracklet_ids": [
+      1700
+    ],
+    "source_track_ids": [
+      789
+    ],
+    "mean_confidence": 0.5029211580753327,
+    "observed_count": 10,
+    "observed_span_s": 0.6339666550059064,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 115,
+    "tracklet_ids": [
+      1703
+    ],
+    "source_track_ids": [
+      791
+    ],
+    "mean_confidence": 0.27133713103830814,
+    "observed_count": 16,
+    "observed_span_s": 0.5672333229001651,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 116,
+    "tracklet_ids": [
+      1726
+    ],
+    "source_track_ids": [
+      803
+    ],
+    "mean_confidence": 0.3689486842889052,
+    "observed_count": 13,
+    "observed_span_s": 0.7006999871118751,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 117,
+    "tracklet_ids": [
+      1749
+    ],
+    "source_track_ids": [
+      812
+    ],
+    "mean_confidence": 0.3051809695633975,
+    "observed_count": 11,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 118,
+    "tracklet_ids": [
+      1769
+    ],
+    "source_track_ids": [
+      819
+    ],
+    "mean_confidence": 0.8537196516990662,
+    "observed_count": 8,
+    "observed_span_s": 0.3670333265822592,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 119,
+    "tracklet_ids": [
+      1792,
+      1814,
+      1815,
+      1817
+    ],
+    "source_track_ids": [
+      828,
+      841,
+      841,
+      841
+    ],
+    "mean_confidence": 0.7463985525193761,
+    "observed_count": 61,
+    "observed_span_s": 3.236566607135728,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.6673333210590044,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 120,
+    "tracklet_ids": [
+      1793,
+      1714,
+      1715,
+      1490
+    ],
+    "source_track_ids": [
+      829,
+      799,
+      799,
+      697
+    ],
+    "mean_confidence": 0.8275719157287053,
+    "observed_count": 56,
+    "observed_span_s": 4.003999926353345,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.6673333210590044,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 121,
+    "tracklet_ids": [
+      1827
+    ],
+    "source_track_ids": [
+      842
+    ],
+    "mean_confidence": 0.4486626908183098,
+    "observed_count": 8,
+    "observed_span_s": 0.2669333284234199,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 122,
+    "tracklet_ids": [
+      1853,
+      2175,
+      2177
+    ],
+    "source_track_ids": [
+      854,
+      1027,
+      1027
+    ],
+    "mean_confidence": 0.5943950050755551,
+    "observed_count": 285,
+    "observed_span_s": 11.478133122213421,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.3012999760646835,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 123,
+    "tracklet_ids": [
+      1856,
+      1803,
+      2272,
+      2273
+    ],
+    "source_track_ids": [
+      857,
+      835,
+      1084,
+      1084
+    ],
+    "mean_confidence": 0.3796724208330704,
+    "observed_count": 295,
+    "observed_span_s": 11.378033124054355,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.4671333247410985,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 124,
+    "tracklet_ids": [
+      1866,
+      1883
+    ],
+    "source_track_ids": [
+      863,
+      875
+    ],
+    "mean_confidence": 0.34275288028376444,
+    "observed_count": 42,
+    "observed_span_s": 1.5348666384354601,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 125,
+    "tracklet_ids": [
+      1867,
+      1868,
+      2899,
+      3847
+    ],
+    "source_track_ids": [
+      863,
+      863,
+      1355,
+      1900
+    ],
+    "mean_confidence": 0.48754844666273334,
+    "observed_count": 799,
+    "observed_span_s": 29.262566128433264,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 126,
+    "tracklet_ids": [
+      1873,
+      2111,
+      2007,
+      2148,
+      2184
+    ],
+    "source_track_ids": [
+      865,
+      994,
+      943,
+      1012,
+      1031
+    ],
+    "mean_confidence": 0.8596854755218993,
+    "observed_count": 47,
+    "observed_span_s": 2.0353666292296566,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.4003999926353572,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 127,
+    "tracklet_ids": [
+      1875,
+      1900,
+      1901,
+      1984,
+      1985
+    ],
+    "source_track_ids": [
+      867,
+      881,
+      881,
+      926,
+      926
+    ],
+    "mean_confidence": 0.6530913484620524,
+    "observed_count": 91,
+    "observed_span_s": 5.83916655926555,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.0343666476412636,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 128,
+    "tracklet_ids": [
+      1897,
+      2081,
+      2217,
+      2082,
+      2291,
+      2086,
+      2382,
+      2886
+    ],
+    "source_track_ids": [
+      879,
+      982,
+      1051,
+      982,
+      1094,
+      982,
+      1122,
+      1349
+    ],
+    "mean_confidence": 0.5663557287993705,
+    "observed_count": 314,
+    "observed_span_s": 14.180833072501855,
+    "fragment_count": 8,
+    "max_observed_gap_s": 1.3012999760649109,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 129,
+    "tracklet_ids": [
+      1909,
+      1911,
+      1913
+    ],
+    "source_track_ids": [
+      888,
+      888,
+      888
+    ],
+    "mean_confidence": 0.6579295311655317,
+    "observed_count": 49,
+    "observed_span_s": 3.9372665942476033,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.1678333118529736,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 130,
+    "tracklet_ids": [
+      2011
+    ],
+    "source_track_ids": [
+      946
+    ],
+    "mean_confidence": 0.486205902966586,
+    "observed_count": 11,
+    "observed_span_s": 0.5672333229001651,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 131,
+    "tracklet_ids": [
+      2023,
+      2005
+    ],
+    "source_track_ids": [
+      950,
+      942
+    ],
+    "mean_confidence": 0.7964731791745061,
+    "observed_count": 23,
+    "observed_span_s": 0.800799985270487,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 132,
+    "tracklet_ids": [
+      2024,
+      2052
+    ],
+    "source_track_ids": [
+      951,
+      961
+    ],
+    "mean_confidence": 0.8256369332472483,
+    "observed_count": 18,
+    "observed_span_s": 0.6005999889530358,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 133,
+    "tracklet_ids": [
+      2027,
+      2029,
+      2278,
+      2388,
+      2415,
+      2416,
+      2280
+    ],
+    "source_track_ids": [
+      952,
+      952,
+      1087,
+      1123,
+      1129,
+      1129,
+      1087
+    ],
+    "mean_confidence": 0.5878059455827505,
+    "observed_count": 119,
+    "observed_span_s": 7.907899854548077,
+    "fragment_count": 7,
+    "max_observed_gap_s": 1.2679333100118129,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 134,
+    "tracklet_ids": [
+      2045
+    ],
+    "source_track_ids": [
+      956
+    ],
+    "mean_confidence": 0.2654106848769718,
+    "observed_count": 9,
+    "observed_span_s": 0.3002999944765179,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210574128,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 135,
+    "tracklet_ids": [
+      2075
+    ],
+    "source_track_ids": [
+      977
+    ],
+    "mean_confidence": 0.3719470240175724,
+    "observed_count": 8,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 136,
+    "tracklet_ids": [
+      2103,
+      2037,
+      1496,
+      2197,
+      2645,
+      2309,
+      2649,
+      2650
+    ],
+    "source_track_ids": [
+      991,
+      955,
+      697,
+      1039,
+      1260,
+      1103,
+      1260,
+      1260
+    ],
+    "mean_confidence": 0.727900884475237,
+    "observed_count": 405,
+    "observed_span_s": 17.150466351214163,
+    "fragment_count": 8,
+    "max_observed_gap_s": 1.000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 137,
+    "tracklet_ids": [
+      2113,
+      2165,
+      2150,
+      2167,
+      2330,
+      2479
+    ],
+    "source_track_ids": [
+      995,
+      1024,
+      1012,
+      1024,
+      1111,
+      1171
+    ],
+    "mean_confidence": 0.8748395766677528,
+    "observed_count": 116,
+    "observed_span_s": 5.805799893212679,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.7006999871118751,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 138,
+    "tracklet_ids": [
+      2126,
+      2142,
+      2127,
+      1848
+    ],
+    "source_track_ids": [
+      1005,
+      1009,
+      1005,
+      852
+    ],
+    "mean_confidence": 0.5538998862792706,
+    "observed_count": 116,
+    "observed_span_s": 5.071733240047706,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 139,
+    "tracklet_ids": [
+      2179,
+      2957
+    ],
+    "source_track_ids": [
+      1027,
+      1378
+    ],
+    "mean_confidence": 0.4985436459382375,
+    "observed_count": 60,
+    "observed_span_s": 3.0029999447649516,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.7340666531647457,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 140,
+    "tracklet_ids": [
+      2188
+    ],
+    "source_track_ids": [
+      1034
+    ],
+    "mean_confidence": 0.5374675459331937,
+    "observed_count": 9,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 141,
+    "tracklet_ids": [
+      2196
+    ],
+    "source_track_ids": [
+      1039
+    ],
+    "mean_confidence": 0.7250863611698151,
+    "observed_count": 10,
+    "observed_span_s": 0.4671333247410985,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 142,
+    "tracklet_ids": [
+      2212,
+      2234,
+      2236,
+      2410
+    ],
+    "source_track_ids": [
+      1048,
+      1064,
+      1064,
+      1128
+    ],
+    "mean_confidence": 0.7266532556683409,
+    "observed_count": 51,
+    "observed_span_s": 2.8027999484475004,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.6673333210590044,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 143,
+    "tracklet_ids": [
+      2229,
+      2403,
+      2404,
+      2367,
+      2657
+    ],
+    "source_track_ids": [
+      1060,
+      1125,
+      1125,
+      1118,
+      1262
+    ],
+    "mean_confidence": 0.6824647263955261,
+    "observed_count": 118,
+    "observed_span_s": 7.440766529806979,
+    "fragment_count": 5,
+    "max_observed_gap_s": 1.1678333118529736,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 144,
+    "tracklet_ids": [
+      2253
+    ],
+    "source_track_ids": [
+      1072
+    ],
+    "mean_confidence": 0.3782631605863571,
+    "observed_count": 8,
+    "observed_span_s": 0.2335666623707766,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 145,
+    "tracklet_ids": [
+      2274,
+      2303
+    ],
+    "source_track_ids": [
+      1085,
+      1103
+    ],
+    "mean_confidence": 0.6739638771148438,
+    "observed_count": 47,
+    "observed_span_s": 1.8017999668591074,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 146,
+    "tracklet_ids": [
+      2285,
+      2305
+    ],
+    "source_track_ids": [
+      1088,
+      1103
+    ],
+    "mean_confidence": 0.6806219946593046,
+    "observed_count": 32,
+    "observed_span_s": 2.302299957653304,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.5004999907941965,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 147,
+    "tracklet_ids": [
+      2314
+    ],
+    "source_track_ids": [
+      1105
+    ],
+    "mean_confidence": 0.8460327772533193,
+    "observed_count": 17,
+    "observed_span_s": 0.9008999834295537,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 148,
+    "tracklet_ids": [
+      2319,
+      2320,
+      2321,
+      2949,
+      2950,
+      2951,
+      2953,
+      3514,
+      3607,
+      3647,
+      3694,
+      3787
+    ],
+    "source_track_ids": [
+      1105,
+      1105,
+      1105,
+      1377,
+      1377,
+      1377,
+      1377,
+      1667,
+      1734,
+      1758,
+      1787,
+      1853
+    ],
+    "mean_confidence": 0.7491413281361262,
+    "observed_count": 300,
+    "observed_span_s": 16.816799690684775,
+    "fragment_count": 12,
+    "max_observed_gap_s": 1.5348666384354601,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 149,
+    "tracklet_ids": [
+      2332,
+      2171,
+      2333
+    ],
+    "source_track_ids": [
+      1111,
+      1024,
+      1111
+    ],
+    "mean_confidence": 0.8654777508671001,
+    "observed_count": 59,
+    "observed_span_s": 2.1354666273887233,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 150,
+    "tracklet_ids": [
+      2334,
+      2434,
+      2435,
+      2631,
+      2436
+    ],
+    "source_track_ids": [
+      1112,
+      1141,
+      1141,
+      1253,
+      1141
+    ],
+    "mean_confidence": 0.5847110572068588,
+    "observed_count": 115,
+    "observed_span_s": 6.0393665555832285,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.7340666531649731,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 151,
+    "tracklet_ids": [
+      2338,
+      2349,
+      2350,
+      2498,
+      2341,
+      2317,
+      2318,
+      2353,
+      2354,
+      2355,
+      2356,
+      2358,
+      2359,
+      2360,
+      2361,
+      2362
+    ],
+    "source_track_ids": [
+      1113,
+      1116,
+      1116,
+      1185,
+      1113,
+      1105,
+      1105,
+      1116,
+      1116,
+      1116,
+      1116,
+      1116,
+      1116,
+      1116,
+      1116,
+      1116
+    ],
+    "mean_confidence": 0.7784140635939205,
+    "observed_count": 221,
+    "observed_span_s": 13.880533078025337,
+    "fragment_count": 16,
+    "max_observed_gap_s": 1.000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 152,
+    "tracklet_ids": [
+      2373,
+      2837
+    ],
+    "source_track_ids": [
+      1119,
+      1328
+    ],
+    "mean_confidence": 0.6047671971543466,
+    "observed_count": 193,
+    "observed_span_s": 6.973633205065653,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 153,
+    "tracklet_ids": [
+      2379
+    ],
+    "source_track_ids": [
+      1122
+    ],
+    "mean_confidence": 0.5590311870688484,
+    "observed_count": 21,
+    "observed_span_s": 1.0343666476412636,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 154,
+    "tracklet_ids": [
+      2384,
+      2385,
+      3147
+    ],
+    "source_track_ids": [
+      1122,
+      1122,
+      1477
+    ],
+    "mean_confidence": 0.5505854930532607,
+    "observed_count": 76,
+    "observed_span_s": 3.0363666108180496,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.4671333247410985,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 155,
+    "tracklet_ids": [
+      2387
+    ],
+    "source_track_ids": [
+      1122
+    ],
+    "mean_confidence": 0.48413950701554614,
+    "observed_count": 12,
+    "observed_span_s": 0.4337666586884552,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 156,
+    "tracklet_ids": [
+      2394
+    ],
+    "source_track_ids": [
+      1124
+    ],
+    "mean_confidence": 0.7009341642260551,
+    "observed_count": 16,
+    "observed_span_s": 0.7006999871118751,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 157,
+    "tracklet_ids": [
+      2420,
+      2214,
+      2603,
+      2640
+    ],
+    "source_track_ids": [
+      1133,
+      1048,
+      1233,
+      1258
+    ],
+    "mean_confidence": 0.5840492796750716,
+    "observed_count": 81,
+    "observed_span_s": 4.104099924512184,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.33366666052938854,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 158,
+    "tracklet_ids": [
+      2429
+    ],
+    "source_track_ids": [
+      1138
+    ],
+    "mean_confidence": 0.5547200441360474,
+    "observed_count": 8,
+    "observed_span_s": 0.26693332842364725,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 159,
+    "tracklet_ids": [
+      2439
+    ],
+    "source_track_ids": [
+      1144
+    ],
+    "mean_confidence": 0.3089151399003135,
+    "observed_count": 18,
+    "observed_span_s": 0.5672333228999378,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 160,
+    "tracklet_ids": [
+      2443
+    ],
+    "source_track_ids": [
+      1145
+    ],
+    "mean_confidence": 0.6134776547551155,
+    "observed_count": 8,
+    "observed_span_s": 0.33366666052938854,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 161,
+    "tracklet_ids": [
+      2446,
+      1499,
+      2743,
+      2744,
+      2306,
+      3011,
+      3012
+    ],
+    "source_track_ids": [
+      1148,
+      697,
+      1294,
+      1294,
+      1103,
+      1409,
+      1409
+    ],
+    "mean_confidence": 0.6979231823373724,
+    "observed_count": 270,
+    "observed_span_s": 12.345666439589877,
+    "fragment_count": 7,
+    "max_observed_gap_s": 0.5338666568472945,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 162,
+    "tracklet_ids": [
+      2469,
+      2398,
+      2399,
+      2400
+    ],
+    "source_track_ids": [
+      1166,
+      1124,
+      1124,
+      1124
+    ],
+    "mean_confidence": 0.6044358881314595,
+    "observed_count": 150,
+    "observed_span_s": 6.873533206906814,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.4337666586884552,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 163,
+    "tracklet_ids": [
+      2492,
+      2493,
+      2494
+    ],
+    "source_track_ids": [
+      1183,
+      1183,
+      1183
+    ],
+    "mean_confidence": 0.4220609624011844,
+    "observed_count": 51,
+    "observed_span_s": 3.0029999447649516,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.46713332474132585,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 164,
+    "tracklet_ids": [
+      2508
+    ],
+    "source_track_ids": [
+      1194
+    ],
+    "mean_confidence": 0.3496436595916748,
+    "observed_count": 10,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 165,
+    "tracklet_ids": [
+      2523
+    ],
+    "source_track_ids": [
+      1204
+    ],
+    "mean_confidence": 0.5766627391179403,
+    "observed_count": 72,
+    "observed_span_s": 3.0697332768711476,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 166,
+    "tracklet_ids": [
+      2525
+    ],
+    "source_track_ids": [
+      1204
+    ],
+    "mean_confidence": 0.44589025576909386,
+    "observed_count": 15,
+    "observed_span_s": 0.6673333210590044,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 167,
+    "tracklet_ids": [
+      2537
+    ],
+    "source_track_ids": [
+      1211
+    ],
+    "mean_confidence": 0.4720719172841027,
+    "observed_count": 42,
+    "observed_span_s": 2.4691332879178844,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 168,
+    "tracklet_ids": [
+      2538
+    ],
+    "source_track_ids": [
+      1211
+    ],
+    "mean_confidence": 0.38431066274642944,
+    "observed_count": 9,
+    "observed_span_s": 0.4337666586884552,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 169,
+    "tracklet_ids": [
+      2545,
+      2547,
+      3257
+    ],
+    "source_track_ids": [
+      1212,
+      1212,
+      1524
+    ],
+    "mean_confidence": 0.4653942312723325,
+    "observed_count": 81,
+    "observed_span_s": 5.939266557424389,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.4681333063294915,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 170,
+    "tracklet_ids": [
+      2562
+    ],
+    "source_track_ids": [
+      1218
+    ],
+    "mean_confidence": 0.49581604699293774,
+    "observed_count": 12,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 171,
+    "tracklet_ids": [
+      2568
+    ],
+    "source_track_ids": [
+      1222
+    ],
+    "mean_confidence": 0.2878236472606659,
+    "observed_count": 10,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 172,
+    "tracklet_ids": [
+      2585,
+      2586,
+      2587,
+      3463,
+      3465
+    ],
+    "source_track_ids": [
+      1225,
+      1225,
+      1225,
+      1646,
+      1646
+    ],
+    "mean_confidence": 0.4762395287730864,
+    "observed_count": 224,
+    "observed_span_s": 9.809799819566024,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.6673333210587771,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 173,
+    "tracklet_ids": [
+      2592
+    ],
+    "source_track_ids": [
+      1226
+    ],
+    "mean_confidence": 0.3848865404725075,
+    "observed_count": 8,
+    "observed_span_s": 0.4671333247410985,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 174,
+    "tracklet_ids": [
+      2614,
+      2615,
+      2616
+    ],
+    "source_track_ids": [
+      1241,
+      1241,
+      1241
+    ],
+    "mean_confidence": 0.2684162590772875,
+    "observed_count": 62,
+    "observed_span_s": 5.0049999079417375,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.9352666310708173,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 175,
+    "tracklet_ids": [
+      2629,
+      2014,
+      2015
+    ],
+    "source_track_ids": [
+      1251,
+      946,
+      946
+    ],
+    "mean_confidence": 0.4767143777033099,
+    "observed_count": 147,
+    "observed_span_s": 6.573233212430296,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.867533317376683,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 176,
+    "tracklet_ids": [
+      2642,
+      2812,
+      2895,
+      3041,
+      2896
+    ],
+    "source_track_ids": [
+      1259,
+      1314,
+      1354,
+      1430,
+      1354
+    ],
+    "mean_confidence": 0.6448416361102352,
+    "observed_count": 135,
+    "observed_span_s": 5.705699895053613,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 177,
+    "tracklet_ids": [
+      2655
+    ],
+    "source_track_ids": [
+      1261
+    ],
+    "mean_confidence": 0.7781385571667643,
+    "observed_count": 66,
+    "observed_span_s": 2.1688332934413665,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 178,
+    "tracklet_ids": [
+      2662
+    ],
+    "source_track_ids": [
+      1264
+    ],
+    "mean_confidence": 0.4022238552570343,
+    "observed_count": 9,
+    "observed_span_s": 0.3002999944765179,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 179,
+    "tracklet_ids": [
+      2663,
+      2665,
+      3246
+    ],
+    "source_track_ids": [
+      1265,
+      1265,
+      1518
+    ],
+    "mean_confidence": 0.5289671886406961,
+    "observed_count": 244,
+    "observed_span_s": 10.443766474572158,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 180,
+    "tracklet_ids": [
+      2686
+    ],
+    "source_track_ids": [
+      1271
+    ],
+    "mean_confidence": 0.2808607220649719,
+    "observed_count": 10,
+    "observed_span_s": 0.5672333229001651,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 181,
+    "tracklet_ids": [
+      2704,
+      2929,
+      3017,
+      3108,
+      3109,
+      3489,
+      3627,
+      3690,
+      3726,
+      3727
+    ],
+    "source_track_ids": [
+      1275,
+      1364,
+      1411,
+      1463,
+      1463,
+      1659,
+      1747,
+      1786,
+      1809,
+      1809
+    ],
+    "mean_confidence": 0.5649338822092926,
+    "observed_count": 456,
+    "observed_span_s": 17.85116633832581,
+    "fragment_count": 10,
+    "max_observed_gap_s": 0.46713332474132585,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 182,
+    "tracklet_ids": [
+      2710
+    ],
+    "source_track_ids": [
+      1276
+    ],
+    "mean_confidence": 0.4707229369216495,
+    "observed_count": 18,
+    "observed_span_s": 0.5672333229001651,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 183,
+    "tracklet_ids": [
+      2723,
+      2872,
+      2873,
+      3078,
+      3286,
+      3081
+    ],
+    "source_track_ids": [
+      1286,
+      1343,
+      1343,
+      1455,
+      1546,
+      1455
+    ],
+    "mean_confidence": 0.4600615497897653,
+    "observed_count": 85,
+    "observed_span_s": 10.343666476413318,
+    "fragment_count": 6,
+    "max_observed_gap_s": 1.8017999668591074,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 184,
+    "tracklet_ids": [
+      2726,
+      3154
+    ],
+    "source_track_ids": [
+      1286,
+      1482
+    ],
+    "mean_confidence": 0.5578996663292249,
+    "observed_count": 60,
+    "observed_span_s": 3.803799930035666,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.8007999852707144,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 185,
+    "tracklet_ids": [
+      2771,
+      2370,
+      2733,
+      2774,
+      2775,
+      2776,
+      2777,
+      3663
+    ],
+    "source_track_ids": [
+      1304,
+      1118,
+      1290,
+      1304,
+      1304,
+      1304,
+      1304,
+      1768
+    ],
+    "mean_confidence": 0.6915712360417812,
+    "observed_count": 387,
+    "observed_span_s": 17.58423300990239,
+    "fragment_count": 8,
+    "max_observed_gap_s": 1.3680333081706522,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 186,
+    "tracklet_ids": [
+      2786,
+      2787
+    ],
+    "source_track_ids": [
+      1307,
+      1307
+    ],
+    "mean_confidence": 0.5481017338378089,
+    "observed_count": 56,
+    "observed_span_s": 3.1030999429240183,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.5004999907941965,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 187,
+    "tracklet_ids": [
+      2789,
+      2791
+    ],
+    "source_track_ids": [
+      1309,
+      1309
+    ],
+    "mean_confidence": 0.5037485782219016,
+    "observed_count": 276,
+    "observed_span_s": 10.610599804836738,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.7674333192176164,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 188,
+    "tracklet_ids": [
+      2793,
+      3796
+    ],
+    "source_track_ids": [
+      1309,
+      1858
+    ],
+    "mean_confidence": 0.5488491662450738,
+    "observed_count": 111,
+    "observed_span_s": 4.237566588724121,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 189,
+    "tracklet_ids": [
+      2803,
+      2687,
+      2688
+    ],
+    "source_track_ids": [
+      1312,
+      1271,
+      1271
+    ],
+    "mean_confidence": 0.30697482475986726,
+    "observed_count": 77,
+    "observed_span_s": 3.570233267665344,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.2669333284234199,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 190,
+    "tracklet_ids": [
+      2808
+    ],
+    "source_track_ids": [
+      1312
+    ],
+    "mean_confidence": 0.29504114091396333,
+    "observed_count": 10,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 191,
+    "tracklet_ids": [
+      2840,
+      2748,
+      2749,
+      2844,
+      2750,
+      3166,
+      2752,
+      3168,
+      2756,
+      3170,
+      3506,
+      2758,
+      3507,
+      3676
+    ],
+    "source_track_ids": [
+      1330,
+      1296,
+      1296,
+      1330,
+      1296,
+      1487,
+      1296,
+      1487,
+      1296,
+      1487,
+      1666,
+      1296,
+      1666,
+      1778
+    ],
+    "mean_confidence": 0.7899926640995646,
+    "observed_count": 289,
+    "observed_span_s": 14.280933070660694,
+    "fragment_count": 14,
+    "max_observed_gap_s": 0.8341666513238124,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 192,
+    "tracklet_ids": [
+      2877,
+      2878,
+      2670
+    ],
+    "source_track_ids": [
+      1343,
+      1343,
+      1265
+    ],
+    "mean_confidence": 0.44065952441602385,
+    "observed_count": 106,
+    "observed_span_s": 5.605599896895001,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 193,
+    "tracklet_ids": [
+      2881
+    ],
+    "source_track_ids": [
+      1346
+    ],
+    "mean_confidence": 0.6935224207964811,
+    "observed_count": 11,
+    "observed_span_s": 0.46713332474132585,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 194,
+    "tracklet_ids": [
+      2913,
+      3121,
+      3122
+    ],
+    "source_track_ids": [
+      1362,
+      1467,
+      1467
+    ],
+    "mean_confidence": 0.6989711332828441,
+    "observed_count": 47,
+    "observed_span_s": 3.7704332639827953,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.501499972382362,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 195,
+    "tracklet_ids": [
+      2934,
+      2915,
+      2916,
+      3352,
+      2918,
+      3353
+    ],
+    "source_track_ids": [
+      1367,
+      1362,
+      1362,
+      1585,
+      1362,
+      1585
+    ],
+    "mean_confidence": 0.6461389074053789,
+    "observed_count": 193,
+    "observed_span_s": 8.742066505871662,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.8007999852707144,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 196,
+    "tracklet_ids": [
+      2945,
+      2946
+    ],
+    "source_track_ids": [
+      1375,
+      1375
+    ],
+    "mean_confidence": 0.6362931494201932,
+    "observed_count": 28,
+    "observed_span_s": 1.4347666402768482,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 197,
+    "tracklet_ids": [
+      2975,
+      3502,
+      3503,
+      2979
+    ],
+    "source_track_ids": [
+      1390,
+      1664,
+      1664,
+      1390
+    ],
+    "mean_confidence": 0.7100913165553883,
+    "observed_count": 371,
+    "observed_span_s": 13.780433079866498,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.26693332842364725,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 198,
+    "tracklet_ids": [
+      2977
+    ],
+    "source_track_ids": [
+      1390
+    ],
+    "mean_confidence": 0.7611903179259527,
+    "observed_count": 21,
+    "observed_span_s": 1.2011999779060716,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 199,
+    "tracklet_ids": [
+      2984
+    ],
+    "source_track_ids": [
+      1395
+    ],
+    "mean_confidence": 0.4491589314797345,
+    "observed_count": 17,
+    "observed_span_s": 0.7674333192178437,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 200,
+    "tracklet_ids": [
+      3003,
+      3004,
+      2401,
+      3007,
+      3008
+    ],
+    "source_track_ids": [
+      1408,
+      1408,
+      1124,
+      1408,
+      1408
+    ],
+    "mean_confidence": 0.6337484149195307,
+    "observed_count": 278,
+    "observed_span_s": 10.31029981036022,
+    "fragment_count": 5,
+    "max_observed_gap_s": 0.36703332658248655,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 201,
+    "tracklet_ids": [
+      3025
+    ],
+    "source_track_ids": [
+      1419
+    ],
+    "mean_confidence": 0.4688757130732903,
+    "observed_count": 13,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 202,
+    "tracklet_ids": [
+      3027,
+      3028
+    ],
+    "source_track_ids": [
+      1420,
+      1420
+    ],
+    "mean_confidence": 0.46073154427788476,
+    "observed_count": 22,
+    "observed_span_s": 1.6015999705414288,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.5672333228999378,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 203,
+    "tracklet_ids": [
+      3065
+    ],
+    "source_track_ids": [
+      1450
+    ],
+    "mean_confidence": 0.3621060401201248,
+    "observed_count": 8,
+    "observed_span_s": 0.3670333265822592,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 204,
+    "tracklet_ids": [
+      3070
+    ],
+    "source_track_ids": [
+      1451
+    ],
+    "mean_confidence": 0.2922966964542866,
+    "observed_count": 8,
+    "observed_span_s": 0.3670333265822592,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 205,
+    "tracklet_ids": [
+      3087,
+      3194,
+      3195,
+      3196,
+      3609,
+      3852
+    ],
+    "source_track_ids": [
+      1458,
+      1491,
+      1491,
+      1491,
+      1736,
+      1905
+    ],
+    "mean_confidence": 0.5618702869976747,
+    "observed_count": 293,
+    "observed_span_s": 13.279933089072529,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.9008999834295537,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 206,
+    "tracklet_ids": [
+      3089
+    ],
+    "source_track_ids": [
+      1458
+    ],
+    "mean_confidence": 0.4457128420472145,
+    "observed_count": 16,
+    "observed_span_s": 0.6005999889530358,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 207,
+    "tracklet_ids": [
+      3093,
+      2845,
+      3094,
+      3133,
+      3134,
+      3136,
+      3137
+    ],
+    "source_track_ids": [
+      1462,
+      1330,
+      1462,
+      1474,
+      1474,
+      1474,
+      1474
+    ],
+    "mean_confidence": 0.7553514863053957,
+    "observed_count": 108,
+    "observed_span_s": 5.972633223477487,
+    "fragment_count": 7,
+    "max_observed_gap_s": 0.7006999871118751,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 208,
+    "tracklet_ids": [
+      3097,
+      3098,
+      3099,
+      3100
+    ],
+    "source_track_ids": [
+      1462,
+      1462,
+      1462,
+      1462
+    ],
+    "mean_confidence": 0.8039999022541275,
+    "observed_count": 83,
+    "observed_span_s": 4.3042999208298625,
+    "fragment_count": 4,
+    "max_observed_gap_s": 0.3002999944765179,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 209,
+    "tracklet_ids": [
+      3115,
+      3117,
+      3118,
+      3119,
+      2651,
+      3120,
+      3379,
+      2654
+    ],
+    "source_track_ids": [
+      1466,
+      1466,
+      1466,
+      1466,
+      1260,
+      1466,
+      1602,
+      1260
+    ],
+    "mean_confidence": 0.8074806190306141,
+    "observed_count": 155,
+    "observed_span_s": 8.64196650771305,
+    "fragment_count": 8,
+    "max_observed_gap_s": 1.0343666476412636,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 210,
+    "tracklet_ids": [
+      3127,
+      3268,
+      3182,
+      3271,
+      3183,
+      3478,
+      3546
+    ],
+    "source_track_ids": [
+      1472,
+      1532,
+      1489,
+      1532,
+      1489,
+      1654,
+      1685
+    ],
+    "mean_confidence": 0.42185077751860206,
+    "observed_count": 162,
+    "observed_span_s": 12.345666439590104,
+    "fragment_count": 7,
+    "max_observed_gap_s": 1.7684333008060094,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 211,
+    "tracklet_ids": [
+      3150,
+      2898,
+      3280
+    ],
+    "source_track_ids": [
+      1479,
+      1354,
+      1541
+    ],
+    "mean_confidence": 0.5865230293888034,
+    "observed_count": 66,
+    "observed_span_s": 2.8027999484475004,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.36703332658248655,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 212,
+    "tracklet_ids": [
+      3163
+    ],
+    "source_track_ids": [
+      1487
+    ],
+    "mean_confidence": 0.7692204356193543,
+    "observed_count": 10,
+    "observed_span_s": 0.33366666052938854,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210574128,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 213,
+    "tracklet_ids": [
+      3171
+    ],
+    "source_track_ids": [
+      1487
+    ],
+    "mean_confidence": 0.85664740892557,
+    "observed_count": 13,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 214,
+    "tracklet_ids": [
+      3192
+    ],
+    "source_track_ids": [
+      1489
+    ],
+    "mean_confidence": 0.343271042406559,
+    "observed_count": 20,
+    "observed_span_s": 0.8675333173764557,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.23356666237054924,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 215,
+    "tracklet_ids": [
+      3204,
+      3205,
+      3206,
+      3207,
+      3014,
+      3476,
+      3581,
+      3672,
+      3384
+    ],
+    "source_track_ids": [
+      1497,
+      1497,
+      1497,
+      1497,
+      1409,
+      1652,
+      1714,
+      1775,
+      1602
+    ],
+    "mean_confidence": 0.7562175359295196,
+    "observed_count": 238,
+    "observed_span_s": 11.378033124054582,
+    "fragment_count": 9,
+    "max_observed_gap_s": 0.6005999889528084,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 216,
+    "tracklet_ids": [
+      3215,
+      2989,
+      3217,
+      3218,
+      3220,
+      3221
+    ],
+    "source_track_ids": [
+      1503,
+      1395,
+      1503,
+      1503,
+      1503,
+      1503
+    ],
+    "mean_confidence": 0.5204407819481783,
+    "observed_count": 215,
+    "observed_span_s": 11.978633113007618,
+    "fragment_count": 6,
+    "max_observed_gap_s": 1.3680333081708795,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 217,
+    "tracklet_ids": [
+      3273,
+      3304,
+      2694,
+      3545,
+      3301,
+      2698,
+      2700
+    ],
+    "source_track_ids": [
+      1534,
+      1548,
+      1271,
+      1685,
+      1547,
+      1271,
+      1271
+    ],
+    "mean_confidence": 0.40754252762505505,
+    "observed_count": 165,
+    "observed_span_s": 10.977633131418997,
+    "fragment_count": 7,
+    "max_observed_gap_s": 1.8351666329122054,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 218,
+    "tracklet_ids": [
+      3311
+    ],
+    "source_track_ids": [
+      1554
+    ],
+    "mean_confidence": 0.276250958442688,
+    "observed_count": 9,
+    "observed_span_s": 0.4337666586884552,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 219,
+    "tracklet_ids": [
+      3319
+    ],
+    "source_track_ids": [
+      1561
+    ],
+    "mean_confidence": 0.26728467270731926,
+    "observed_count": 8,
+    "observed_span_s": 0.33366666052938854,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 220,
+    "tracklet_ids": [
+      3328
+    ],
+    "source_track_ids": [
+      1566
+    ],
+    "mean_confidence": 0.5900358309348425,
+    "observed_count": 12,
+    "observed_span_s": 0.46713332474132585,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 221,
+    "tracklet_ids": [
+      3343
+    ],
+    "source_track_ids": [
+      1579
+    ],
+    "mean_confidence": 0.4344601105241215,
+    "observed_count": 17,
+    "observed_span_s": 0.6673333210590044,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 222,
+    "tracklet_ids": [
+      3347,
+      3419,
+      3457
+    ],
+    "source_track_ids": [
+      1582,
+      1623,
+      1643
+    ],
+    "mean_confidence": 0.35904708090755677,
+    "observed_count": 36,
+    "observed_span_s": 2.6359666181826924,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.9008999834293263,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 223,
+    "tracklet_ids": [
+      3351,
+      3477,
+      3530,
+      3531,
+      2922,
+      2923
+    ],
+    "source_track_ids": [
+      1585,
+      1653,
+      1676,
+      1676,
+      1362,
+      1362
+    ],
+    "mean_confidence": 0.5876083843043594,
+    "observed_count": 122,
+    "observed_span_s": 8.708699839818792,
+    "fragment_count": 6,
+    "max_observed_gap_s": 2.235566625547335,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 224,
+    "tracklet_ids": [
+      3361,
+      3385,
+      3386,
+      3387,
+      3590,
+      3390
+    ],
+    "source_track_ids": [
+      1589,
+      1603,
+      1603,
+      1603,
+      1723,
+      1603
+    ],
+    "mean_confidence": 0.7181964725598522,
+    "observed_count": 87,
+    "observed_span_s": 5.372033234524224,
+    "fragment_count": 6,
+    "max_observed_gap_s": 0.9008999834295537,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 225,
+    "tracklet_ids": [
+      3377,
+      3378
+    ],
+    "source_track_ids": [
+      1601,
+      1601
+    ],
+    "mean_confidence": 0.6003147706840978,
+    "observed_count": 66,
+    "observed_span_s": 3.236566607135728,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.33366666052938854,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 226,
+    "tracklet_ids": [
+      3393
+    ],
+    "source_track_ids": [
+      1604
+    ],
+    "mean_confidence": 0.2795877978205681,
+    "observed_count": 8,
+    "observed_span_s": 0.2669333284234199,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210574128,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 227,
+    "tracklet_ids": [
+      3409,
+      3410
+    ],
+    "source_track_ids": [
+      1615,
+      1615
+    ],
+    "mean_confidence": 0.7506177201867104,
+    "observed_count": 32,
+    "observed_span_s": 1.7684333008060094,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.4003999926353572,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 228,
+    "tracklet_ids": [
+      3423,
+      3467
+    ],
+    "source_track_ids": [
+      1625,
+      1648
+    ],
+    "mean_confidence": 0.46907653320919385,
+    "observed_count": 22,
+    "observed_span_s": 1.2011999779060716,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.43376665868822784,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 229,
+    "tracklet_ids": [
+      3428
+    ],
+    "source_track_ids": [
+      1625
+    ],
+    "mean_confidence": 0.5225632403578077,
+    "observed_count": 21,
+    "observed_span_s": 0.867533317376683,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 230,
+    "tracklet_ids": [
+      3436,
+      3437
+    ],
+    "source_track_ids": [
+      1630,
+      1630
+    ],
+    "mean_confidence": 0.28531579971313475,
+    "observed_count": 45,
+    "observed_span_s": 2.9028999466063397,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.834166651323585,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 231,
+    "tracklet_ids": [
+      3439,
+      3441
+    ],
+    "source_track_ids": [
+      1631,
+      1631
+    ],
+    "mean_confidence": 0.7276855545528864,
+    "observed_count": 59,
+    "observed_span_s": 3.0697332768709202,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.8007999852707144,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 232,
+    "tracklet_ids": [
+      3443
+    ],
+    "source_track_ids": [
+      1633
+    ],
+    "mean_confidence": 0.4231892615556717,
+    "observed_count": 10,
+    "observed_span_s": 0.3670333265822592,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 233,
+    "tracklet_ids": [
+      3446
+    ],
+    "source_track_ids": [
+      1635
+    ],
+    "mean_confidence": 0.645832576922008,
+    "observed_count": 14,
+    "observed_span_s": 0.6339666550059064,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 234,
+    "tracklet_ids": [
+      3454
+    ],
+    "source_track_ids": [
+      1640
+    ],
+    "mean_confidence": 0.3788735382258892,
+    "observed_count": 8,
+    "observed_span_s": 0.3002999944765179,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 235,
+    "tracklet_ids": [
+      3485,
+      3679
+    ],
+    "source_track_ids": [
+      1655,
+      1778
+    ],
+    "mean_confidence": 0.8699434708665919,
+    "observed_count": 27,
+    "observed_span_s": 1.1010999797472323,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 236,
+    "tracklet_ids": [
+      3498
+    ],
+    "source_track_ids": [
+      1663
+    ],
+    "mean_confidence": 0.3616705157540061,
+    "observed_count": 11,
+    "observed_span_s": 0.6673333210587771,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 237,
+    "tracklet_ids": [
+      3520
+    ],
+    "source_track_ids": [
+      1672
+    ],
+    "mean_confidence": 0.34401187896728513,
+    "observed_count": 10,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 238,
+    "tracklet_ids": [
+      3527,
+      3528
+    ],
+    "source_track_ids": [
+      1675,
+      1675
+    ],
+    "mean_confidence": 0.4808849794790149,
+    "observed_count": 64,
+    "observed_span_s": 3.6369665997710854,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.834166651323585,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 239,
+    "tracklet_ids": [
+      3554,
+      3655,
+      3657
+    ],
+    "source_track_ids": [
+      1693,
+      1764,
+      1764
+    ],
+    "mean_confidence": 0.48541535581311873,
+    "observed_count": 62,
+    "observed_span_s": 4.47113325109467,
+    "fragment_count": 3,
+    "max_observed_gap_s": 1.0677333136941343,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 240,
+    "tracklet_ids": [
+      3567
+    ],
+    "source_track_ids": [
+      1701
+    ],
+    "mean_confidence": 0.28181474942427415,
+    "observed_count": 13,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 241,
+    "tracklet_ids": [
+      3595,
+      3596,
+      3851
+    ],
+    "source_track_ids": [
+      1725,
+      1725,
+      1904
+    ],
+    "mean_confidence": 0.5010695890946821,
+    "observed_count": 77,
+    "observed_span_s": 3.6035999337182147,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.5338666568470671,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 242,
+    "tracklet_ids": [
+      3635
+    ],
+    "source_track_ids": [
+      1752
+    ],
+    "mean_confidence": 0.3237165960730339,
+    "observed_count": 49,
+    "observed_span_s": 1.6015999705414288,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.033366666053098015,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 243,
+    "tracklet_ids": [
+      3638,
+      3757
+    ],
+    "source_track_ids": [
+      1753,
+      1829
+    ],
+    "mean_confidence": 0.7698588191076766,
+    "observed_count": 43,
+    "observed_span_s": 1.6015999705414288,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 244,
+    "tracklet_ids": [
+      3644,
+      2759,
+      3646
+    ],
+    "source_track_ids": [
+      1757,
+      1296,
+      1757
+    ],
+    "mean_confidence": 0.8553354327495282,
+    "observed_count": 65,
+    "observed_span_s": 3.0363666108180496,
+    "fragment_count": 3,
+    "max_observed_gap_s": 0.2335666623707766,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 245,
+    "tracklet_ids": [
+      3649
+    ],
+    "source_track_ids": [
+      1759
+    ],
+    "mean_confidence": 0.5300916547958667,
+    "observed_count": 13,
+    "observed_span_s": 0.5338666568470671,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 246,
+    "tracklet_ids": [
+      3667,
+      2590
+    ],
+    "source_track_ids": [
+      1772,
+      1225
+    ],
+    "mean_confidence": 0.4771266930526303,
+    "observed_count": 62,
+    "observed_span_s": 2.6025999521298218,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 247,
+    "tracklet_ids": [
+      3674
+    ],
+    "source_track_ids": [
+      1777
+    ],
+    "mean_confidence": 0.442779293831657,
+    "observed_count": 17,
+    "observed_span_s": 0.867533317376683,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026458058,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 248,
+    "tracklet_ids": [
+      3685
+    ],
+    "source_track_ids": [
+      1783
+    ],
+    "mean_confidence": 0.5309663079679012,
+    "observed_count": 24,
+    "observed_span_s": 1.000999981588393,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1334666642119373,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 249,
+    "tracklet_ids": [
+      3698,
+      3846
+    ],
+    "source_track_ids": [
+      1789,
+      1899
+    ],
+    "mean_confidence": 0.5979173154365726,
+    "observed_count": 41,
+    "observed_span_s": 2.836166614500371,
+    "fragment_count": 2,
+    "max_observed_gap_s": 0.7674333192178437,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 250,
+    "tracklet_ids": [
+      3711
+    ],
+    "source_track_ids": [
+      1799
+    ],
+    "mean_confidence": 0.4641002139379812,
+    "observed_count": 43,
+    "observed_span_s": 1.9352666310710447,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.16683333026480796,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 251,
+    "tracklet_ids": [
+      3760
+    ],
+    "source_track_ids": [
+      1831
+    ],
+    "mean_confidence": 0.5277555084228516,
+    "observed_count": 25,
+    "observed_span_s": 1.000999981588393,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 252,
+    "tracklet_ids": [
+      3779
+    ],
+    "source_track_ids": [
+      1847
+    ],
+    "mean_confidence": 0.6670693809335883,
+    "observed_count": 11,
+    "observed_span_s": 0.4003999926353572,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.06673333210596866,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 253,
+    "tracklet_ids": [
+      3799
+    ],
+    "source_track_ids": [
+      1861
+    ],
+    "mean_confidence": 0.6404368052115808,
+    "observed_count": 13,
+    "observed_span_s": 0.5004999907941965,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 254,
+    "tracklet_ids": [
+      3811
+    ],
+    "source_track_ids": [
+      1870
+    ],
+    "mean_confidence": 0.5638603329658508,
+    "observed_count": 10,
+    "observed_span_s": 0.5338666568470671,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.2001999963176786,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 255,
+    "tracklet_ids": [
+      3834
+    ],
+    "source_track_ids": [
+      1888
+    ],
+    "mean_confidence": 0.5056886106729508,
+    "observed_count": 10,
+    "observed_span_s": 0.43376665868822784,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.1000999981588393,
+    "render_eligible": true
+  },
+  {
+    "trajectory_id": 256,
+    "tracklet_ids": [
+      3857
+    ],
+    "source_track_ids": [
+      1910
+    ],
+    "mean_confidence": 0.3397758938372135,
+    "observed_count": 8,
+    "observed_span_s": 0.36703332658248655,
+    "fragment_count": 1,
+    "max_observed_gap_s": 0.13346666421170994,
+    "render_eligible": true
+  }
+]

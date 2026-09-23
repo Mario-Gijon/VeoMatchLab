@@ -1,0 +1,140 @@
+{
+  "source_run_dir": "person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T024752",
+  "processed_frames": 90,
+  "input_observations": 2096,
+  "total_assignments": 1945,
+  "total_tracks_created": 151,
+  "unmatched_observations_after_first_frame": 128,
+  "configs": {
+    "track_manager": {
+      "min_confirmed_hits": 3,
+      "tentative_max_gap_s": 0.15,
+      "visible_prediction_horizon_s": 0.5,
+      "lost_memory_horizon_s": 2.0,
+      "max_visible_tracks": 25,
+      "confidence_ema_alpha": 0.15,
+      "reliability_hit_ratio_weight": 0.45,
+      "reliability_age_weight": 0.2,
+      "reliability_confidence_weight": 0.2,
+      "reliability_recency_weight": 0.15,
+      "visible_retention_bonus": 0.1,
+      "age_saturation_hits": 30
+    },
+    "association": {
+      "mahalanobis_gate_squared": 16.0,
+      "max_speed_mps": 12.5,
+      "position_slack_m": 0.1,
+      "uncertainty_sigma_multiplier": 3.0,
+      "euclidean_cost_weight": 0.05
+    },
+    "kalman": {
+      "acceleration_std_mps2": 4.0,
+      "initial_velocity_std_mps": 6.0,
+      "covariance_floor": 1e-09
+    }
+  },
+  "stage_summary": {
+    "confirmed": {
+      "frames": 89,
+      "track_count_sum": 3508,
+      "observation_count_sum": 2073,
+      "pairs_evaluated": 81913,
+      "allowed_pairs": 2070,
+      "physical_gate_rejections": 77824,
+      "mahalanobis_gate_rejections": 2019,
+      "non_finite_mahalanobis_rejections": 0,
+      "other_rejections": 0,
+      "matches": 1738,
+      "rejected_pairs": 79843,
+      "physical_rejection_fraction": 0.9500811836948958,
+      "mahalanobis_rejection_fraction": 0.024648102254831345,
+      "allowed_pair_fraction": 0.02527071405027285
+    },
+    "lost": {
+      "frames": 89,
+      "track_count_sum": 993,
+      "observation_count_sum": 335,
+      "pairs_evaluated": 2924,
+      "allowed_pairs": 37,
+      "physical_gate_rejections": 2346,
+      "mahalanobis_gate_rejections": 541,
+      "non_finite_mahalanobis_rejections": 0,
+      "other_rejections": 0,
+      "matches": 25,
+      "rejected_pairs": 2887,
+      "physical_rejection_fraction": 0.8023255813953488,
+      "mahalanobis_rejection_fraction": 0.1850205198358413,
+      "allowed_pair_fraction": 0.01265389876880985
+    },
+    "tentative": {
+      "frames": 89,
+      "track_count_sum": 538,
+      "observation_count_sum": 310,
+      "pairs_evaluated": 2670,
+      "allowed_pairs": 190,
+      "physical_gate_rejections": 2433,
+      "mahalanobis_gate_rejections": 47,
+      "non_finite_mahalanobis_rejections": 0,
+      "other_rejections": 0,
+      "matches": 182,
+      "rejected_pairs": 2480,
+      "physical_rejection_fraction": 0.9112359550561798,
+      "mahalanobis_rejection_fraction": 0.017602996254681647,
+      "allowed_pair_fraction": 0.07116104868913857
+    }
+  },
+  "unmatched_reason_counts": {
+    "nearest_confirmed": {
+      "no_candidate": 1,
+      "mahalanobis_gate": 100,
+      "physical_gate": 27
+    },
+    "nearest_lost": {
+      "no_candidate": 32,
+      "mahalanobis_gate": 66,
+      "physical_gate": 30
+    },
+    "nearest_tentative": {
+      "physical_gate": 112,
+      "mahalanobis_gate": 16
+    }
+  },
+  "unmatched_nearest_confirmed": {
+    "predicted_distance_m": {
+      "count": 127,
+      "min": 0.08525870559836089,
+      "median": 0.5243760776411779,
+      "p95": 8.391803586191937,
+      "max": 36.85606287785877,
+      "mean": 1.9667664322530645
+    },
+    "physical_radius_m": {
+      "count": 127,
+      "min": 0.5706165607370866,
+      "median": 0.9681415752827878,
+      "p95": 3.9725041503067477,
+      "max": 5.1826520400609155,
+      "mean": 1.3152694071776223
+    },
+    "uncertainty_slack_m": {
+      "count": 127,
+      "min": 0.1535332350733613,
+      "median": 0.35093248881819883,
+      "p95": 1.0806054964739396,
+      "max": 1.4998494104636668,
+      "mean": 0.4646821524815902
+    },
+    "mahalanobis_squared": {
+      "count": 100,
+      "min": 16.285695716476965,
+      "median": 24.521654451721353,
+      "p95": 124.22630880143933,
+      "max": 879.0493500486493,
+      "mean": 48.220381806384495
+    }
+  },
+  "outputs": {
+    "association_diagnostics_jsonl": "person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T024752/tracking_v2_1_diagnostics/association_diagnostics.jsonl",
+    "summary_json": "person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T024752/tracking_v2_1_diagnostics/summary.json"
+  }
+}

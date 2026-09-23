@@ -1,0 +1,63 @@
+{
+  "processed_frames": 1798,
+  "processed_duration_s": 59.959898897143376,
+  "input_observations": 38455,
+  "covariance_calibration": {
+    "scale": 1.0,
+    "triplet_count": 30063,
+    "nis_median": 0.5328535238215449,
+    "nis_mean": 1.4837364752075894,
+    "nis_p95": 6.399663476399998,
+    "raw_scale": 0.384372568168776,
+    "status": "calibrated"
+  },
+  "preliminary_forward": {
+    "frames": 1798,
+    "observations": 38455,
+    "assignments": 36493,
+    "unmatched_observations": 1962,
+    "tracks_created": 1962,
+    "confirmations": 803,
+    "reactivations": 1002,
+    "lost_transitions": 1754,
+    "retirements": 1867,
+    "max_visible": 25
+  },
+  "calibrated_forward": {
+    "frames": 1798,
+    "observations": 38455,
+    "assignments": 36493,
+    "unmatched_observations": 1962,
+    "tracks_created": 1962,
+    "confirmations": 803,
+    "reactivations": 1002,
+    "lost_transitions": 1754,
+    "retirements": 1867,
+    "max_visible": 25
+  },
+  "tracklet_count": 2695,
+  "link_candidate_count": 11354,
+  "accepted_tracklet_links": 2009,
+  "trajectory_count": 686,
+  "linked_trajectory_count": 444,
+  "render_eligible_trajectory_count": 498,
+  "weak_trajectory_count": 188,
+  "visible_count_min": 25,
+  "visible_count_max": 25,
+  "visible_count_mean": 25.0,
+  "visible_count_median": 25.0,
+  "observed_track_frames": 26919,
+  "interpolated_track_frames": 17196,
+  "extrapolated_track_frames": 835,
+  "maximum_rendered_speed_mps": 27.626523114723483,
+  "output_paths": {
+    "calibration.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/calibration.json",
+    "tracklets.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/tracklets.json",
+    "trajectories.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/trajectories.json",
+    "offline_tracks.jsonl": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/offline_tracks.jsonl",
+    "summary.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/summary.json",
+    "context_config.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/context_config.json",
+    "result_offline_2d.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/result_offline_2d.mp4",
+    "debug_raw_vs_offline.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T142044/debug_raw_vs_offline.mp4"
+  }
+}

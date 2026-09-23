@@ -1,24 +1,19 @@
-"""Lifecycle, reliability and visible-slot management for field tracks.
+"""TrackManager V2.1: V2 behaviour plus association diagnostics.
 
-This module sits above:
-- tracking.track
-- tracking.association
+The tracking decisions are intentionally the same as V2:
+    CONFIRMED -> LOST -> TENTATIVE -> births
 
-It intentionally does NOT know about teams, shirt numbers, player identity,
-appearance embeddings or detector internals.
+V2.1 only instruments those decisions so real match runs can answer:
+- which lifecycle stage rejected candidate pairs,
+- whether physical or Mahalanobis gating is responsible,
+- why observations still unmatched after the full cascade became births.
 
-V1 goals:
-- one-frame detections do not immediately appear on the 2D field,
-- confirmed tracks survive short detector gaps as Kalman predictions,
-- longer gaps hide a track but keep it in memory for conservative recovery,
-- internal candidates are unlimited,
-- the final 2D view exposes at most max_visible_tracks (25 by default),
-- existing visible tracks get mild hysteresis so the display does not flicker
-  when two candidates have almost identical reliability.
+No proximity deduplication or new tracking heuristic is introduced here.
 
-The reliability score is an operational stability score, not a calibrated
-probability. Its weights are explicit and configurable so they can later be
-replaced by evidence from real match data.
+Workflow note:
+This revision is delivered as track_manager_V2_1.py.  When promoted in the
+project it should replace the stable tracking/track_manager.py so existing
+runtime imports remain unchanged.
 """
 
 from __future__ import annotations
@@ -26,15 +21,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import math
-from typing import Any, Iterable, Sequence
+from typing import Any, Sequence
 
 from tracking.association import (
     AssociationConfig,
-    AssociationResult,
+    PairDiagnostics,
     associate,
+    evaluate_pair,
 )
 from tracking.kalman import KalmanConfig
-from tracking.track import Track, TrackFrameState
+from tracking.track import Track
 
 
 class TrackLifecycle(str, Enum):
@@ -46,35 +42,22 @@ class TrackLifecycle(str, Enum):
 
 @dataclass(frozen=True)
 class TrackManagerConfig:
-    # Birth confirmation.
     min_confirmed_hits: int = 3
     tentative_max_gap_s: float = 0.15
 
-    # A confirmed track remains visible as prediction for this long.
     visible_prediction_horizon_s: float = 0.50
-
-    # After becoming hidden/LOST, keep predicting and allow reassociation until
-    # this total time since the last real observation.
     lost_memory_horizon_s: float = 2.00
 
-    # Final 2D display capacity only. Internal candidates are not capped.
     max_visible_tracks: int = 25
 
-    # EMA for detector confidence, used only as one component of operational
-    # reliability.
     confidence_ema_alpha: float = 0.15
 
-    # Reliability weights; normalized internally.
     reliability_hit_ratio_weight: float = 0.45
     reliability_age_weight: float = 0.20
     reliability_confidence_weight: float = 0.20
     reliability_recency_weight: float = 0.15
 
-    # Display hysteresis. Existing visible tracks receive this small ranking
-    # bonus before max_visible_tracks is applied.
     visible_retention_bonus: float = 0.10
-
-    # Number of hits at which the age component saturates.
     age_saturation_hits: int = 30
 
     def __post_init__(self) -> None:
@@ -158,6 +141,50 @@ class ManagedTrackSnapshot:
 
 
 @dataclass(frozen=True)
+class StageAssociationDiagnostics:
+    lifecycle: str
+    track_count: int
+    observation_count: int
+
+    pairs_evaluated: int
+    allowed_pairs: int
+    physical_gate_rejections: int
+    mahalanobis_gate_rejections: int
+    non_finite_mahalanobis_rejections: int
+    other_rejections: int
+
+    matches: int
+
+    @property
+    def rejected_pairs(self) -> int:
+        return self.pairs_evaluated - self.allowed_pairs
+
+
+@dataclass(frozen=True)
+class NearestTrackDiagnostic:
+    lifecycle: str
+    track_id: int
+    predicted_distance_m: float
+    displacement_from_last_observed_m: float
+    physical_radius_m: float
+    uncertainty_slack_m: float
+    mahalanobis_squared: float | None
+    allowed: bool
+    reason: str
+
+
+@dataclass(frozen=True)
+class UnmatchedObservationDiagnostic:
+    observation_index: int
+    detection_index: int | None
+    confidence: float
+
+    nearest_confirmed: NearestTrackDiagnostic | None
+    nearest_lost: NearestTrackDiagnostic | None
+    nearest_tentative: NearestTrackDiagnostic | None
+
+
+@dataclass(frozen=True)
 class TrackManagerFrameResult:
     frame: int
     time_s: float
@@ -175,6 +202,11 @@ class TrackManagerFrameResult:
     visible_tracks: tuple[ManagedTrackSnapshot, ...]
     all_active_tracks: tuple[ManagedTrackSnapshot, ...]
 
+    association_stage_diagnostics: tuple[StageAssociationDiagnostics, ...] = ()
+    unmatched_observation_diagnostics: tuple[
+        UnmatchedObservationDiagnostic, ...
+    ] = ()
+
 
 def _observation_confidence(observation: Any) -> float:
     value = float(getattr(observation, "confidence", 1.0))
@@ -183,8 +215,46 @@ def _observation_confidence(observation: Any) -> float:
     return max(0.0, min(1.0, value))
 
 
+def _summarize_stage(
+    *,
+    lifecycle: TrackLifecycle,
+    track_count: int,
+    observation_count: int,
+    pairs: Sequence[PairDiagnostics],
+    matches: int,
+) -> StageAssociationDiagnostics:
+    counts = {
+        "allowed": 0,
+        "physical_gate": 0,
+        "mahalanobis_gate": 0,
+        "non_finite_mahalanobis": 0,
+        "other": 0,
+    }
+
+    for pair in pairs:
+        if pair.allowed:
+            counts["allowed"] += 1
+        elif pair.reason in counts:
+            counts[pair.reason] += 1
+        else:
+            counts["other"] += 1
+
+    return StageAssociationDiagnostics(
+        lifecycle=lifecycle.value,
+        track_count=track_count,
+        observation_count=observation_count,
+        pairs_evaluated=len(pairs),
+        allowed_pairs=counts["allowed"],
+        physical_gate_rejections=counts["physical_gate"],
+        mahalanobis_gate_rejections=counts["mahalanobis_gate"],
+        non_finite_mahalanobis_rejections=counts["non_finite_mahalanobis"],
+        other_rejections=counts["other"],
+        matches=matches,
+    )
+
+
 class TrackManager:
-    """Own all anonymous tracks for one continuous detector run."""
+    """Anonymous football-person track manager with diagnostic cascade."""
 
     def __init__(
         self,
@@ -225,8 +295,6 @@ class TrackManager:
         )
 
     def reliability(self, managed: ManagedTrack) -> float:
-        """Operational stability score in [0,1], not a probability."""
-
         track = managed.track
         cfg = self.config
 
@@ -242,15 +310,12 @@ class TrackManager:
         )
         confidence_score = max(0.0, min(1.0, managed.confidence_ema))
 
-        if cfg.visible_prediction_horizon_s > 0.0:
-            recency_score = max(
-                0.0,
-                1.0
-                - track.seconds_since_observation
-                / cfg.visible_prediction_horizon_s,
-            )
-        else:
-            recency_score = 0.0
+        recency_score = max(
+            0.0,
+            1.0
+            - track.seconds_since_observation
+            / cfg.visible_prediction_horizon_s,
+        )
 
         weights = (
             cfg.reliability_hit_ratio_weight,
@@ -264,8 +329,10 @@ class TrackManager:
             confidence_score,
             recency_score,
         )
-        denominator = sum(weights)
-        score = sum(w * c for w, c in zip(weights, components)) / denominator
+        score = (
+            sum(w * c for w, c in zip(weights, components))
+            / sum(weights)
+        )
         return max(0.0, min(1.0, float(score)))
 
     def process_frame(
@@ -287,8 +354,9 @@ class TrackManager:
         reactivated: list[int] = []
         newly_lost: list[int] = []
         retired: list[int] = []
+        assignments: list[ManagerAssignment] = []
+        stage_diagnostics: list[StageAssociationDiagnostics] = []
 
-        # First frame: every observation starts as a hidden tentative track.
         if self._last_frame is None:
             for observation in observations:
                 managed = self._spawn(observation)
@@ -308,16 +376,14 @@ class TrackManager:
                 reactivated_track_ids=(),
                 newly_lost_track_ids=(),
                 retired_track_ids=(),
+                association_stage_diagnostics=(),
+                unmatched_observation_diagnostics=(),
             )
 
-        # Predict every active track to the new frame.
         for managed in list(self._managed.values()):
-            if managed.lifecycle == TrackLifecycle.RETIRED:
-                continue
-            managed.track.predict_to(frame=frame, time_s=time_s)
+            if managed.lifecycle != TrackLifecycle.RETIRED:
+                managed.track.predict_to(frame=frame, time_s=time_s)
 
-        # Age lifecycle before association. Lost tracks still participate while
-        # within memory; expired tracks do not.
         for managed in list(self._managed.values()):
             transition = self._age_lifecycle(managed)
             if transition == "lost":
@@ -325,55 +391,122 @@ class TrackManager:
             elif transition == "retired":
                 retired.append(managed.track_id)
 
-        associable = [
-            managed
-            for managed in self._managed.values()
-            if managed.lifecycle != TrackLifecycle.RETIRED
-        ]
-        association = associate(
-            [managed.track for managed in associable],
-            observations,
-            config=self.association_config,
+        for track_id in retired:
+            self._retire(track_id)
+
+        remaining_observation_indices = list(range(len(observations)))
+        matched_track_ids: set[int] = set()
+
+        lifecycle_stages = (
+            TrackLifecycle.CONFIRMED,
+            TrackLifecycle.LOST,
+            TrackLifecycle.TENTATIVE,
         )
 
-        assignments: list[ManagerAssignment] = []
-        matched_track_indices = {
-            match.track_index for match in association.matches
-        }
+        for lifecycle in lifecycle_stages:
+            stage_tracks = [
+                managed
+                for managed in self._managed.values()
+                if managed.lifecycle == lifecycle
+                and managed.track_id not in matched_track_ids
+            ]
 
-        for match in association.matches:
-            managed = associable[match.track_index]
-            observation = observations[match.observation_index]
-            previous_lifecycle = managed.lifecycle
+            if not stage_tracks or not remaining_observation_indices:
+                stage_diagnostics.append(
+                    StageAssociationDiagnostics(
+                        lifecycle=lifecycle.value,
+                        track_count=len(stage_tracks),
+                        observation_count=len(remaining_observation_indices),
+                        pairs_evaluated=0,
+                        allowed_pairs=0,
+                        physical_gate_rejections=0,
+                        mahalanobis_gate_rejections=0,
+                        non_finite_mahalanobis_rejections=0,
+                        other_rejections=0,
+                        matches=0,
+                    )
+                )
+                continue
 
-            managed.track.update(observation)
-            self._update_confidence(managed, observation)
+            stage_observations = [
+                observations[index]
+                for index in remaining_observation_indices
+            ]
 
-            if previous_lifecycle == TrackLifecycle.LOST:
-                managed.lifecycle = TrackLifecycle.CONFIRMED
-                reactivated.append(managed.track_id)
-            elif (
-                previous_lifecycle == TrackLifecycle.TENTATIVE
-                and managed.track.hits >= self.config.min_confirmed_hits
-            ):
-                managed.lifecycle = TrackLifecycle.CONFIRMED
-                managed.confirmed_frame = frame
-                managed.confirmed_time_s = time_s
-                newly_confirmed.append(managed.track_id)
+            result = associate(
+                [managed.track for managed in stage_tracks],
+                stage_observations,
+                config=self.association_config,
+                include_pair_diagnostics=True,
+            )
 
-            assignments.append(
-                ManagerAssignment(
-                    track_id=managed.track_id,
-                    observation_index=match.observation_index,
-                    mahalanobis_squared=match.mahalanobis_squared,
-                    predicted_distance_m=match.predicted_distance_m,
+            stage_diagnostics.append(
+                _summarize_stage(
+                    lifecycle=lifecycle,
+                    track_count=len(stage_tracks),
+                    observation_count=len(stage_observations),
+                    pairs=result.pair_diagnostics,
+                    matches=len(result.matches),
                 )
             )
 
-        # Resolve unmatched predictions.
-        for track_index, managed in enumerate(associable):
-            if track_index in matched_track_indices:
+            matched_stage_observation_positions: set[int] = set()
+
+            for match in result.matches:
+                managed = stage_tracks[match.track_index]
+                global_observation_index = remaining_observation_indices[
+                    match.observation_index
+                ]
+                observation = observations[global_observation_index]
+
+                previous_lifecycle = managed.lifecycle
+                managed.track.update(observation)
+                self._update_confidence(managed, observation)
+                matched_track_ids.add(managed.track_id)
+                matched_stage_observation_positions.add(
+                    match.observation_index
+                )
+
+                if previous_lifecycle == TrackLifecycle.LOST:
+                    managed.lifecycle = TrackLifecycle.CONFIRMED
+                    reactivated.append(managed.track_id)
+                elif (
+                    previous_lifecycle == TrackLifecycle.TENTATIVE
+                    and managed.track.hits >= self.config.min_confirmed_hits
+                ):
+                    managed.lifecycle = TrackLifecycle.CONFIRMED
+                    managed.confirmed_frame = frame
+                    managed.confirmed_time_s = time_s
+                    newly_confirmed.append(managed.track_id)
+
+                assignments.append(
+                    ManagerAssignment(
+                        track_id=managed.track_id,
+                        observation_index=global_observation_index,
+                        mahalanobis_squared=match.mahalanobis_squared,
+                        predicted_distance_m=match.predicted_distance_m,
+                    )
+                )
+
+            remaining_observation_indices = [
+                global_index
+                for local_index, global_index
+                in enumerate(remaining_observation_indices)
+                if local_index not in matched_stage_observation_positions
+            ]
+
+        # Capture diagnostics while every unmatched track is still in the
+        # prediction-ready state.  mark_missed() resolves that state.
+        unmatched_observation_diagnostics = self._diagnose_unmatched(
+            observations=observations,
+            observation_indices=remaining_observation_indices,
+            matched_track_ids=matched_track_ids,
+        )
+
+        for managed in list(self._managed.values()):
+            if managed.track_id in matched_track_ids:
                 continue
+
             managed.track.mark_missed()
 
             transition = self._age_lifecycle(managed)
@@ -382,15 +515,12 @@ class TrackManager:
             elif transition == "retired" and managed.track_id not in retired:
                 retired.append(managed.track_id)
 
-        # Every unmatched observation becomes an internal tentative candidate,
-        # never an immediately visible player.
-        for observation_index in association.unmatched_observation_indices:
-            managed = self._spawn(observations[observation_index])
-            new_track_ids.append(managed.track_id)
-
-        # Move retired tracks to archive after all association bookkeeping.
         for track_id in retired:
             self._retire(track_id)
+
+        for observation_index in remaining_observation_indices:
+            managed = self._spawn(observations[observation_index])
+            new_track_ids.append(managed.track_id)
 
         self._last_frame = frame
         self._last_time_s = time_s
@@ -400,13 +530,103 @@ class TrackManager:
             frame=frame,
             time_s=time_s,
             assignments=tuple(assignments),
-            unmatched_observation_indices=association.unmatched_observation_indices,
+            unmatched_observation_indices=tuple(
+                remaining_observation_indices
+            ),
             new_track_ids=tuple(new_track_ids),
             newly_confirmed_track_ids=tuple(sorted(set(newly_confirmed))),
             reactivated_track_ids=tuple(sorted(set(reactivated))),
             newly_lost_track_ids=tuple(sorted(set(newly_lost))),
             retired_track_ids=tuple(sorted(set(retired))),
+            association_stage_diagnostics=tuple(stage_diagnostics),
+            unmatched_observation_diagnostics=unmatched_observation_diagnostics,
         )
+
+    def _diagnose_unmatched(
+        self,
+        *,
+        observations: Sequence[Any],
+        observation_indices: Sequence[int],
+        matched_track_ids: set[int],
+    ) -> tuple[UnmatchedObservationDiagnostic, ...]:
+        candidates_by_lifecycle: dict[TrackLifecycle, list[ManagedTrack]] = {
+            TrackLifecycle.CONFIRMED: [],
+            TrackLifecycle.LOST: [],
+            TrackLifecycle.TENTATIVE: [],
+        }
+
+        for managed in self._managed.values():
+            if managed.track_id in matched_track_ids:
+                continue
+            if managed.lifecycle in candidates_by_lifecycle:
+                candidates_by_lifecycle[managed.lifecycle].append(managed)
+
+        result: list[UnmatchedObservationDiagnostic] = []
+
+        for observation_index in observation_indices:
+            observation = observations[observation_index]
+
+            nearest = {}
+            for lifecycle in (
+                TrackLifecycle.CONFIRMED,
+                TrackLifecycle.LOST,
+                TrackLifecycle.TENTATIVE,
+            ):
+                best = None
+                for managed in candidates_by_lifecycle[lifecycle]:
+                    pair = evaluate_pair(
+                        managed.track,
+                        observation,
+                        track_index=0,
+                        observation_index=observation_index,
+                        config=self.association_config,
+                    )
+                    diagnostic = NearestTrackDiagnostic(
+                        lifecycle=lifecycle.value,
+                        track_id=managed.track_id,
+                        predicted_distance_m=pair.predicted_distance_m,
+                        displacement_from_last_observed_m=(
+                            pair.displacement_from_last_observed_m
+                        ),
+                        physical_radius_m=pair.physical_radius_m,
+                        uncertainty_slack_m=pair.uncertainty_slack_m,
+                        mahalanobis_squared=pair.mahalanobis_squared,
+                        allowed=pair.allowed,
+                        reason=pair.reason,
+                    )
+
+                    if (
+                        best is None
+                        or diagnostic.predicted_distance_m
+                        < best.predicted_distance_m
+                    ):
+                        best = diagnostic
+
+                nearest[lifecycle] = best
+
+            detection_index_value = getattr(
+                observation,
+                "detection_index",
+                None,
+            )
+            detection_index = (
+                int(detection_index_value)
+                if detection_index_value is not None
+                else None
+            )
+
+            result.append(
+                UnmatchedObservationDiagnostic(
+                    observation_index=observation_index,
+                    detection_index=detection_index,
+                    confidence=_observation_confidence(observation),
+                    nearest_confirmed=nearest[TrackLifecycle.CONFIRMED],
+                    nearest_lost=nearest[TrackLifecycle.LOST],
+                    nearest_tentative=nearest[TrackLifecycle.TENTATIVE],
+                )
+            )
+
+        return tuple(result)
 
     def _spawn(self, observation: Any) -> ManagedTrack:
         track_id = self._next_track_id
@@ -418,6 +638,7 @@ class TrackManager:
             initial_observation=observation,
             kalman_config=self.kalman_config,
         )
+
         managed = ManagedTrack(
             track=track,
             lifecycle=TrackLifecycle.TENTATIVE,
@@ -548,6 +769,12 @@ class TrackManager:
         reactivated_track_ids: tuple[int, ...],
         newly_lost_track_ids: tuple[int, ...],
         retired_track_ids: tuple[int, ...],
+        association_stage_diagnostics: tuple[
+            StageAssociationDiagnostics, ...
+        ],
+        unmatched_observation_diagnostics: tuple[
+            UnmatchedObservationDiagnostic, ...
+        ],
     ) -> TrackManagerFrameResult:
         active = [
             self._snapshot(managed)
@@ -572,6 +799,10 @@ class TrackManager:
             visible_track_ids=tuple(item.track_id for item in visible),
             visible_tracks=tuple(visible),
             all_active_tracks=tuple(active),
+            association_stage_diagnostics=association_stage_diagnostics,
+            unmatched_observation_diagnostics=(
+                unmatched_observation_diagnostics
+            ),
         )
 
     def _validate_frame_clock(self, frame: int, time_s: float) -> None:
@@ -607,8 +838,11 @@ __all__ = [
     "ManagedTrack",
     "ManagedTrackSnapshot",
     "ManagerAssignment",
+    "NearestTrackDiagnostic",
+    "StageAssociationDiagnostics",
     "TrackLifecycle",
     "TrackManager",
     "TrackManagerConfig",
     "TrackManagerFrameResult",
+    "UnmatchedObservationDiagnostic",
 ]

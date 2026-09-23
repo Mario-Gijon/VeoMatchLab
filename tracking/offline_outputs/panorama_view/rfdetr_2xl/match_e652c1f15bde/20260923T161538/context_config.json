@@ -1,0 +1,101 @@
+{
+  "source_run_dir": "person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T140314",
+  "source_detection_config": {
+    "model": {
+      "backend": "rfdetr",
+      "variant": "2xl",
+      "name": "rfdetr_2xl",
+      "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth",
+      "device": "cuda",
+      "native_resolution": 880,
+      "inference_mode": "sequential_views"
+    },
+    "view": "panorama_view",
+    "clip_id": "match_e652c1f15bde",
+    "video": "data/matches/match_e652c1f15bde/media/dual_lens.mp4",
+    "calibration": "data/matches/match_e652c1f15bde/calibration/camera_alignment.veo",
+    "start_s": 1200.0,
+    "duration_s": 60.0,
+    "threshold": 0.25,
+    "render_size_per_view": [
+      2048,
+      1152
+    ],
+    "panorama_size": [
+      3840,
+      2160
+    ],
+    "overlap": 0.15,
+    "far_touchline_margin_m": 0.5,
+    "output_video": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T140314/result.mp4",
+    "pipeline": "dual_lens -> panorama_view -> person detector -> bbox footpoint -> ground X/Z -> field filter -> ownership -> video + 2D pitch"
+  },
+  "offline_context_config": {
+    "calibration_max_triplet_gap_s": 0.15,
+    "calibration_min_triplets": 50,
+    "covariance_scale_min": 1.0,
+    "covariance_scale_max": 9.0,
+    "tracklet_split_gap_s": 0.25,
+    "tracklet_break_max_speed_mps": 13.5,
+    "tracklet_break_base_slack_m": 0.1,
+    "tracklet_break_uncertainty_sigma_multiplier": 3.0,
+    "velocity_window_s": 0.5,
+    "velocity_min_observations": 5,
+    "velocity_min_span_s": 0.12,
+    "anchor_min_observations": 8,
+    "anchor_min_span_s": 0.2,
+    "anchor_min_coverage": 0.5,
+    "anchor_max_endpoint_speed_mps": 14.0,
+    "linker_max_gap_s": 2.5,
+    "linker_long_gap_requires_velocity_s": 0.5,
+    "linker_max_speed_mps": 13.0,
+    "linker_base_slack_m": 0.5,
+    "linker_uncertainty_sigma_multiplier": 3.0,
+    "linker_prediction_growth_mps": 1.5,
+    "linker_velocity_cost_weight": 0.1,
+    "linker_gap_cost_weight": 0.35,
+    "linker_same_source_bonus": 0.4,
+    "linker_unmatched_cost": 3.75,
+    "final_min_observations": 8,
+    "final_min_span_s": 0.2,
+    "render_gap_s": 0.5,
+    "endpoint_extrapolation_s": 0.0,
+    "max_visible_tracks": 25
+  },
+  "track_manager_config": {
+    "min_confirmed_hits": 3,
+    "tentative_max_gap_s": 0.15,
+    "visible_prediction_horizon_s": 0.5,
+    "lost_memory_horizon_s": 2.0,
+    "max_visible_tracks": 25,
+    "confidence_ema_alpha": 0.15,
+    "reliability_hit_ratio_weight": 0.45,
+    "reliability_age_weight": 0.2,
+    "reliability_confidence_weight": 0.2,
+    "reliability_recency_weight": 0.15,
+    "visible_retention_bonus": 0.1,
+    "age_saturation_hits": 30
+  },
+  "association_config": {
+    "mahalanobis_gate_squared": 16.0,
+    "max_speed_mps": 12.5,
+    "position_slack_m": 0.1,
+    "uncertainty_sigma_multiplier": 3.0,
+    "euclidean_cost_weight": 0.05
+  },
+  "kalman_config": {
+    "acceleration_std_mps2": 4.0,
+    "initial_velocity_std_mps": 6.0,
+    "covariance_floor": 1e-09
+  },
+  "output_paths": {
+    "calibration.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/calibration.json",
+    "tracklets.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/tracklets.json",
+    "trajectories.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/trajectories.json",
+    "offline_tracks.jsonl": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/offline_tracks.jsonl",
+    "summary.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/summary.json",
+    "context_config.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/context_config.json",
+    "result_offline_2d.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/result_offline_2d.mp4",
+    "debug_raw_vs_offline.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260923T161538/debug_raw_vs_offline.mp4"
+  }
+}
