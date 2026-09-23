@@ -125,6 +125,19 @@ DEFAULT_YOLO26X = (
 DEFAULT_CLIPS_ROOT = ROOT / "person_detect" / "clips"
 DEFAULT_DATA_MATCHES_ROOT = ROOT / "data" / "matches"
 DEFAULT_RUNS = ROOT / "person_detect" / "outputs"
+MODEL_CHOICES = (
+    "rfdetr_large",
+    "rfdetr_2xl",
+    "dfine_x_coco",
+    "dfine_x_obj2coco",
+    "yolo26x",
+)
+VIEW_CHOICES = (
+    "interactive_view",
+    "two_lens_view",
+    "panorama_view",
+    "ultra_panorama_view",
+)
 
 COMBINED_W = 1920
 COMBINED_H = 1080
@@ -538,12 +551,12 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--model",
-        choices=("rfdetr_large", "rfdetr_2xl", "dfine_x_coco", "dfine_x_obj2coco", "yolo26x"),
+        choices=MODEL_CHOICES,
         default="rfdetr_large",
     )
     parser.add_argument(
         "--view",
-        choices=("interactive_view", "two_lens_view", "panorama_view", "ultra_panorama_view"),
+        choices=VIEW_CHOICES,
         default="interactive_view",
     )
     parser.add_argument(
@@ -629,9 +642,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
-
+def run_detection(args: argparse.Namespace) -> Path:
     if args.duration <= 0.0:
         raise ValueError("--duration must be > 0")
     if not 0.0 <= args.threshold <= 1.0:
@@ -912,6 +923,11 @@ def main() -> None:
     print(json.dumps(summary, indent=2))
     print(f"Video: {result_video}")
     print(f"Detections: {detections_path}")
+    return run_dir
+
+
+def main() -> None:
+    run_detection(parse_args())
 
 
 if __name__ == "__main__":
