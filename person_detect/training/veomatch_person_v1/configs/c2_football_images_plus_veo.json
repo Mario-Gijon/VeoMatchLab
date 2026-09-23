@@ -4,7 +4,7 @@
   "composition": ["football_images", "veo_ball_detection"],
   "base_checkpoint": "person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth",
   "class_names": ["person"],
-  "training": {"epochs": 50, "batch_size": 2, "grad_accum_steps": 4, "learning_rate": 0.00001},
+  "training": {"epochs": 50, "batch_size": 1, "grad_accum_steps": 16, "learning_rate": 0.00005, "learning_rate_encoder": 0.000075, "resolution": 880, "gradient_checkpointing": true, "use_ema": true, "early_stopping": true, "early_stopping_patience": 10, "skip_best_epochs": 3},
   "best_epoch": null,
   "validation_metrics": {}
 }

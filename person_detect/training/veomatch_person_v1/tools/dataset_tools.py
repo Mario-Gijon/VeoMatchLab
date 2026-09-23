@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 from collections import Counter, defaultdict
@@ -21,6 +22,31 @@ CLASS_MAP = {
 }
 IGNORED_CLASSES = {"ball", "football", "logo"}
 SPLITS = ("train", "valid", "test")
+
+
+def _write_rfdetr_split_files(output: Path, dataset: dict[str, Any]) -> None:
+    """Write the split layout auto-discovered by RF-DETR."""
+    for split in SPLITS:
+        split_dir = output / split
+        image_dir = split_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        images = [item for item in dataset["images"] if item.get("split") == split]
+        image_ids = {item["id"] for item in images}
+        annotations = [item for item in dataset["annotations"] if item["image_id"] in image_ids]
+        split_dataset = {"images": [], "annotations": annotations, "categories": dataset["categories"]}
+        for item in images:
+            filename = Path(item["file_name"]).name
+            link = image_dir / filename
+            target = Path("..") / ".." / "images" / split / filename
+            if not link.exists():
+                try:
+                    os.symlink(target, link)
+                except OSError:
+                    os.link(output / "images" / split / filename, link)
+            copied = dict(item)
+            copied["file_name"] = str(Path("images") / filename)
+            split_dataset["images"].append(copied)
+        (split_dir / "_annotations.coco.json").write_text(json.dumps(split_dataset, indent=2) + "\n", encoding="utf-8")
 
 
 def sequence_group_from_path(path: str | Path) -> str:
@@ -181,6 +207,7 @@ def convert_coco(source: str | Path, output: str | Path, *, source_name: str) ->
         next_image_id += 1
     dataset = {"images": coco_images, "annotations": coco_annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
+    _write_rfdetr_split_files(output, dataset)
     (output / "manifest.json").write_text(json.dumps({"dataset": source_name, "unknown_classes": unknown, "ignored_classes": ignored, "images": manifest}, indent=2) + "\n", encoding="utf-8")
     if unknown:
         (output / "unknown_classes.json").write_text(json.dumps(unknown, indent=2) + "\n", encoding="utf-8")
@@ -300,6 +327,7 @@ def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name
         pair_summary[key] += 1
     dataset = {"images": [{k: v for k, v in item.items() if k != "_manifest"} for item in image_rows], "annotations": annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
+    _write_rfdetr_split_files(output, dataset)
     audit = {"total_sequence_groups": len(sequence_splits), "groups_by_split": {split: sum(1 for values in sequence_splits.values() if values == {split}) for split in SPLITS}, "sequence_groups_spanning_splits": leakage, "sequence_group_leakage_count": len(leakage), "near_duplicate_pair_counts": pair_summary, "perceptual_cross_split_pairs": sum(value for key, value in pair_summary.items() if key.split("__")[0] != key.split("__")[1]), "near_duplicate_pairs_same_sequence_group": sum(item["same_sequence_group"] for item in near_duplicates), "near_duplicate_pairs_perceptual_only": sum(not item["same_sequence_group"] for item in near_duplicates), "exact_duplicates_removed": exact_duplicates_removed, "exact_duplicate_split_conflicts": split_conflicts}
     (output / "manifest.json").write_text(json.dumps({"dataset": dataset_name, "images": final_manifest, "sequence_audit": audit}, indent=2) + "\n", encoding="utf-8")
     (output / "near_duplicates.json").write_text(json.dumps({"pairs": near_duplicates, "summary": pair_summary, "sequence_group_leakage": leakage}, indent=2) + "\n", encoding="utf-8")

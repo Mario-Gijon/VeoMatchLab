@@ -7,6 +7,13 @@ from person_detect.training.veomatch_person_v1.tools.dataset_tools import (
     normalize_class,
     sequence_group_from_path,
 )
+from person_detect.training.veomatch_person_v1.train import (
+    _find_best,
+    _ensure_run_dir,
+    _validate_dataset,
+    canonical_experiment,
+    load_config,
+)
 
 
 def _ppm(path: Path, value: int) -> None:
@@ -110,3 +117,43 @@ def test_sequence_groups_are_single_split(tmp_path):
     merge_datasets([train], merged, dataset_name="merged_sequence")
     audit = json.loads((merged / "manifest.json").read_text())["sequence_audit"]
     assert audit["sequence_group_leakage_count"] == 0
+
+
+def test_rfdetr_split_structure_and_single_category(tmp_path):
+    source = _source(tmp_path, "rfdetr_source")
+    converted = tmp_path / "converted"
+    convert_coco(source, converted, source_name="source")
+    report = _validate_dataset(converted)
+    assert report["train"]["images"] == 1
+    payload = json.loads((converted / "train" / "_annotations.coco.json").read_text())
+    assert payload["categories"] == [{"id": 1, "name": "person", "supercategory": "person"}]
+    assert (converted / "train" / payload["images"][0]["file_name"]).is_file()
+
+
+def test_training_aliases_and_controlled_config():
+    assert canonical_experiment("c1") == "c1_football_images"
+    config = load_config("c1")
+    assert config["training"] == {
+        "epochs": 50, "batch_size": 1, "grad_accum_steps": 16,
+        "learning_rate": 5e-5, "learning_rate_encoder": 7.5e-5,
+        "resolution": 880, "gradient_checkpointing": True, "use_ema": True,
+        "early_stopping": True, "early_stopping_patience": 10,
+        "skip_best_epochs": 3,
+    }
+
+
+def test_checkpoint_selection_is_explicit(tmp_path):
+    (tmp_path / "checkpoint_best_regular.pth").write_bytes(b"regular")
+    assert _find_best(tmp_path).name == "checkpoint_best_regular.pth"
+    (tmp_path / "unrelated.pth").write_bytes(b"unrelated")
+    assert _find_best(tmp_path).name == "checkpoint_best_regular.pth"
+
+
+def test_existing_run_requires_explicit_protection(tmp_path):
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "checkpoint_best_total.pth").write_bytes(b"checkpoint")
+    import pytest
+    with pytest.raises(FileExistsError):
+        _ensure_run_dir(run_dir, overwrite=False)
+    _ensure_run_dir(run_dir, overwrite=True)

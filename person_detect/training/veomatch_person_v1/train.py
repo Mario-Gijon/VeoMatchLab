@@ -33,6 +33,7 @@ def parse_args(argv=None):
     parser.add_argument("--epochs", type=int)
     parser.add_argument("--batch-size", type=int)
     parser.add_argument("--lr", type=float)
+    parser.add_argument("--overwrite", action="store_true", help="Allow writing into a non-empty existing run directory")
     return parser.parse_args(argv)
 
 
@@ -43,12 +44,47 @@ def load_config(experiment: str) -> dict:
 
 
 def _find_best(run_dir: Path) -> Path:
-    candidates = [run_dir / "best.pth", run_dir / "checkpoint_best_total.pth", run_dir / "checkpoint_best.pth"]
-    candidates.extend(sorted(run_dir.rglob("*.pth")))
+    candidates = [
+        run_dir / "checkpoint_best_total.pth",
+        run_dir / "checkpoint_best_ema.pth",
+        run_dir / "checkpoint_best_regular.pth",
+    ]
     for candidate in candidates:
         if candidate.is_file():
             return candidate
-    raise FileNotFoundError(f"No best checkpoint found under {run_dir}")
+    raise FileNotFoundError(
+        f"RF-DETR best checkpoint not found under {run_dir}; expected "
+        "checkpoint_best_total.pth (or checkpoint_best_ema.pth / "
+        "checkpoint_best_regular.pth)."
+    )
+
+
+def _validate_dataset(dataset_dir: Path) -> dict:
+    split_reports = {}
+    for split in ("train", "valid"):
+        annotation_path = dataset_dir / split / "_annotations.coco.json"
+        if not annotation_path.is_file():
+            raise FileNotFoundError(
+                f"Incomplete RF-DETR dataset: missing {annotation_path}. "
+                "Rebuild C1/C2/C3 with build_datasets.py."
+            )
+        payload = json.loads(annotation_path.read_text(encoding="utf-8"))
+        categories = payload.get("categories", [])
+        if categories != [{"id": 1, "name": "person", "supercategory": "person"}]:
+            raise ValueError(f"{annotation_path} must contain exactly the person category")
+        missing = []
+        for image in payload.get("images", []):
+            image_path = annotation_path.parent / image["file_name"]
+            if not image_path.is_file():
+                missing.append(str(image_path))
+        if missing:
+            raise FileNotFoundError(f"{annotation_path} references missing image files, e.g. {missing[0]}")
+        split_reports[split] = {"images": len(payload.get("images", [])), "annotations": len(payload.get("annotations", []))}
+    test_annotation = dataset_dir / "test" / "_annotations.coco.json"
+    if test_annotation.is_file():
+        payload = json.loads(test_annotation.read_text(encoding="utf-8"))
+        split_reports["test"] = {"images": len(payload.get("images", [])), "annotations": len(payload.get("annotations", []))}
+    return split_reports
 
 
 def _training_metrics(run_dir: Path) -> tuple[int | None, dict]:
@@ -63,16 +99,24 @@ def _training_metrics(run_dir: Path) -> tuple[int | None, dict]:
     return None, {}
 
 
+def _ensure_run_dir(run_dir: Path, *, overwrite: bool) -> None:
+    if run_dir.exists() and any(run_dir.iterdir()) and not overwrite:
+        raise FileExistsError(
+            f"Run directory already contains artifacts: {run_dir}. "
+            "Use --overwrite explicitly or choose a new run directory."
+        )
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+
 def train(args) -> Path:
     experiment = canonical_experiment(args.experiment)
     config = load_config(experiment)
     if not BASE_CHECKPOINT.is_file():
         raise FileNotFoundError(BASE_CHECKPOINT)
     dataset_dir = ROOT / config["dataset_dir"]
-    if not (dataset_dir / "annotations.json").is_file():
-        raise FileNotFoundError(dataset_dir / "annotations.json")
+    _validate_dataset(dataset_dir)
     run_dir = WORKSPACE / "runs" / experiment
-    run_dir.mkdir(parents=True, exist_ok=True)
+    _ensure_run_dir(run_dir, overwrite=args.overwrite)
     params = dict(config["training"])
     if args.epochs is not None:
         params["epochs"] = args.epochs
@@ -84,7 +128,10 @@ def train(args) -> Path:
     # RF-DETR is imported only when a real training run is requested.
     from rfdetr import RFDETR2XLarge
 
-    model = RFDETR2XLarge(pretrain_weights=str(BASE_CHECKPOINT))
+    model = RFDETR2XLarge(
+        pretrain_weights=str(BASE_CHECKPOINT),
+        gradient_checkpointing=bool(params["gradient_checkpointing"]),
+    )
     model.train(
         dataset_dir=str(dataset_dir),
         output_dir=str(run_dir),
@@ -92,10 +139,16 @@ def train(args) -> Path:
         batch_size=int(params["batch_size"]),
         grad_accum_steps=int(params["grad_accum_steps"]),
         lr=float(params["learning_rate"]),
+        lr_encoder=float(params["learning_rate_encoder"]),
+        resolution=int(params["resolution"]),
+        use_ema=bool(params["use_ema"]),
+        early_stopping=bool(params["early_stopping"]),
+        early_stopping_patience=int(params["early_stopping_patience"]),
+        skip_best_epochs=int(params["skip_best_epochs"]),
     )
     best = _find_best(run_dir)
     best_epoch, validation_metrics = _training_metrics(run_dir)
-    export_dir = EXPORT_ROOT / args.experiment
+    export_dir = EXPORT_ROOT / experiment
     export_dir.mkdir(parents=True, exist_ok=True)
     exported = export_dir / "best.pth"
     shutil.copy2(best, exported)
@@ -118,8 +171,38 @@ def main(argv=None) -> int:
     args = parse_args(argv)
     experiment = canonical_experiment(args.experiment)
     config = load_config(experiment)
+    dataset_dir = ROOT / config["dataset_dir"]
+    split_reports = _validate_dataset(dataset_dir)
+    params = dict(config["training"])
+    if args.epochs is not None:
+        params["epochs"] = args.epochs
+    if args.batch_size is not None:
+        params["batch_size"] = args.batch_size
+    if args.lr is not None:
+        params["learning_rate"] = args.lr
     run_dir = WORKSPACE / "runs" / experiment
-    print(json.dumps({"experiment": experiment, "base_checkpoint": str(BASE_CHECKPOINT), "dataset": config["dataset_dir"], "run_dir": str(run_dir)}, indent=2))
+    plan = {
+        "experiment": experiment,
+        "base_checkpoint": str(BASE_CHECKPOINT),
+        "dataset_directory": str(dataset_dir),
+        "split_counts": split_reports,
+        "class_names": config["class_names"],
+        "resolution": params["resolution"],
+        "epochs": params["epochs"],
+        "batch_size": params["batch_size"],
+        "gradient_accumulation": params["grad_accum_steps"],
+        "effective_batch_size": params["batch_size"] * params["grad_accum_steps"],
+        "learning_rate": params["learning_rate"],
+        "encoder_learning_rate": params["learning_rate_encoder"],
+        "gradient_checkpointing": params["gradient_checkpointing"],
+        "use_ema": params["use_ema"],
+        "early_stopping": params["early_stopping"],
+        "early_stopping_patience": params["early_stopping_patience"],
+        "skip_best_epochs": params["skip_best_epochs"],
+        "run_directory": str(run_dir),
+        "final_export_directory": str(EXPORT_ROOT / experiment),
+    }
+    print(json.dumps(plan, indent=2))
     if args.dry_run:
         return 0
     print(f"Starting independent RF-DETR 2XL training for {args.experiment}...")
