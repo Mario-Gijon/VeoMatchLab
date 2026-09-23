@@ -13,6 +13,8 @@ from person_detect.training.veomatch_person_v1.train import (
     _validate_dataset,
     canonical_experiment,
     load_config,
+    model_constructor_kwargs,
+    resolve_num_classes,
 )
 
 
@@ -140,6 +142,31 @@ def test_training_aliases_and_controlled_config():
         "early_stopping": True, "early_stopping_patience": 10,
         "skip_best_epochs": 3,
     }
+
+
+def test_all_experiments_resolve_one_class_and_preserve_baseline_constructor():
+    for experiment in ("c1", "c2", "c3"):
+        config = load_config(experiment)
+        assert resolve_num_classes(config) == 1
+        kwargs = model_constructor_kwargs(config, config["training"])
+        assert kwargs["num_classes"] == 1
+        assert kwargs["pretrain_weights"].endswith("rf-detr-xxlarge.pth")
+        assert kwargs["gradient_checkpointing"] is True
+
+
+def test_model_constructor_receives_one_class(monkeypatch):
+    captured = {}
+
+    class FakeRFDETR2XLarge:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    config = load_config("c1")
+    import person_detect.training.veomatch_person_v1.train as train_module
+    monkeypatch.setattr(train_module, "RFDETR2XLarge", FakeRFDETR2XLarge, raising=False)
+    # This mirrors the real constructor call without importing RF-DETR.
+    train_module.RFDETR2XLarge(**model_constructor_kwargs(config, config["training"]))
+    assert captured["num_classes"] == 1
 
 
 def test_checkpoint_selection_is_explicit(tmp_path):

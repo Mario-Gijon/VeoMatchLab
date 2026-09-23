@@ -26,6 +26,22 @@ def canonical_experiment(value: str) -> str:
     return ALIASES.get(value, value)
 
 
+def resolve_num_classes(config: dict) -> int:
+    class_names = config.get("class_names")
+    if not isinstance(class_names, list) or not class_names:
+        raise ValueError("training config must define a non-empty class_names list")
+    return len(class_names)
+
+
+def model_constructor_kwargs(config: dict, params: dict) -> dict:
+    """Resolve the explicit task head while retaining baseline initialization."""
+    return {
+        "pretrain_weights": str(BASE_CHECKPOINT),
+        "num_classes": resolve_num_classes(config),
+        "gradient_checkpointing": bool(params["gradient_checkpointing"]),
+    }
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("experiment", choices=(*ALIASES, *EXPERIMENTS))
@@ -128,10 +144,7 @@ def train(args) -> Path:
     # RF-DETR is imported only when a real training run is requested.
     from rfdetr import RFDETR2XLarge
 
-    model = RFDETR2XLarge(
-        pretrain_weights=str(BASE_CHECKPOINT),
-        gradient_checkpointing=bool(params["gradient_checkpointing"]),
-    )
+    model = RFDETR2XLarge(**model_constructor_kwargs(config, params))
     model.train(
         dataset_dir=str(dataset_dir),
         output_dir=str(run_dir),
@@ -187,6 +200,7 @@ def main(argv=None) -> int:
         "dataset_directory": str(dataset_dir),
         "split_counts": split_reports,
         "class_names": config["class_names"],
+        "num_classes": resolve_num_classes(config),
         "resolution": params["resolution"],
         "epochs": params["epochs"],
         "batch_size": params["batch_size"],
