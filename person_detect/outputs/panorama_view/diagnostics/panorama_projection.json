@@ -1,0 +1,34 @@
+{
+  "calibration": "data/matches/match_e652c1f15bde/calibration/camera_alignment.veo",
+  "video": "data/matches/match_e652c1f15bde/media/dual_lens.mp4",
+  "frame": {
+    "fps": 29.970030521275802,
+    "frame_count": 217254,
+    "requested_time_s": 756.0,
+    "requested_frame": 22657,
+    "actual_frame": 22657,
+    "actual_time_s": 755.9885527615909
+  },
+  "panorama_width": 3840,
+  "panorama_height": 2160,
+  "field_length_m": 105.0,
+  "field_width_m": 72.47016906738281,
+  "camera_world_xyz": [
+    -4.2417841,
+    -5.75584602,
+    -39.89143372
+  ],
+  "far_touchline": {
+    "name": "+Z",
+    "z": 36.235084533691406,
+    "margin_outward_m": 0.5
+  },
+  "angular_presentation_range": {
+    "top": 0.2661348581314087,
+    "right": 1.6285682916641235,
+    "bottom": -0.5557354688644409,
+    "left": -1.6438907384872437
+  },
+  "left_valid_fraction": 0.5680207127700617,
+  "right_valid_fraction": 0.5679178722993827
+}

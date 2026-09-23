@@ -1,0 +1,34 @@
+{
+  "model": {
+    "backend": "dfine",
+    "variant": "x_coco",
+    "name": "dfine_x_coco",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/dfine/dfine_x_coco.pth",
+    "device": "cuda",
+    "native_resolution": 640,
+    "inference_mode": "sequential_views",
+    "implementation": "Peterande/D-FINE official",
+    "dfine_root": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE",
+    "config": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE/configs/dfine/dfine_hgnetv2_x_coco.yml",
+    "checkpoint_state": "model"
+  },
+  "view": "panorama_view",
+  "clip_id": "match_e652c1f15bde",
+  "video": "/home/mario/Projects/VeoMatchLab/data/matches/match_e652c1f15bde/media/dual_lens.mp4",
+  "calibration": "/home/mario/Projects/VeoMatchLab/data/matches/match_e652c1f15bde/calibration/camera_alignment.veo",
+  "start_s": 1230.0,
+  "duration_s": 3.0,
+  "threshold": 0.25,
+  "render_size_per_view": [
+    2048,
+    1152
+  ],
+  "panorama_size": [
+    3840,
+    2160
+  ],
+  "overlap": 0.15,
+  "far_touchline_margin_m": 0.5,
+  "output_video": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/panorama_view/dfine_x_coco/match_e652c1f15bde/20260923T024828/result.mp4",
+  "pipeline": "dual_lens -> panorama_view -> person detector -> bbox footpoint -> ground X/Z -> field filter -> ownership -> video + 2D pitch"
+}

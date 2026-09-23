@@ -1,0 +1,27 @@
+{
+  "model": {
+    "backend": "dfine",
+    "variant": "x_coco",
+    "name": "dfine_x_coco",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/dfine/dfine_x_coco.pth",
+    "device": "cuda",
+    "native_resolution": 640,
+    "inference_mode": "sequential_views",
+    "implementation": "Peterande/D-FINE official",
+    "dfine_root": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE",
+    "config": "/home/mario/Projects/VeoMatchLab/.model-cache/D-FINE/configs/dfine/dfine_hgnetv2_x_coco.yml",
+    "checkpoint_state": "model"
+  },
+  "view": "interactive_view",
+  "panorama_size": null,
+  "processed_frames": 90,
+  "processed_duration_s": 3.0029999447651137,
+  "wall_time_s": 53.002299236999534,
+  "processing_fps": 1.6980395434840556,
+  "raw_person_detections": 5486,
+  "accepted_detections": 2277,
+  "rejected_outside_field": 2909,
+  "rejected_not_owner": 300,
+  "rejected_other": 0,
+  "run_dir": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/interactive_view/dfine_x_coco/match_e652c1f15bde/20260923T021258"
+}

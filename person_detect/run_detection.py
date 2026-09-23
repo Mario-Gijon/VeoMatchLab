@@ -257,6 +257,26 @@ def resize_panel(image: np.ndarray, name: str, *, panel_width: int = PANEL_W) ->
     return panel
 
 
+def resize_panorama(image: np.ndarray, view_name: str) -> np.ndarray:
+    """Fit a single panorama into the result canvas without distortion."""
+    source_h, source_w = image.shape[:2]
+    scale = min(1920.0 / source_w, 720.0 / source_h)
+    display_w = max(1, int(round(source_w * scale)))
+    display_h = max(1, int(round(source_h * scale)))
+    rendered = cv2.resize(image, (display_w, display_h), interpolation=cv2.INTER_AREA)
+    cv2.putText(
+        rendered,
+        "ULTRA PANORAMA" if view_name == "ultra_panorama_view" else "PANORAMA",
+        (18, 38),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.0,
+        (255, 255, 255),
+        2,
+        cv2.LINE_AA,
+    )
+    return rendered
+
+
 def pitch_to_pixel(
     world_x: float,
     world_z: float,
@@ -280,8 +300,14 @@ def draw_pitch(
     canvas: np.ndarray,
     projector: FieldProjector,
     detections: list[dict],
+    *,
+    region_y: int = TOP_H,
+    region_h: int | None = None,
 ) -> None:
-    available_h = COMBINED_H - TOP_H
+    available_h = COMBINED_H - region_y if region_h is None else region_h
+    available_h = max(0, available_h)
+    if available_h < 40:
+        return
     pitch_h = min(650, available_h - 34)
     pitch_w = int(round(
         pitch_h
@@ -298,7 +324,7 @@ def draw_pitch(
         ))
 
     x0 = (COMBINED_W - pitch_w) // 2
-    y0 = TOP_H + (available_h - pitch_h) // 2
+    y0 = region_y + (available_h - pitch_h) // 2
 
     cv2.rectangle(
         canvas,
@@ -425,20 +451,27 @@ def make_combined_frame(
     frame_number: int,
     time_s: float,
     view_names: tuple[str, ...],
+    benchmark_view: str,
 ) -> np.ndarray:
     canvas = np.zeros(
         (COMBINED_H, COMBINED_W, 3),
         dtype=np.uint8,
     )
 
-    panel_width = COMBINED_W // len(view_names)
-    top = np.concatenate(
-        [resize_panel(annotated_views[name], name, panel_width=panel_width) for name in view_names],
-        axis=1,
-    )
-    canvas[:TOP_H, :] = top
-
-    draw_pitch(canvas, projector, accepted)
+    if benchmark_view in {"panorama_view", "ultra_panorama_view"}:
+        panorama = resize_panorama(annotated_views["panorama"], benchmark_view)
+        display_h, display_w = panorama.shape[:2]
+        x0 = (COMBINED_W - display_w) // 2
+        canvas[:display_h, x0:x0 + display_w] = panorama
+        draw_pitch(canvas, projector, accepted, region_y=display_h)
+    else:
+        panel_width = COMBINED_W // len(view_names)
+        top = np.concatenate(
+            [resize_panel(annotated_views[name], name, panel_width=panel_width) for name in view_names],
+            axis=1,
+        )
+        canvas[:TOP_H, :] = top
+        draw_pitch(canvas, projector, accepted)
 
     text = (
         f"{model_name} | threshold={threshold:.2f} | "
@@ -861,6 +894,7 @@ def run_detection(args: argparse.Namespace) -> Path:
                     frame_number=absolute_frame,
                     time_s=time_s,
                     view_names=view_names,
+                    benchmark_view=args.view,
                 )
 
                 if writer.stdin is None:

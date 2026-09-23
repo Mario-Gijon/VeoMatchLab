@@ -1,0 +1,25 @@
+{
+  "model": {
+    "backend": "rfdetr",
+    "variant": "large",
+    "name": "rfdetr_large",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr/rf-detr-large-2026.pth",
+    "device": "cuda",
+    "native_resolution": 704
+  },
+  "view": "panorama_view",
+  "panorama_size": [
+    3840,
+    2160
+  ],
+  "processed_frames": 90,
+  "processed_duration_s": 3.0029999447651137,
+  "wall_time_s": 28.913364537002053,
+  "processing_fps": 3.1127473900459406,
+  "raw_person_detections": 2374,
+  "accepted_detections": 1968,
+  "rejected_outside_field": 406,
+  "rejected_not_owner": 0,
+  "rejected_other": 0,
+  "run_dir": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/panorama_view/rfdetr_large/match_e652c1f15bde/20260923T021638"
+}

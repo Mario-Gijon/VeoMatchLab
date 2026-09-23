@@ -1,0 +1,26 @@
+{
+  "model": {
+    "backend": "rfdetr",
+    "variant": "large",
+    "name": "rfdetr_large",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr/rf-detr-large-2026.pth",
+    "device": "cuda",
+    "native_resolution": 704
+  },
+  "view": "two_lens_view",
+  "clip_id": "match_e652c1f15bde",
+  "video": "/home/mario/Projects/VeoMatchLab/data/matches/match_e652c1f15bde/media/dual_lens.mp4",
+  "calibration": "/home/mario/Projects/VeoMatchLab/data/matches/match_e652c1f15bde/calibration/camera_alignment.veo",
+  "start_s": 1230.0,
+  "duration_s": 3.0,
+  "threshold": 0.25,
+  "render_size_per_view": [
+    2048,
+    1152
+  ],
+  "panorama_size": null,
+  "overlap": 0.15,
+  "far_touchline_margin_m": 0.5,
+  "output_video": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/two_lens_view/rfdetr_large/match_e652c1f15bde/20260923T024610/result.mp4",
+  "pipeline": "dual_lens -> two_lens_view -> person detector -> bbox footpoint -> ground X/Z -> field filter -> ownership -> video + 2D pitch"
+}

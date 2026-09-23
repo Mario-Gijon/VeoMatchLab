@@ -1,0 +1,26 @@
+{
+  "model": {
+    "backend": "ultralytics_yolo",
+    "variant": "yolo26x",
+    "name": "yolo26x",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/yolo/yolo26x.pt",
+    "device": "cuda:0",
+    "native_resolution": 640,
+    "inference_mode": "sequential_views",
+    "person_class_id": 0,
+    "iou_threshold": 0.7,
+    "head": "default_one_to_many_with_nms"
+  },
+  "view": "two_lens_view",
+  "panorama_size": null,
+  "processed_frames": 90,
+  "processed_duration_s": 3.0029999447651137,
+  "wall_time_s": 7.029637136001838,
+  "processing_fps": 12.802936802963945,
+  "raw_person_detections": 2784,
+  "accepted_detections": 1931,
+  "rejected_outside_field": 531,
+  "rejected_not_owner": 322,
+  "rejected_other": 0,
+  "run_dir": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/two_lens_view/yolo26x/match_e652c1f15bde/20260923T021624"
+}

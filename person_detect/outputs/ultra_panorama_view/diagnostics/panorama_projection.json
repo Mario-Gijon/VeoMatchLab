@@ -1,34 +1,34 @@
 {
-  "calibration": "person_detect/clips/match_629890153a11/camera_alignment.veo",
-  "video": "person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "calibration": "data/matches/match_e652c1f15bde/calibration/camera_alignment.veo",
+  "video": "data/matches/match_e652c1f15bde/media/dual_lens.mp4",
   "frame": {
-    "fps": 29.97002997002997,
-    "frame_count": 2698,
-    "requested_time_s": 10.0,
-    "requested_frame": 300,
-    "actual_frame": 300,
-    "actual_time_s": 10.01
+    "fps": 29.970030521275802,
+    "frame_count": 217254,
+    "requested_time_s": 756.0,
+    "requested_frame": 22657,
+    "actual_frame": 22657,
+    "actual_time_s": 755.9885527615909
   },
-  "panorama_width": 3889,
+  "panorama_width": 4077,
   "panorama_height": 1024,
   "field_length_m": 105.0,
-  "field_width_m": 64.70645141601562,
+  "field_width_m": 72.47016906738281,
   "camera_world_xyz": [
-    -0.26846886,
-    -4.76267099,
-    -36.12551117
+    -4.2417841,
+    -5.75584602,
+    -39.89143372
   ],
   "far_touchline": {
     "name": "+Z",
-    "z": 32.35322570800781,
+    "z": 36.235084533691406,
     "margin_outward_m": 0.5
   },
   "angular_presentation_range": {
-    "top": 0.21097195148468018,
-    "right": 1.6232786178588867,
-    "bottom": -0.6472842693328857,
-    "left": -1.6360337734222412
+    "top": 0.2661348581314087,
+    "right": 1.6285682916641235,
+    "bottom": -0.5557354688644409,
+    "left": -1.6438907384872437
   },
-  "left_valid_fraction": 0.5606583673502186,
-  "right_valid_fraction": 0.5631209923020056
+  "left_valid_fraction": 0.5680149313220505,
+  "right_valid_fraction": 0.5679193589802551
 }
