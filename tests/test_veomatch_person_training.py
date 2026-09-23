@@ -5,6 +5,7 @@ from person_detect.training.veomatch_person_v1.tools.dataset_tools import (
     convert_coco,
     merge_datasets,
     normalize_class,
+    sequence_group_from_path,
 )
 
 
@@ -33,6 +34,8 @@ def test_person_class_mapping_is_conservative():
     assert normalize_class("goalkeeper") == "person"
     assert normalize_class("ball") is None
     assert normalize_class("unknown") is None
+    assert sequence_group_from_path("15-004519_Shot_on_goal_frame_0403.jpg") == "15_004519_shot_on_goal"
+    assert sequence_group_from_path("15-004519_Shot_on_goal_frame_0414.jpg") == "15_004519_shot_on_goal"
 
 
 def test_exact_duplicate_is_removed_and_split_conflict_reported(tmp_path):
@@ -46,7 +49,7 @@ def test_exact_duplicate_is_removed_and_split_conflict_reported(tmp_path):
     result = merge_datasets([first_dataset, second_dataset], merged, dataset_name="merged")
     assert result["exact_duplicates_removed"] == 1
     manifest = json.loads((merged / "manifest.json").read_text())
-    assert manifest["split_conflicts"]
+    assert manifest["sequence_audit"]["exact_duplicate_split_conflicts"]
 
 
 def test_datasets_keep_one_copy_per_hash_across_splits(tmp_path):
@@ -86,3 +89,24 @@ def test_all_roboflow_splits_are_discovered(tmp_path):
     assert {image["split"] for image in payload["images"]} == {"train", "valid", "test"}
     manifest = json.loads((converted / "manifest.json").read_text())
     assert len(manifest["images"]) == 3
+
+
+def test_sequence_groups_are_single_split(tmp_path):
+    first = _source(tmp_path, "sequence", split="train")
+    second = _source(tmp_path, "sequence", split="test")
+    # Give both source files the same normalized temporal-sequence stem.
+    for split in ("train", "test"):
+        image = tmp_path / "sequence" / "images" / split / "frame.ppm"
+        renamed = image.with_name(f"Manchester_City_vs_Genk_frame_{'17947' if split == 'train' else '17948'}.ppm")
+        image.rename(renamed)
+        annotation = tmp_path / "sequence" / split / "_annotations.coco.json"
+        payload = json.loads(annotation.read_text())
+        payload["images"][0]["file_name"] = f"../images/{split}/{renamed.name}"
+        annotation.write_text(json.dumps(payload))
+    from person_detect.training.veomatch_person_v1.tools.dataset_tools import convert_coco
+    train = tmp_path / "converted_sequence"
+    convert_coco(tmp_path / "sequence", train, source_name="sequence")
+    merged = tmp_path / "merged_sequence"
+    merge_datasets([train], merged, dataset_name="merged_sequence")
+    audit = json.loads((merged / "manifest.json").read_text())["sequence_audit"]
+    assert audit["sequence_group_leakage_count"] == 0

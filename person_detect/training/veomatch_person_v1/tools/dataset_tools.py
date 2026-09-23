@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -20,6 +21,17 @@ CLASS_MAP = {
 }
 IGNORED_CLASSES = {"ball", "football", "logo"}
 SPLITS = ("train", "valid", "test")
+
+
+def sequence_group_from_path(path: str | Path) -> str:
+    """Normalize a source filename into a conservative temporal sequence key."""
+    stem = Path(path).stem
+    stem = re.sub(r"\.rf\.[A-Za-z0-9]+$", "", stem, flags=re.IGNORECASE)
+    stem = re.sub(r"(?:_jpg|_jpeg|_png|_webp)$", "", stem, flags=re.IGNORECASE)
+    stem = re.sub(r"(?:[_-]?frame|[_-]?image|[_-]?img)[_-]?\d+$", "", stem, flags=re.IGNORECASE)
+    stem = re.sub(r"[_-]\d{3,}$", "", stem)
+    stem = re.sub(r"[^A-Za-z0-9]+", "_", stem).strip("_").casefold()
+    return stem or Path(path).stem.casefold()
 
 
 def normalize_class(name: str) -> str | None:
@@ -106,7 +118,7 @@ def _coco_records(source: Path) -> tuple[list[dict[str, Any]], list[str], list[s
                         unknown.append(original)
                     continue
                 mapped.append({"bbox": annotation["bbox"], "category_id": 1, "area": annotation.get("area", 0), "iscrowd": annotation.get("iscrowd", 0)})
-            records.append({"source_image": source_image, "source_split": split, "width": int(image.get("width", 0)), "height": int(image.get("height", 0)), "original_classes": sorted(original_classes), "original_counts": dict(original_counts), "annotations": mapped})
+            records.append({"source_image": source_image, "source_split": split, "width": int(image.get("width", 0)), "height": int(image.get("height", 0)), "original_classes": sorted(original_classes), "original_counts": dict(original_counts), "sequence_group": sequence_group_from_path(image["file_name"]), "annotations": mapped})
     return records, sorted(set(unknown)), sorted(set(ignored))
 
 
@@ -165,7 +177,7 @@ def convert_coco(source: str | Path, output: str | Path, *, source_name: str) ->
             item.update({"id": next_annotation_id, "image_id": next_image_id})
             coco_annotations.append(item)
             next_annotation_id += 1
-        manifest.append({"source_dataset": source_name, "original_image_path": str(record["source_image"]), "generated_image_path": str(destination), "source_split": record["source_split"], "final_split": record["source_split"], "original_classes": record["original_classes"], "mapped_person_annotation_count": len(record["annotations"]), "file_hash": digest})
+        manifest.append({"source_dataset": source_name, "original_image_path": str(record["source_image"]), "generated_image_path": str(destination), "source_split": record["source_split"], "final_split": record["source_split"], "sequence_group": record["sequence_group"], "original_classes": record["original_classes"], "mapped_person_annotation_count": len(record["annotations"]), "file_hash": digest})
         next_image_id += 1
     dataset = {"images": coco_images, "annotations": coco_annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
@@ -176,22 +188,51 @@ def convert_coco(source: str | Path, output: str | Path, *, source_name: str) ->
     return {"output": str(output), "images": len(manifest), "annotations": len(coco_annotations), "unknown_classes": unknown}
 
 
-def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name: str) -> dict[str, Any]:
+def _assign_group_splits(rows: list[dict[str, Any]]) -> dict[str, str]:
+    grouped: dict[str, Counter] = defaultdict(Counter)
+    for row in rows:
+        grouped[row["sequence_group"]][row["source_split"]] += 1
+    target_total = sum(sum(counts.values()) for counts in grouped.values())
+    target = {split: target_total * sum(counts[split] for counts in grouped.values()) / target_total for split in SPLITS}
+    current = Counter()
+    assignments = {}
+    group_rows = defaultdict(list)
+    for row in rows:
+        group_rows[row["sequence_group"]].append(row)
+    ordered_groups = sorted(grouped, key=lambda group: (-sum(grouped[group].values()), group))
+    for group in ordered_groups:
+        counts = grouped[group]
+        maximum = max(counts.values())
+        preferred = [split for split in SPLITS if counts[split] == maximum]
+        if all(row.get("source_dataset") == "football_eoakc" for row in group_rows[group]):
+            choices = ("train",)
+        else:
+            choices = SPLITS
+        size = sum(counts.values())
+        def score(split: str) -> tuple[float, int]:
+            deviation = sum(
+                ((current[item] + (size if item == split else 0)) - target[item]) ** 2
+                for item in SPLITS
+            )
+            return deviation, 0 if split in preferred else 1
+        chosen = min(choices, key=score)
+        assignments[group] = chosen
+        current[chosen] += size
+    return assignments
+
+
+def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name: str, group_split_overrides: dict[str, str] | None = None) -> dict[str, Any]:
+    """Merge converted datasets, assigning each sequence group to one split."""
     output = Path(output).expanduser().resolve()
     output.mkdir(parents=True, exist_ok=True)
     for split in SPLITS:
         (output / "images" / split).mkdir(parents=True, exist_ok=True)
-    image_rows = []
-    annotations = []
+    candidates = []
     seen_hashes: dict[str, dict[str, Any]] = {}
-    seen_phashes: dict[str, list[str]] = defaultdict(list)
-    near_duplicates = []
-    next_image_id = 1
-    next_annotation_id = 1
     exact_duplicates_removed = 0
     split_conflicts = []
-    for dataset_path in inputs:
-        dataset_path = Path(dataset_path)
+    for dataset_path_raw in inputs:
+        dataset_path = Path(dataset_path_raw).expanduser().resolve()
         payload = json.loads((dataset_path / "annotations.json").read_text(encoding="utf-8"))
         manifest = json.loads((dataset_path / "manifest.json").read_text(encoding="utf-8"))["images"]
         by_name = {row["generated_image_path"]: row for row in manifest}
@@ -207,34 +248,62 @@ def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name
             digest = row["file_hash"]
             if digest in seen_hashes:
                 exact_duplicates_removed += 1
-                if seen_hashes[digest]["split"] != _split(row.get("final_split"), "train"):
-                    split_conflicts.append({"file_hash": digest, "existing": seen_hashes[digest], "duplicate_source": str(source_image), "duplicate_split": row.get("final_split")})
+                if seen_hashes[digest]["source_split"] != row.get("source_split"):
+                    split_conflicts.append({"file_hash": digest, "existing_source": seen_hashes[digest].get("original_image_path"), "existing_split": seen_hashes[digest].get("source_split"), "duplicate_source": str(source_image), "duplicate_split": row.get("source_split")})
                 continue
-            phash = perceptual_hash(source_image)
-            if phash in seen_phashes:
-                near_duplicates.append({"file_hash": digest, "matches": seen_phashes[phash], "path": str(source_image)})
-            seen_phashes[phash].append(str(source_image))
-            split = _split(row.get("final_split"), "train")
-            destination = output / "images" / split / f"{digest[:16]}_{source_image.name}"
-            shutil.copy2(source_image, destination)
-            seen_hashes[digest] = {"split": split, "path": str(destination)}
-            new_id = next_image_id
-            image_rows.append({"id": new_id, "file_name": str(Path("images") / split / destination.name), "width": image.get("width", 0), "height": image.get("height", 0), "split": split})
-            for annotation in anns[image_id]:
-                item = dict(annotation)
-                item.update({"id": next_annotation_id, "image_id": new_id})
-                annotations.append(item)
-                next_annotation_id += 1
             row = dict(row)
-            row.update({"generated_image_path": str(destination), "final_split": split})
-            image_rows[-1]["_manifest"] = row
-            next_image_id += 1
+            row["sequence_group"] = row.get("sequence_group") or sequence_group_from_path(row["original_image_path"])
+            row["_source_image"] = source_image
+            row["_image"] = image
+            row["_annotations"] = anns[image_id]
+            candidates.append(row)
+            seen_hashes[digest] = row
+
+    assignments = _assign_group_splits(candidates)
+    if group_split_overrides:
+        assignments.update({group: _split(split) for group, split in group_split_overrides.items()})
+    image_rows = []
+    annotations = []
+    phash_buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    near_duplicates = []
+    next_image_id = 1
+    next_annotation_id = 1
+    for row in candidates:
+        source_image = row["_source_image"]
+        split = assignments[row["sequence_group"]]
+        destination = output / "images" / split / f"{row['file_hash'][:16]}_{source_image.name}"
+        shutil.copy2(source_image, destination)
+        phash = perceptual_hash(source_image)
+        for previous in phash_buckets[phash]:
+            near_duplicates.append({"a": previous, "b": {"file_hash": row["file_hash"], "path": str(destination), "split": split, "sequence_group": row["sequence_group"]}, "same_sequence_group": previous["sequence_group"] == row["sequence_group"]})
+        phash_buckets[phash].append({"file_hash": row["file_hash"], "path": str(destination), "split": split, "sequence_group": row["sequence_group"]})
+        new_id = next_image_id
+        image_rows.append({"id": new_id, "file_name": str(Path("images") / split / destination.name), "width": row["_image"].get("width", 0), "height": row["_image"].get("height", 0), "split": split})
+        for annotation in row["_annotations"]:
+            item = dict(annotation)
+            item.update({"id": next_annotation_id, "image_id": new_id})
+            annotations.append(item)
+            next_annotation_id += 1
+        provenance = {key: value for key, value in row.items() if not key.startswith("_")}
+        provenance.update({"generated_image_path": str(destination), "final_split": split})
+        image_rows[-1]["_manifest"] = provenance
+        next_image_id += 1
     final_manifest = [item.pop("_manifest") for item in image_rows]
+    sequence_splits: dict[str, set[str]] = defaultdict(set)
+    for row in final_manifest:
+        sequence_splits[row["sequence_group"]].add(row["final_split"])
+    leakage = {group: sorted(splits) for group, splits in sequence_splits.items() if len(splits) > 1}
+    pair_summary = {f"{a}__{b}": 0 for a in SPLITS for b in SPLITS if SPLITS.index(a) <= SPLITS.index(b)}
+    for pair in near_duplicates:
+        a, b = pair["a"]["split"], pair["b"]["split"]
+        key = f"{a}__{b}" if SPLITS.index(a) <= SPLITS.index(b) else f"{b}__{a}"
+        pair_summary[key] += 1
     dataset = {"images": [{k: v for k, v in item.items() if k != "_manifest"} for item in image_rows], "annotations": annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
-    (output / "manifest.json").write_text(json.dumps({"dataset": dataset_name, "images": final_manifest, "near_duplicates_for_review": near_duplicates, "split_conflicts": split_conflicts}, indent=2) + "\n", encoding="utf-8")
-    (output / "near_duplicates.json").write_text(json.dumps(near_duplicates, indent=2) + "\n", encoding="utf-8")
-    return {"output": str(output), "images": len(final_manifest), "exact_duplicates_removed": exact_duplicates_removed, "near_duplicates_for_review": len(near_duplicates), "split_conflicts": len(split_conflicts)}
+    audit = {"total_sequence_groups": len(sequence_splits), "groups_by_split": {split: sum(1 for values in sequence_splits.values() if values == {split}) for split in SPLITS}, "sequence_groups_spanning_splits": leakage, "sequence_group_leakage_count": len(leakage), "near_duplicate_pair_counts": pair_summary, "perceptual_cross_split_pairs": sum(value for key, value in pair_summary.items() if key.split("__")[0] != key.split("__")[1]), "near_duplicate_pairs_same_sequence_group": sum(item["same_sequence_group"] for item in near_duplicates), "near_duplicate_pairs_perceptual_only": sum(not item["same_sequence_group"] for item in near_duplicates), "exact_duplicates_removed": exact_duplicates_removed, "exact_duplicate_split_conflicts": split_conflicts}
+    (output / "manifest.json").write_text(json.dumps({"dataset": dataset_name, "images": final_manifest, "sequence_audit": audit}, indent=2) + "\n", encoding="utf-8")
+    (output / "near_duplicates.json").write_text(json.dumps({"pairs": near_duplicates, "summary": pair_summary, "sequence_group_leakage": leakage}, indent=2) + "\n", encoding="utf-8")
+    return {"output": str(output), "images": len(final_manifest), "split_sizes": {split: sum(1 for row in final_manifest if row["final_split"] == split) for split in SPLITS}, "sequence_groups": len(sequence_splits), "sequence_group_leakage_count": len(leakage), "perceptual_cross_split_pairs": audit["perceptual_cross_split_pairs"], "exact_duplicates_removed": exact_duplicates_removed, "sequence_assignments": assignments}
 
 
 def main(argv=None) -> int:
