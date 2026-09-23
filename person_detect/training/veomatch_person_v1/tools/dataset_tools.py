@@ -16,17 +16,15 @@ from pathlib import Path
 from typing import Any
 
 CLASS_MAP = {
-    "player": "person", "Player": "person",
-    "referee": "person", "Referee": "person",
-    "goalkeeper": "person", "Goalkeeper": "person",
-    "person": "person",
+    "player": "person", "referee": "person", "goalkeeper": "person", "person": "person",
 }
+IGNORED_CLASSES = {"ball", "football", "logo"}
 SPLITS = ("train", "valid", "test")
 
 
 def normalize_class(name: str) -> str | None:
     """Return the allowed class name, or ``None`` for unknown/non-person."""
-    return CLASS_MAP.get(str(name))
+    return CLASS_MAP.get(str(name).strip().casefold())
 
 
 def file_hash(path: Path) -> str:
@@ -58,68 +56,84 @@ def _split(value: str | None, fallback: str = "train") -> str:
     return value if value in SPLITS else fallback
 
 
-def _find_coco(source: Path) -> Path:
-    candidates = sorted(source.rglob("*.json"))
-    for candidate in candidates:
-        try:
-            payload = json.loads(candidate.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+def _coco_paths(source: Path) -> list[tuple[str, Path]]:
+    paths = []
+    for split in SPLITS:
+        split_dir = source / split
+        if not split_dir.is_dir():
             continue
-        if isinstance(payload, dict) and {"images", "annotations", "categories"} <= payload.keys():
-            return candidate
-    raise FileNotFoundError(f"No COCO annotation JSON found under {source}")
+        preferred = split_dir / "_annotations.coco.json"
+        candidates = [preferred] if preferred.is_file() else sorted(split_dir.glob("*.json"))
+        for candidate in candidates:
+            try:
+                payload = json.loads(candidate.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict) and {"images", "annotations", "categories"} <= payload.keys():
+                paths.append((split, candidate))
+                break
+    if not paths:
+        raise FileNotFoundError(f"No split COCO annotation JSON found under {source}")
+    return paths
 
 
-def _coco_records(source: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
-    annotation_path = _find_coco(source)
-    payload = json.loads(annotation_path.read_text(encoding="utf-8"))
-    categories = {int(item["id"]): str(item["name"]) for item in payload.get("categories", [])}
-    annotations_by_image: dict[int, list[dict[str, Any]]] = defaultdict(list)
-    for annotation in payload.get("annotations", []):
-        annotations_by_image[int(annotation["image_id"])].append(annotation)
+def _coco_records(source: Path) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     records = []
     unknown: list[str] = []
-    for image in payload.get("images", []):
-        source_image = (annotation_path.parent / image["file_name"]).resolve()
-        if not source_image.exists():
-            source_image = (source / image["file_name"]).resolve()
-        split = _split(image.get("split"), Path(image["file_name"]).parts[0] if Path(image["file_name"]).parts else "train")
-        mapped = []
-        original_classes = set()
-        original_counts = Counter()
-        for annotation in annotations_by_image.get(int(image["id"]), []):
-            original = categories.get(int(annotation.get("category_id", -1)), "")
-            original_classes.add(original)
-            original_counts[original] += 1
-            normalized = normalize_class(original)
-            if normalized is None:
-                if original:
-                    unknown.append(original)
-                continue
-            mapped.append({"bbox": annotation["bbox"], "category_id": 1, "area": annotation.get("area", 0), "iscrowd": annotation.get("iscrowd", 0)})
-        records.append({"source_image": source_image, "source_split": split, "width": int(image.get("width", 0)), "height": int(image.get("height", 0)), "original_classes": sorted(original_classes), "original_counts": dict(original_counts), "annotations": mapped})
-    return payload, records, sorted(set(unknown))
+    ignored: list[str] = []
+    for split, annotation_path in _coco_paths(source):
+        payload = json.loads(annotation_path.read_text(encoding="utf-8"))
+        categories = {int(item["id"]): str(item["name"]) for item in payload.get("categories", [])}
+        annotations_by_image: dict[int, list[dict[str, Any]]] = defaultdict(list)
+        for annotation in payload.get("annotations", []):
+            annotations_by_image[int(annotation["image_id"])].append(annotation)
+        for image in payload.get("images", []):
+            source_image = (annotation_path.parent / image["file_name"]).resolve()
+            if not source_image.exists():
+                source_image = (source / image["file_name"]).resolve()
+            mapped = []
+            original_classes = set()
+            original_counts = Counter()
+            for annotation in annotations_by_image.get(int(image["id"]), []):
+                original = categories.get(int(annotation.get("category_id", -1)), "")
+                original_classes.add(original)
+                original_counts[original] += 1
+                normalized = normalize_class(original)
+                if normalized is None:
+                    if original.casefold() in IGNORED_CLASSES:
+                        ignored.append(original)
+                    elif original:
+                        unknown.append(original)
+                    continue
+                mapped.append({"bbox": annotation["bbox"], "category_id": 1, "area": annotation.get("area", 0), "iscrowd": annotation.get("iscrowd", 0)})
+            records.append({"source_image": source_image, "source_split": split, "width": int(image.get("width", 0)), "height": int(image.get("height", 0)), "original_classes": sorted(original_classes), "original_counts": dict(original_counts), "annotations": mapped})
+    return records, sorted(set(unknown)), sorted(set(ignored))
 
 
 def inspect_dataset(source: str | Path) -> dict[str, Any]:
     source = Path(source).expanduser().resolve()
-    payload, records, unknown = _coco_records(source)
+    records, unknown, ignored = _coco_records(source)
     original_counts = Counter()
-    mapped_counts = Counter()
     split_counts = Counter()
-    annotation_count = 0
+    original_annotation_count = 0
+    mapped_person_annotation_count = 0
+    ignored_annotation_count = 0
     for record in records:
         split_counts[record["source_split"]] += 1
         original_counts.update(record["original_counts"])
-        mapped_counts["person"] += len(record["annotations"])
-        annotation_count += len(record["annotations"])
+        mapped_person_annotation_count += len(record["annotations"])
+        original_annotation_count += sum(record["original_counts"].values())
+        ignored_annotation_count += sum(count for name, count in record["original_counts"].items() if name.casefold() in IGNORED_CLASSES)
     return {
         "source": str(source),
         "image_count": len(records),
-        "annotation_count": annotation_count,
+        "original_annotation_count": original_annotation_count,
+        "mapped_person_annotation_count": mapped_person_annotation_count,
+        "ignored_annotation_count": ignored_annotation_count,
         "original_classes": sorted({name for record in records for name in record["original_classes"]}),
         "annotations_per_class": dict(original_counts),
-        "mapped_annotations_per_class": dict(mapped_counts),
+        "mapped_annotations_per_class": {"person": mapped_person_annotation_count},
+        "ignored_classes": ignored,
         "split_sizes": {split: split_counts[split] for split in SPLITS},
         "unknown_classes": unknown,
     }
@@ -128,7 +142,7 @@ def inspect_dataset(source: str | Path) -> dict[str, Any]:
 def convert_coco(source: str | Path, output: str | Path, *, source_name: str) -> dict[str, Any]:
     source = Path(source).expanduser().resolve()
     output = Path(output).expanduser().resolve()
-    _, records, unknown = _coco_records(source)
+    records, unknown, ignored = _coco_records(source)
     output.mkdir(parents=True, exist_ok=True)
     images_root = output / "images"
     for split in SPLITS:
@@ -155,9 +169,10 @@ def convert_coco(source: str | Path, output: str | Path, *, source_name: str) ->
         next_image_id += 1
     dataset = {"images": coco_images, "annotations": coco_annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
-    (output / "manifest.json").write_text(json.dumps({"dataset": source_name, "unknown_classes": unknown, "images": manifest}, indent=2) + "\n", encoding="utf-8")
+    (output / "manifest.json").write_text(json.dumps({"dataset": source_name, "unknown_classes": unknown, "ignored_classes": ignored, "images": manifest}, indent=2) + "\n", encoding="utf-8")
     if unknown:
         (output / "unknown_classes.json").write_text(json.dumps(unknown, indent=2) + "\n", encoding="utf-8")
+    (output / "ignored_classes.json").write_text(json.dumps(ignored, indent=2) + "\n", encoding="utf-8")
     return {"output": str(output), "images": len(manifest), "annotations": len(coco_annotations), "unknown_classes": unknown}
 
 

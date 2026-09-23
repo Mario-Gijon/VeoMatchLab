@@ -12,15 +12,16 @@ def _ppm(path: Path, value: int) -> None:
     path.write_bytes(f"P3\n2 2\n255\n{value} {value} {value} {value} {value} {value} {value} {value} {value} {value} {value} {value}\n".encode())
 
 
-def _source(root: Path, name: str, *, split: str = "train") -> Path:
+def _source(root: Path, name: str, *, split: str = "train", category: str = "player") -> Path:
     images = root / name / "images" / split
     images.mkdir(parents=True)
+    (root / name / split).mkdir(parents=True, exist_ok=True)
     image = images / "frame.ppm"
     _ppm(image, 100)
-    (root / name / "annotations.json").write_text(json.dumps({
-        "images": [{"id": 1, "file_name": f"images/{split}/frame.ppm", "width": 2, "height": 2, "split": split}],
+    (root / name / split / "_annotations.coco.json").write_text(json.dumps({
+        "images": [{"id": 1, "file_name": "../images/%s/frame.ppm" % split, "width": 2, "height": 2}],
         "annotations": [{"id": 1, "image_id": 1, "category_id": 1, "bbox": [0, 0, 1, 1]}],
-        "categories": [{"id": 1, "name": "player"}],
+        "categories": [{"id": 1, "name": category}],
     }))
     return root / name
 
@@ -28,6 +29,7 @@ def _source(root: Path, name: str, *, split: str = "train") -> Path:
 def test_person_class_mapping_is_conservative():
     assert normalize_class("player") == "person"
     assert normalize_class("Referee") == "person"
+    assert normalize_class("Person") == "person"
     assert normalize_class("goalkeeper") == "person"
     assert normalize_class("ball") is None
     assert normalize_class("unknown") is None
@@ -56,3 +58,31 @@ def test_datasets_keep_one_copy_per_hash_across_splits(tmp_path):
     payload = json.loads((merged / "annotations.json").read_text())
     files = [item["file_name"] for item in payload["images"]]
     assert len(files) == len(set(files)) == 1
+
+
+def test_inspection_distinguishes_ignored_and_mapped_annotations(tmp_path):
+    from person_detect.training.veomatch_person_v1.tools.dataset_tools import inspect_dataset
+    source = _source(tmp_path, "mixed", category="Football")
+    report = inspect_dataset(source)
+    assert report["original_annotation_count"] == 1
+    assert report["mapped_person_annotation_count"] == 0
+    assert report["ignored_annotation_count"] == 1
+    assert report["ignored_classes"] == ["Football"]
+    assert report["unknown_classes"] == []
+    assert report["split_sizes"] == {"train": 1, "valid": 0, "test": 0}
+
+
+def test_all_roboflow_splits_are_discovered(tmp_path):
+    for split in ("train", "valid", "test"):
+        _source(tmp_path, "multi", split=split)
+    from person_detect.training.veomatch_person_v1.tools.dataset_tools import inspect_dataset
+    report = inspect_dataset(tmp_path / "multi")
+    assert report["image_count"] == 3
+    assert report["split_sizes"] == {"train": 1, "valid": 1, "test": 1}
+    assert report["mapped_person_annotation_count"] == 3
+    converted = tmp_path / "converted_multi"
+    convert_coco(tmp_path / "multi", converted, source_name="multi")
+    payload = json.loads((converted / "annotations.json").read_text())
+    assert {image["split"] for image in payload["images"]} == {"train", "valid", "test"}
+    manifest = json.loads((converted / "manifest.json").read_text())
+    assert len(manifest["images"]) == 3
