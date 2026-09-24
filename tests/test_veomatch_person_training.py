@@ -145,7 +145,7 @@ def test_training_aliases_and_controlled_config():
 
 
 def test_all_experiments_resolve_one_class_and_preserve_baseline_constructor():
-    for experiment in ("c1", "c2", "c3"):
+    for experiment in ("c1", "c2"):
         config = load_config(experiment)
         assert resolve_num_classes(config) == 1
         kwargs = model_constructor_kwargs(config, config["training"])

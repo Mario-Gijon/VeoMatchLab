@@ -1,7 +1,7 @@
 {
   "experiment": "c2_football_images_plus_veo",
   "dataset_dir": "person_detect/training/veomatch_person_v1/datasets/c2_football_images_plus_veo",
-  "composition": ["football_images", "veo_ball_detection"],
+  "composition": ["football_images", "veo_ball_detection", "football_eoakc"],
   "base_checkpoint": "person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth",
   "class_names": ["person"],
   "training": {"epochs": 50, "batch_size": 1, "grad_accum_steps": 16, "learning_rate": 0.00005, "learning_rate_encoder": 0.000075, "resolution": 880, "gradient_checkpointing": true, "use_ema": true, "early_stopping": true, "early_stopping_patience": 10, "skip_best_epochs": 3},

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fine-tune RF-DETR 2XL independently for C1, C2, or C3.
+"""Fine-tune RF-DETR 2XL independently for C1 or C2.
 
 This entry point is intentionally lazy: importing it never imports RF-DETR or
 loads a checkpoint.  Use ``--dry-run`` to validate paths and print the exact
@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parents[3]
 WORKSPACE = ROOT / "person_detect/training/veomatch_person_v1"
 BASE_CHECKPOINT = ROOT / "person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth"
 EXPORT_ROOT = ROOT / "person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1"
-EXPERIMENTS = ("c1_football_images", "c2_football_images_plus_veo", "c3_football_images_plus_veo_plus_eoakc")
-ALIASES = {"c1": EXPERIMENTS[0], "c2": EXPERIMENTS[1], "c3": EXPERIMENTS[2]}
+EXPERIMENTS = ("c1_football_images", "c2_football_images_plus_veo")
+ALIASES = {"c1": EXPERIMENTS[0], "c2": EXPERIMENTS[1]}
 
 
 def canonical_experiment(value: str) -> str:
@@ -82,7 +82,7 @@ def _validate_dataset(dataset_dir: Path) -> dict:
         if not annotation_path.is_file():
             raise FileNotFoundError(
                 f"Incomplete RF-DETR dataset: missing {annotation_path}. "
-                "Rebuild C1/C2/C3 with build_datasets.py."
+                "Rebuild C1/C2 with build_datasets.py."
             )
         payload = json.loads(annotation_path.read_text(encoding="utf-8"))
         categories = payload.get("categories", [])

@@ -9,8 +9,12 @@ baseline checkpoint:
 Experiments:
 
 - C1: `football_images`
-- C2: `football_images` + `veo_ball_detection`
-- C3: `football_images` + `veo_ball_detection` + `football_eoakc`
+- C2: `football_images` + `veo_ball_detection` + `football_eoakc`
+
+`veo_ball_detection` and `football_eoakc` remain separate source datasets
+under `sources/`; they are merged together only when building C2. C2 starts
+independently from the original RF-DETR 2XL checkpoint and is never
+initialized from C1.
 
 Place imported source datasets under `sources/`.  No dataset downloader is
 included; Roboflow imports require the user's own credentials and should be
@@ -21,16 +25,16 @@ source with:
 python -m person_detect.training.veomatch_person_v1.tools.dataset_tools inspect sources/football_images
 python -m person_detect.training.veomatch_person_v1.tools.dataset_tools convert-coco \
   sources/football_images datasets/football_images --source-name football_images
+```
 
-After all three sources have been imported, build the independent cumulative
-datasets with:
+After all three sources have been imported, build C1 and the complete Veo-domain
+C2 dataset with:
 
 ```bash
 python -m person_detect.training.veomatch_person_v1.tools.build_datasets \
   --football-images sources/football_images \
   --veo-ball-detection sources/veo_ball_detection \
   --football-eoakc sources/football_eoakc
-```
 ```
 
 The current adapter accepts COCO detection JSON. Generated datasets use one COCO category (`person`) and retain a per-image
@@ -50,5 +54,4 @@ the selected checkpoint is exported independently to:
 `person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/<experiment>/best.pth`
 
 with adjacent `metadata.json`. This makes the intended comparison explicit:
-baseline RF-DETR 2XL vs C1 vs C2 vs C3, without chaining C2 from C1 or C3
-from C2.
+baseline RF-DETR 2XL vs C1 vs complete Veo-domain C2.

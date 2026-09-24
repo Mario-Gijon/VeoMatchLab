@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the independent C1/C2/C3 cumulative COCO datasets."""
+"""Build the independent C1 and complete Veo-domain C2 datasets."""
 
 from __future__ import annotations
 
@@ -30,10 +30,8 @@ def main(argv=None) -> int:
         converted[name] = destination
     combinations = {
         "c1_football_images": ["football_images"],
-        "c2_football_images_plus_veo": ["football_images", "veo_ball_detection"],
-        "c3_football_images_plus_veo_plus_eoakc": ["football_images", "veo_ball_detection", "football_eoakc"],
+        "c2_football_images_plus_veo": ["football_images", "veo_ball_detection", "football_eoakc"],
     }
-    c2_assignments = None
     for experiment, sources in combinations.items():
         output = WORKSPACE / "datasets" / experiment
         if output.exists():
@@ -42,10 +40,7 @@ def main(argv=None) -> int:
             [converted[name] for name in sources],
             output,
             dataset_name=experiment,
-            group_split_overrides=c2_assignments if experiment == "c3_football_images_plus_veo_plus_eoakc" else None,
         )
-        if experiment == "c2_football_images_plus_veo":
-            c2_assignments = result["sequence_assignments"]
         result.pop("sequence_assignments", None)
         print(result)
     shutil.rmtree(staging)
