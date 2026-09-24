@@ -1,0 +1,83 @@
+{
+  "processed_frames": 2697,
+  "processed_duration_s": 89.95653333333334,
+  "input_observations": 55440,
+  "field_length_m": 105.0,
+  "field_width_m": 72.47016906738281,
+  "v2_proposal": {
+    "trajectory_count": 449,
+    "tracklet_count": 6039,
+    "anchor_tracklet_count": 1573,
+    "weak_tracklet_count": 4466,
+    "accepted_tracklet_links": 1124
+  },
+  "v4_identity_resolution": {
+    "duplicate_pairs": 29,
+    "duplicate_components": 20,
+    "blocked_duplicate_merges": 0,
+    "fragment_count": 420,
+    "core_fragments": 304,
+    "bridge_fragments": 14,
+    "ephemeral_fragments": 102,
+    "raw_global_link_candidates": 48,
+    "retained_topk_link_candidates": 48,
+    "candidate_handoff_modes": {
+      "gap": 47,
+      "observed_overlap": 1
+    },
+    "accepted_global_links": 40,
+    "accepted_handoff_modes": {
+      "gap": 39,
+      "observed_overlap": 1
+    },
+    "final_identity_count": 281,
+    "boundary_birth_identities": 9,
+    "boundary_death_identities": 8
+  },
+  "full_clip": {
+    "frames": 2697,
+    "start_time_s": 0.0,
+    "end_time_s": 89.95653333333334,
+    "unique_identity_ids": 281,
+    "visible_count_min": 10,
+    "visible_count_max": 25,
+    "visible_count_mean": 18.656655543196145,
+    "visible_count_median": 19,
+    "frames_at_visible_cap": 174,
+    "observed_track_frames": 40542,
+    "interpolated_track_frames": 9775,
+    "maximum_rendered_speed_mps": 18.88226274321951
+  },
+  "evaluation_tail": {
+    "requested_tail_s": 20.0,
+    "frames": 600,
+    "start_time_s": 69.95653333333334,
+    "end_time_s": 89.95653333333334,
+    "unique_identity_ids": 73,
+    "visible_count_min": 12,
+    "visible_count_max": 25,
+    "visible_count_mean": 20.245,
+    "visible_count_median": 20.0,
+    "frames_at_visible_cap": 4,
+    "observed_track_frames": 10315,
+    "interpolated_track_frames": 1832,
+    "maximum_rendered_speed_mps": 13.177343874687553
+  },
+  "output_paths": {
+    "duplicate_evidence_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/duplicate_evidence_V4.json",
+    "identity_fragments_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/identity_fragments_V4.json",
+    "identity_links_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/identity_links_V4.json",
+    "global_identities_V4.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/global_identities_V4.json",
+    "global_tracks_V4.jsonl": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/global_tracks_V4.jsonl",
+    "summary.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/summary.json",
+    "global_identity_V4_config.json": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/global_identity_V4_config.json",
+    "result_global_identity_V4_2d.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/result_global_identity_V4_2d.mp4",
+    "debug_raw_vs_global_identity_V4.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/debug_raw_vs_global_identity_V4.mp4",
+    "comparison_panorama_vs_2d.mp4": "/home/mario/Projects/VeoMatchLab/tracking/offline_outputs_v4/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T104247/comparison_panorama_vs_2d.mp4"
+  },
+  "comparison_video": {
+    "frames": 2697,
+    "width": 1920,
+    "height": 1660
+  }
+}

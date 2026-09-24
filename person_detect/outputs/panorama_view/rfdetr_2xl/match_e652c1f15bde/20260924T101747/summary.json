@@ -1,0 +1,26 @@
+{
+  "model": {
+    "backend": "rfdetr",
+    "variant": "2xl",
+    "name": "rfdetr_2xl",
+    "weights": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/c1_football_images/best.pth",
+    "device": "cuda",
+    "native_resolution": 880,
+    "inference_mode": "sequential_views"
+  },
+  "view": "panorama_view",
+  "panorama_size": [
+    3840,
+    2160
+  ],
+  "processed_frames": 90,
+  "processed_duration_s": 3.003,
+  "wall_time_s": 23.22126257700438,
+  "processing_fps": 3.87575824964511,
+  "raw_person_detections": 2320,
+  "accepted_detections": 2258,
+  "rejected_outside_field": 62,
+  "rejected_not_owner": 0,
+  "rejected_other": 0,
+  "run_dir": "/home/mario/Projects/VeoMatchLab/person_detect/outputs/panorama_view/rfdetr_2xl/match_e652c1f15bde/20260924T101747"
+}
