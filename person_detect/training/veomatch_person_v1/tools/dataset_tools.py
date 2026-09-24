@@ -317,8 +317,10 @@ def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name
         next_image_id += 1
     final_manifest = [item.pop("_manifest") for item in image_rows]
     sequence_splits: dict[str, set[str]] = defaultdict(set)
+    source_split_counts: dict[str, Counter] = defaultdict(Counter)
     for row in final_manifest:
         sequence_splits[row["sequence_group"]].add(row["final_split"])
+        source_split_counts[row["source_dataset"]][row["final_split"]] += 1
     leakage = {group: sorted(splits) for group, splits in sequence_splits.items() if len(splits) > 1}
     pair_summary = {f"{a}__{b}": 0 for a in SPLITS for b in SPLITS if SPLITS.index(a) <= SPLITS.index(b)}
     for pair in near_duplicates:
@@ -328,10 +330,10 @@ def merge_datasets(inputs: list[str | Path], output: str | Path, *, dataset_name
     dataset = {"images": [{k: v for k, v in item.items() if k != "_manifest"} for item in image_rows], "annotations": annotations, "categories": [{"id": 1, "name": "person", "supercategory": "person"}]}
     (output / "annotations.json").write_text(json.dumps(dataset, indent=2) + "\n", encoding="utf-8")
     _write_rfdetr_split_files(output, dataset)
-    audit = {"total_sequence_groups": len(sequence_splits), "groups_by_split": {split: sum(1 for values in sequence_splits.values() if values == {split}) for split in SPLITS}, "sequence_groups_spanning_splits": leakage, "sequence_group_leakage_count": len(leakage), "near_duplicate_pair_counts": pair_summary, "perceptual_cross_split_pairs": sum(value for key, value in pair_summary.items() if key.split("__")[0] != key.split("__")[1]), "near_duplicate_pairs_same_sequence_group": sum(item["same_sequence_group"] for item in near_duplicates), "near_duplicate_pairs_perceptual_only": sum(not item["same_sequence_group"] for item in near_duplicates), "exact_duplicates_removed": exact_duplicates_removed, "exact_duplicate_split_conflicts": split_conflicts}
+    audit = {"total_sequence_groups": len(sequence_splits), "groups_by_split": {split: sum(1 for values in sequence_splits.values() if values == {split}) for split in SPLITS}, "sequence_groups_spanning_splits": leakage, "sequence_group_leakage_count": len(leakage), "source_image_counts": {source: {split: counts[split] for split in SPLITS} for source, counts in sorted(source_split_counts.items())}, "near_duplicate_pair_counts": pair_summary, "perceptual_cross_split_pairs": sum(value for key, value in pair_summary.items() if key.split("__")[0] != key.split("__")[1]), "near_duplicate_pairs_same_sequence_group": sum(item["same_sequence_group"] for item in near_duplicates), "near_duplicate_pairs_perceptual_only": sum(not item["same_sequence_group"] for item in near_duplicates), "exact_duplicates_removed": exact_duplicates_removed, "exact_duplicate_split_conflicts": split_conflicts}
     (output / "manifest.json").write_text(json.dumps({"dataset": dataset_name, "images": final_manifest, "sequence_audit": audit}, indent=2) + "\n", encoding="utf-8")
     (output / "near_duplicates.json").write_text(json.dumps({"pairs": near_duplicates, "summary": pair_summary, "sequence_group_leakage": leakage}, indent=2) + "\n", encoding="utf-8")
-    return {"output": str(output), "images": len(final_manifest), "split_sizes": {split: sum(1 for row in final_manifest if row["final_split"] == split) for split in SPLITS}, "sequence_groups": len(sequence_splits), "sequence_group_leakage_count": len(leakage), "perceptual_cross_split_pairs": audit["perceptual_cross_split_pairs"], "exact_duplicates_removed": exact_duplicates_removed, "sequence_assignments": assignments}
+    return {"output": str(output), "images": len(final_manifest), "split_sizes": {split: sum(1 for row in final_manifest if row["final_split"] == split) for split in SPLITS}, "source_image_counts": audit["source_image_counts"], "sequence_groups": len(sequence_splits), "sequence_group_leakage_count": len(leakage), "perceptual_cross_split_pairs": audit["perceptual_cross_split_pairs"], "exact_duplicates_removed": exact_duplicates_removed, "sequence_assignments": assignments}
 
 
 def main(argv=None) -> int:

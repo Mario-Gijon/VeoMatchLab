@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 from pathlib import Path
 
@@ -32,14 +33,27 @@ def main(argv=None) -> int:
         "c1_football_images": ["football_images"],
         "c2_football_images_plus_veo": ["football_images", "veo_ball_detection", "football_eoakc"],
     }
+    c1_output = WORKSPACE / "datasets" / "c1_football_images"
     for experiment, sources in combinations.items():
         output = WORKSPACE / "datasets" / experiment
         if output.exists():
             shutil.rmtree(output)
+        overrides = None
+        if experiment == "c2_football_images_plus_veo":
+            # Lock every football_images sequence to the split assigned by C1.
+            # New Veo-domain groups are assigned only after these assignments
+            # are fixed, keeping C1 a stable evaluation reference.
+            c1_manifest = json.loads((c1_output / "manifest.json").read_text(encoding="utf-8"))
+            overrides = {
+                row["sequence_group"]: row["final_split"]
+                for row in c1_manifest["images"]
+                if row.get("source_dataset") == "football_images"
+            }
         result = merge_datasets(
             [converted[name] for name in sources],
             output,
             dataset_name=experiment,
+            group_split_overrides=overrides,
         )
         result.pop("sequence_assignments", None)
         print(result)
