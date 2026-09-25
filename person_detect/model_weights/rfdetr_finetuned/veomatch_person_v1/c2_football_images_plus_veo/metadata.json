@@ -1,0 +1,29 @@
+{
+  "experiment_name": "c2_football_images_plus_veo",
+  "base_checkpoint": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr/rf-detr-xxlarge.pth",
+  "dataset_composition": [
+    "football_images",
+    "veo_ball_detection",
+    "football_eoakc"
+  ],
+  "class_names": [
+    "person"
+  ],
+  "training_hyperparameters": {
+    "epochs": 50,
+    "batch_size": 1,
+    "grad_accum_steps": 16,
+    "learning_rate": 5e-05,
+    "learning_rate_encoder": 7.5e-05,
+    "resolution": 880,
+    "gradient_checkpointing": true,
+    "use_ema": true,
+    "early_stopping": true,
+    "early_stopping_patience": 10,
+    "skip_best_epochs": 3
+  },
+  "best_epoch": null,
+  "validation_metrics": {},
+  "timestamp": "2026-09-25T00:27:50.114247+00:00",
+  "checkpoint": "/home/mario/Projects/VeoMatchLab/person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/c2_football_images_plus_veo/best.pth"
+}
