@@ -24,6 +24,18 @@ SAMPLE_PERIOD_S = 1.0 / 15.0
 logger = logging.getLogger(__name__)
 
 
+def _transcode_web_video(source: Path, destination: Path) -> None:
+    """Convert an intermediate OpenCV video to browser-compatible H.264 MP4."""
+    command = [
+        "ffmpeg", "-y", "-v", "error", "-i", str(source),
+        "-an", "-c:v", "libx264", "-preset", "veryfast",
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(destination),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or "ffmpeg could not encode the Ultra panorama")
+
+
 class JobCancelled(Exception):
     pass
 
@@ -286,6 +298,7 @@ class ClipAnalysisService:
         rows: list[dict] = []
         association_rows: list[dict] = []
         ultra_path = output_dir / "ultra_base.mp4"
+        ultra_intermediate_path = output_dir / "ultra_base.intermediate.mp4"
         ultra_writer: Any = None
         panorama_maps: Any = None
         pipeline_profile: Any = PipelineProfile()
@@ -309,7 +322,7 @@ class ClipAnalysisService:
             panorama = render_ultra_panorama(data["frame"], data["metadata"], panorama_maps)
             pipeline_profile.ultra_render_seconds += time.perf_counter() - started
             if ultra_writer is None:
-                ultra_writer = cv2.VideoWriter(str(ultra_path), cv2.VideoWriter_fourcc(*"mp4v"), 1.0 / SAMPLE_PERIOD_S, (panorama.shape[1], panorama.shape[0]))
+                ultra_writer = cv2.VideoWriter(str(ultra_intermediate_path), cv2.VideoWriter_fourcc(*"mp4v"), 1.0 / SAMPLE_PERIOD_S, (panorama.shape[1], panorama.shape[0]))
                 if not ultra_writer.isOpened():
                     raise RuntimeError("Could not open ultra panorama video writer")
             started = time.perf_counter()
@@ -322,6 +335,11 @@ class ClipAnalysisService:
         finally:
             if ultra_writer is not None:
                 ultra_writer.release()
+        if ultra_intermediate_path.exists():
+            started = time.perf_counter()
+            _transcode_web_video(ultra_intermediate_path, ultra_path)
+            pipeline_profile.video_encode_seconds += time.perf_counter() - started
+            ultra_intermediate_path.unlink(missing_ok=True)
         self._check_cancelled(job)
         provenance = Provenance(source="our_analysis", run_id=f"run_{job.job_id}_detection", parser_version="clip-v1")
         started = time.perf_counter()
