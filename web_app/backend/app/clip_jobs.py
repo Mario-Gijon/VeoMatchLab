@@ -263,6 +263,15 @@ class ClipAnalysisService:
             for item in measurements
         ]}
 
+    @staticmethod
+    def _postprocess_tracking(output_dir: Path, raw_rows: list[dict]) -> list[dict]:
+        """Apply the shared offline V2 pass without replacing raw diagnostics."""
+        from .tracking_postprocess import postprocess_tracking_rows, write_postprocess_outputs
+
+        final_rows, report = postprocess_tracking_rows(raw_rows)
+        write_postprocess_outputs(output_dir, final_rows, report)
+        return final_rows
+
     def _run(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
         try:
             with job._lock:
@@ -351,9 +360,14 @@ class ClipAnalysisService:
         self._save_run(job, stage="person_detection", status="completed", source_media_id=source["id"],
                        configuration={"clip_id": clip["id"], "threshold": .40, "sample_period_s": SAMPLE_PERIOD_S}, outputs=[detection["id"], association_debug["id"]])
         with job._lock:
-            job.stage, job.processed_frames = "tracking", 0
-        track_rows = [json.loads(line) | {"timestamp_s": json.loads(line)["timestamp"]}
-                      for line in (output_dir / "tracking_frames.jsonl").read_text(encoding="utf-8").splitlines()]
+            job.stage, job.processed_frames = "postprocessing", job.total_frames
+        raw_track_rows = []
+        for line in (output_dir / "tracking_frames.jsonl").read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            raw_track_rows.append(row | {"timestamp_s": row["timestamp"]})
+        self._check_cancelled(job)
+        track_rows = self._postprocess_tracking(output_dir, raw_track_rows)
+        self._check_cancelled(job)
         started = time.perf_counter()
         tracks = self.artifacts.write_records(job.match_id, "tracks.person", track_rows,
             Provenance(source="our_analysis", run_id=f"run_{job.job_id}_tracking", parser_version="clip-v1", upstream_artifact_ids=[detection["id"]]), source_media_ids=[source["id"]])
@@ -391,27 +405,33 @@ class ClipAnalysisService:
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / job.job_id
         output_dir.mkdir(parents=True, exist_ok=True)
         tracker = GlobalTracker()
-        track_rows = []
+        raw_track_rows = []
         for detection_row in self.artifacts.read_window(job.match_id, detection_id, 0.0, clip["duration_s"]):
             self._check_cancelled(job)
             measurements = tuple(TrackingMeasurement(**item) for item in detection_row["measurements"])
             frame = tracker.update(measurements, timestamp=detection_row["timestamp_s"], frame_index=detection_row["frame_index"])
-            track_rows.append({"timestamp_s": frame.timestamp, "frame_index": frame.frame_index,
+            raw_track_rows.append({"timestamp_s": frame.timestamp, "frame_index": frame.frame_index,
                            "timestamp": frame.timestamp, "measurement_count": len(measurements),
                            "tracks": [{"track_id": item.track_id, "x": item.x, "z": item.z, "vx": item.vx, "vz": item.vz,
                                        "lifecycle": item.lifecycle.value, "position_kind": item.position_kind.value,
                                        "measurement_id": item.measurement_id, "missed_seconds": item.missed_seconds, "hits": item.hits}
                                       for item in frame.tracks]})
             with job._lock:
-                job.stage, job.processed_frames = "tracking", len(track_rows)
+                job.stage, job.processed_frames = "tracking", len(raw_track_rows)
+        # Preserve the exact 15 Hz forward tracker diagnostic before V2 changes it.
+        (output_dir / "tracking_frames.jsonl").write_text("".join(json.dumps(row, allow_nan=False) + "\n" for row in raw_track_rows), encoding="utf-8")
+        with job._lock:
+            job.stage = "postprocessing"
+        self._check_cancelled(job)
+        track_rows = self._postprocess_tracking(output_dir, raw_track_rows)
+        self._check_cancelled(job)
         provenance = Provenance(source="our_analysis", run_id=f"run_{job.job_id}_tracking", parser_version="clip-v1", upstream_artifact_ids=[detection_id])
         tracks = self.artifacts.write_records(job.match_id, "tracks.person", track_rows, provenance, source_media_ids=[source["id"]])
         job.detection_artifact_id, job.tracking_artifact_id = detection_id, tracks["id"]
         self._save_run(job, stage="person_tracking", status="completed", source_media_id=source["id"],
                        configuration={"clip_id": clip["id"], "sample_period_s": SAMPLE_PERIOD_S}, upstream=[detection_id], outputs=[tracks["id"]])
-        summary = {"frames_processed": len(track_rows), "measurements_processed": sum(row["measurement_count"] for row in track_rows),
+        summary = {"frames_processed": len(raw_track_rows), "measurements_processed": sum(row["measurement_count"] for row in raw_track_rows),
                    "source_detection_artifact_id": detection_id}
-        (output_dir / "tracking_frames.jsonl").write_text("".join(json.dumps(row, allow_nan=False) + "\n" for row in track_rows), encoding="utf-8")
         (output_dir / "tracking_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         def publish_tracking(value: dict) -> None:
             next_analysis = {

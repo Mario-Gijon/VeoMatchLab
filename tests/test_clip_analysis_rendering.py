@@ -19,6 +19,11 @@ def test_cached_tracking_does_not_render_ultra_base_again():
     assert "read_frame" not in source
 
 
+def test_full_and_cached_tracking_share_the_v2_postprocess_helper():
+    assert "self._postprocess_tracking(" in inspect.getsource(ClipAnalysisService._run_all)
+    assert "self._postprocess_tracking(" in inspect.getsource(ClipAnalysisService._run_cached_tracking)
+
+
 def test_cached_tracking_uses_only_cached_measurements_and_preserves_existing_artifacts(tmp_path):
     store = WorkspaceStore(tmp_path)
     match = store.create_match("Cached", "", None)
@@ -38,5 +43,9 @@ def test_cached_tracking_uses_only_cached_measurements_and_preserves_existing_ar
     assert updated["analysis"]["ultra_base"] == "clips/old/ultra_base.mp4"
     assert "debug_video" not in updated["analysis"]
     assert not (tmp_path / "assets" / match["id"] / "clips" / clip["id"] / job.job_id / "tracking_debug.mp4").exists()
+    output_dir = store.asset_dir(match["id"], "clips") / clip["id"] / job.job_id
+    assert (output_dir / "tracking_frames.jsonl").is_file()
+    assert (output_dir / "tracking_frames_final.jsonl").is_file()
+    assert (output_dir / "tracking_postprocess_report.json").is_file()
     tracks = list(service.artifacts.read_window(match["id"], updated["analysis"]["tracking_artifact_id"]))
     assert len(tracks) == len(rows)
