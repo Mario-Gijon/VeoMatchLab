@@ -460,9 +460,11 @@ def clip_debug_frames(match_id: str, clip_id: str) -> dict[str, Any]:
         raise api_error(404, "Detection association and tracking artifacts are required.", "clip_debug_missing")
     artifacts = LocalArtifactStore(store)
     end = float(clip["duration_s"])
+    _, specs, _ = cached_clip_view_geometry(match, 1280, 720)
     return {
         "tracks": list(artifacts.read_window(match_id, tracking_id, 0.0, end)),
         "association": list(artifacts.read_window(match_id, association_id, 0.0, end)),
+        "camera_specs": {spec.name: {"longitude": spec.longitude, "latitude": spec.latitude, "vfov": spec.vfov} for spec in specs},
     }
 
 
