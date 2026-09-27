@@ -16,6 +16,10 @@ export function presentationDirectionFromVirtualPixel(spec: VirtualCameraSpec, p
 
 export function projectVirtualPixelToUltra(context: ViewContext, spec: VirtualCameraSpec, pixelX: number, pixelY: number, width: number, height: number) {
   const direction = presentationDirectionFromVirtualPixel(spec, pixelX, pixelY, width, height)
+  return direction ? projectPresentationDirectionToUltra(context, direction) : null
+}
+
+export function projectPresentationDirectionToUltra(context: ViewContext, direction: number[]) {
   const va = context.uniforms.va_left && context.uniforms.va_right && context.uniforms.va_top && context.uniforms.va_bottom
     ? { left: Number(context.uniforms.va_left.value), right: Number(context.uniforms.va_right.value), top: Number(context.uniforms.va_top.value), bottom: Number(context.uniforms.va_bottom.value) }
     : null
