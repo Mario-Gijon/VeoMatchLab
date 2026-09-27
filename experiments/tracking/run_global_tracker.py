@@ -45,8 +45,8 @@ from experiments.virtual_camera_coverage.coverage import (  # noqa: E402
     DEFAULT_SPLIT_FRACTION,
     build_map,
     derive_specs,
-    read_frame,
     render_map,
+    SequentialFrameReader,
 )
 from experiments.virtual_camera_coverage.detect import (  # noqa: E402
     DEFAULT_C2_WEIGHTS,
@@ -217,10 +217,10 @@ def run(
     confirmed_ids: set[int] = set()
     skipped_no_position = 0
 
-    with frames_path.open("w", encoding="utf-8") as output:
+    with frames_path.open("w", encoding="utf-8") as output, SequentialFrameReader(args.video) as frame_reader:
         for requested_time in _timestamps(args.start_s, args.duration_s, args.sample_period_s):
             started = time.perf_counter()
-            frame, frame_info = read_frame(args.video, requested_time)
+            frame, frame_info = frame_reader.read(requested_time)
             profile.frame_read_seconds += time.perf_counter() - started
             frame_index = int(frame_info["actual_frame"])
             timestamp = float(frame_info["actual_time_s"])

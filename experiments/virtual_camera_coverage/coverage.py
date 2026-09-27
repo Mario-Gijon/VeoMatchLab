@@ -1554,6 +1554,71 @@ def read_frame(
     }
 
 
+class SequentialFrameReader:
+    """Persistent, forward-only equivalent of :func:`read_frame`.
+
+    It deliberately retains the legacy frame-selection rule: round(time * fps).
+    Backward reads are supported safely with a seek, although clip analysis
+    supplies ascending timestamps and therefore never takes that path.
+    """
+
+    def __init__(self, video: Path) -> None:
+        self.video = video
+        self.cap: cv2.VideoCapture | None = None
+        self.fps = 0.0
+        self.next_frame = 0
+
+    def __enter__(self) -> "SequentialFrameReader":
+        self.cap = cv2.VideoCapture(str(self.video))
+        if not self.cap.isOpened():
+            self.cap.release()
+            self.cap = None
+            raise RuntimeError(f"Could not open {self.video}")
+        self.fps = float(self.cap.get(cv2.CAP_PROP_FPS))
+        if self.fps <= 0.0:
+            self.close()
+            raise RuntimeError("video reports invalid FPS")
+        self.next_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        return self
+
+    def close(self) -> None:
+        if self.cap is not None:
+            self.cap.release()
+            self.cap = None
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def read(self, time_s: float) -> tuple[np.ndarray, dict]:
+        if self.cap is None:
+            raise RuntimeError("SequentialFrameReader is not open")
+        requested = max(0, int(round(time_s * self.fps)))
+        if requested < self.next_frame:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, requested)
+            self.next_frame = requested
+        while self.next_frame < requested:
+            if not self.cap.grab():
+                raise RuntimeError(f"Could not read frame near {time_s:.3f}s")
+            self.next_frame += 1
+        ok, frame = self.cap.read()
+        actual = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+        self.next_frame = actual + 1
+        if not ok or frame is None:
+            raise RuntimeError(f"Could not read frame near {time_s:.3f}s")
+        h, w = frame.shape[:2]
+        if (w, h) != (SOURCE_W, SOURCE_H):
+            raise RuntimeError(f"Expected {SOURCE_W}x{SOURCE_H} source frame, got {w}x{h}")
+        return frame, {
+            "fps": self.fps,
+            "requested_time_s": float(time_s),
+            "requested_frame": requested,
+            "actual_frame": actual,
+            "actual_time_s": actual / self.fps,
+            "source_width": w,
+            "source_height": h,
+        }
+
+
 def camera_diagnostics(camera_map: CameraMap) -> dict:
     either = camera_map.left_valid | camera_map.right_valid
     both = camera_map.left_valid & camera_map.right_valid
