@@ -1,62 +1,292 @@
+"""Tests for the asymmetric 4 FAR + 2 NEAR coverage experiment.
+
+CHATGPT DELIVERY MARKER: TEST_VIRTUAL_CAMERA_COVERAGE_V11
+"""
+
+from __future__ import annotations
+
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
 
-from experiments.virtual_camera_coverage.coverage import (
-    derive_specs,
-    logical_cells,
-)
-from geometry.veo_metadata import load_veo_metadata
-
 
 ROOT = Path(__file__).resolve().parents[1]
-CALIBRATION = sorted((ROOT / "tests/fixtures/calibrations").glob("*.veo"))[0]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from experiments.virtual_camera_coverage.coverage import (  # noqa: E402
+    DEFAULT_FAR_CAMERAS,
+    DEFAULT_NEAR_CAMERAS,
+    build_ground_grid,
+    derive_asymmetric_layout,
+    derive_specs,
+    depth_geometry,
+    owner_ids,
+    player_top_y,
+    tight_physical_bounds,
+)
+from geometry.veo_metadata import load_veo_metadata  # noqa: E402
+from person_detect.views.interactive_view.renderer import camera_world  # noqa: E402
 
 
-def test_six_logical_cells_cover_field_without_overlap():
-    length, width = 105.0, 68.0
-    cells = logical_cells(length, width)
-    assert len(cells) == 6
-    assert {(row, col) for _, col, row, _ in cells} == {(r, c) for r in range(2) for c in range(3)}
-    xs = sorted({b.x_min for *_, b in cells} | {b.x_max for *_, b in cells})
-    zs = sorted({b.z_min for *_, b in cells} | {b.z_max for *_, b in cells})
-    assert xs == [-length / 2, -length / 6, length / 6, length / 2]
-    assert zs == [-width / 2, 0.0, width / 2]
-    for _, _, _, a in cells:
-        for _, _, _, b in cells:
-            if a is b:
-                continue
-            overlap_x = min(a.x_max, b.x_max) - max(a.x_min, b.x_min)
-            overlap_z = min(a.z_max, b.z_max) - max(a.z_min, b.z_min)
-            assert overlap_x <= 0 or overlap_z <= 0
+CALIBRATION = sorted(
+    (ROOT / "tests" / "fixtures" / "calibrations").glob("*.veo")
+)[0]
 
 
-def test_specs_use_calibration_dimensions_and_are_deterministic():
-    metadata = load_veo_metadata(CALIBRATION)
-    first = derive_specs(metadata, 320, 180, 0.75, 1.0)
-    second = derive_specs(metadata, 320, 180, 0.75, 1.0)
+def _metadata():
+    return load_veo_metadata(CALIBRATION)
+
+
+def test_default_layout_is_four_far_two_near():
+    meta = _metadata()
+
+    layout = derive_asymmetric_layout(
+        meta,
+        split_fraction=0.50,
+        near_count=DEFAULT_NEAR_CAMERAS,
+        far_count=DEFAULT_FAR_CAMERAS,
+        max_step_m=1.0,
+    )
+
+    assert layout.near_count == 2
+    assert layout.far_count == 4
+    assert len(layout.cells()) == 6
+
+    assert [cell.name for cell in layout.cells()] == [
+        "near_c1",
+        "near_c2",
+        "far_c1",
+        "far_c2",
+        "far_c3",
+        "far_c4",
+    ]
+
+
+def test_split_is_physical_half_depth_from_near_touchline():
+    meta = _metadata()
+
+    _, _, _, total_depth = depth_geometry(meta)
+
+    layout = derive_asymmetric_layout(
+        meta,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        max_step_m=1.0,
+    )
+
+    assert math.isclose(
+        layout.split_depth_m,
+        total_depth * 0.50,
+    )
+
+
+def test_every_tight_ground_sample_has_exactly_one_owner():
+    meta = _metadata()
+
+    layout = derive_asymmetric_layout(
+        meta,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        max_step_m=1.0,
+    )
+
+    grid = build_ground_grid(
+        meta,
+        tight_physical_bounds(meta),
+        layout,
+        max_step_m=1.0,
+    )
+
+    assert grid.owner_id.shape == grid.longitude.shape
+    assert grid.owner_id.shape == grid.depth_m.shape
+
+    unique = set(
+        int(value)
+        for value in np.unique(grid.owner_id)
+    )
+
+    assert unique.issubset(set(range(6)))
+    assert unique == set(range(6))
+
+    counts = [
+        int(np.sum(grid.owner_id == owner_id))
+        for owner_id in range(6)
+    ]
+
+    assert sum(counts) == grid.owner_id.size
+    assert all(count > 0 for count in counts)
+
+
+def test_owner_ids_respect_near_far_band_boundary():
+    meta = _metadata()
+
+    layout = derive_asymmetric_layout(
+        meta,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        max_step_m=1.0,
+    )
+
+    longitude = np.asarray(
+        [
+            np.mean(layout.near_lon_edges),
+            np.mean(layout.far_lon_edges),
+        ],
+        dtype=np.float64,
+    )
+
+    depths = np.asarray(
+        [
+            layout.split_depth_m - 0.01,
+            layout.split_depth_m,
+        ],
+        dtype=np.float64,
+    )
+
+    owners = owner_ids(
+        longitude,
+        depths,
+        layout,
+    )
+
+    assert int(owners[0]) < layout.near_count
+    assert int(owners[1]) >= layout.near_count
+
+
+def test_player_height_uses_calibrated_veo_y_sign():
+    meta = _metadata()
+
+    camera_y = float(
+        camera_world(meta)[1]
+    )
+
+    top_y = player_top_y(meta)
+
+    assert camera_y != 0.0
+    assert top_y != 0.0
+
+    assert math.copysign(
+        1.0,
+        top_y,
+    ) == math.copysign(
+        1.0,
+        camera_y,
+    )
+
+
+def test_twelve_specs_are_finite_and_deterministic():
+    meta = _metadata()
+
+    first, layout_a, tight_a, context_a = derive_specs(
+        meta,
+        320,
+        180,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        guard_margin_m=0.50,
+        near_context_m=1.0,
+        outer_context_m=0.50,
+        grid_step_m=1.0,
+    )
+
+    second, layout_b, tight_b, context_b = derive_specs(
+        meta,
+        320,
+        180,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        guard_margin_m=0.50,
+        near_context_m=1.0,
+        outer_context_m=0.50,
+        grid_step_m=1.0,
+    )
+
+    assert layout_a == layout_b
     assert len(first) == 12
-    assert all(s.ownership.x_min >= -metadata.field_length / 2 for s in first)
-    assert all(s.ownership.x_max <= metadata.field_length / 2 for s in first)
-    assert all(s.ownership.z_min >= -metadata.field_width / 2 for s in first)
-    assert all(s.ownership.z_max <= metadata.field_width / 2 for s in first)
+    assert len(second) == 12
+
+    assert [spec.name for spec in first] == [
+        "tight_near_c1",
+        "tight_near_c2",
+        "tight_far_c1",
+        "tight_far_c2",
+        "tight_far_c3",
+        "tight_far_c4",
+        "context_near_c1",
+        "context_near_c2",
+        "context_far_c1",
+        "context_far_c2",
+        "context_far_c3",
+        "context_far_c4",
+    ]
+
+    assert np.array_equal(
+        tight_a.owner_id,
+        tight_b.owner_id,
+    )
+
+    assert np.array_equal(
+        context_a.owner_id,
+        context_b.owner_id,
+    )
+
     for a, b in zip(first, second):
         assert a.json() == b.json()
-        assert math.isfinite(a.hfov) and math.isfinite(a.vfov)
-        assert 0 < a.hfov < math.pi and 0 < a.vfov < math.pi
+        assert math.isfinite(a.longitude)
+        assert math.isfinite(a.latitude)
+        assert 0.0 < a.hfov < math.pi
+        assert 0.0 < a.vfov < math.pi
+        assert a.required_ground_points > 0
+        assert a.required_world_points == 2 * a.required_ground_points
+        assert 0.0 <= a.required_point_valid_fraction <= 1.0
 
 
-def test_guard_changes_rendered_bounds_but_not_ownership():
-    metadata = load_veo_metadata(CALIBRATION)
-    no_guard = derive_specs(metadata, 320, 180, 0.0, 1.0)
-    guard = derive_specs(metadata, 320, 180, 0.75, 1.0)
-    for a, b in zip(no_guard, guard):
-        assert a.ownership == b.ownership
-    assert any(a.rendered != b.rendered for a, b in zip(no_guard, guard))
-    for spec in guard:
-        if spec.name.startswith("tight_"):
-            assert spec.rendered.x_min <= spec.ownership.x_min
-            assert spec.rendered.x_max >= spec.ownership.x_max
-            assert spec.rendered.z_min <= spec.ownership.z_min
-            assert spec.rendered.z_max >= spec.ownership.z_max
+def test_cameras_share_pitch_within_each_depth_band_and_mode():
+    meta = _metadata()
+
+    specs, _, _, _ = derive_specs(
+        meta,
+        320,
+        180,
+        split_fraction=0.50,
+        near_count=2,
+        far_count=4,
+        guard_margin_m=0.50,
+        near_context_m=1.0,
+        outer_context_m=0.50,
+        grid_step_m=1.0,
+    )
+
+    for mode in ("tight", "context"):
+        for band, expected_count in (("near", 2), ("far", 4)):
+            group = [
+                spec
+                for spec in specs
+                if spec.mode == mode
+                and spec.cell.band == band
+            ]
+
+            assert len(group) == expected_count
+
+            latitudes = {
+                spec.latitude
+                for spec in group
+            }
+
+            assert len(latitudes) == 1
+
+            # Cameras in the same band must still keep independent pan.
+            longitudes = {
+                round(spec.longitude, 12)
+                for spec in group
+            }
+
+            assert len(longitudes) > 1

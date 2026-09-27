@@ -1,0 +1,929 @@
+{
+  "experiment": "asymmetric_virtual_camera_coverage_4far_4near_margin",
+  "video": "person_detect/clips/match_629890153a11/clip_12m36s_90s.mp4",
+  "calibration": "person_detect/clips/match_629890153a11/camera_alignment.veo",
+  "field_length_m": 105.0,
+  "field_width_m": 64.70645141601562,
+  "camera_world": [
+    -0.26846886,
+    -4.76267099,
+    -36.12551117
+  ],
+  "player_context_height_m": 2.5,
+  "player_top_world_y": -2.5,
+  "guard_margin_m": 0.5,
+  "near_guard_margin_m": 3.5,
+  "coverage_margin_m": 2.5,
+  "coverage_bounds": {
+    "x_min": -55.0,
+    "x_max": 55.0,
+    "z_min": -34.85322570800781,
+    "z_max": 34.85322570800781
+  },
+  "coverage_checkpoints": {
+    "field_xmin_zmin": [
+      -52.5,
+      -32.35322570800781
+    ],
+    "field_xmin_zmax": [
+      -52.5,
+      32.35322570800781
+    ],
+    "field_xmax_zmin": [
+      52.5,
+      -32.35322570800781
+    ],
+    "field_xmax_zmax": [
+      52.5,
+      32.35322570800781
+    ],
+    "margin_xmin_zmin": [
+      -55.0,
+      -34.85322570800781
+    ],
+    "margin_xmin_zmax": [
+      -55.0,
+      34.85322570800781
+    ],
+    "margin_xmax_zmin": [
+      55.0,
+      -34.85322570800781
+    ],
+    "margin_xmax_zmax": [
+      55.0,
+      34.85322570800781
+    ]
+  },
+  "near_context_m": 1.0,
+  "outer_context_m": 0.5,
+  "context_near_edge_policy": "clamped_to_tight_coverage_edge; extra context expands away from physical camera",
+  "grid_step_m": 0.5,
+  "render_size_per_view": [
+    1280,
+    720
+  ],
+  "ownership_layout": {
+    "reference_lon_rad": -0.006377577781677246,
+    "reference_lon_deg": -0.3654082904065122,
+    "near_touchline_z": -32.35322570800781,
+    "far_touchline_z": 32.35322570800781,
+    "depth_sign": 1.0,
+    "total_depth_m": 64.70645141601562,
+    "split_depth_m": 32.35322570800781,
+    "split_fraction": 0.5,
+    "near_count": 4,
+    "far_count": 4,
+    "near_lon_edges_rad": [
+      -1.4438180714287936,
+      -0.672944731009189,
+      0.0979286094104157,
+      0.8688019498300206,
+      1.639675290249625
+    ],
+    "near_lon_edges_deg": [
+      -82.7246818775879,
+      -38.556892932392984,
+      5.610896012801937,
+      49.778684957996866,
+      93.94647390319177
+    ],
+    "far_lon_edges_rad": [
+      -0.886622020389965,
+      -0.39335042437152457,
+      0.09992117164691583,
+      0.5931927676653562,
+      1.0864643636837965
+    ],
+    "far_lon_edges_deg": [
+      -50.79969979170701,
+      -22.537319186168236,
+      5.725061419370542,
+      33.98744202490932,
+      62.24982263044809
+    ],
+    "cells": [
+      {
+        "name": "near_c1",
+        "band": "near",
+        "index_in_band": 0,
+        "owner_id": 0,
+        "lon_min": -1.4438180714287936,
+        "lon_max": -0.672944731009189,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -82.7246818775879,
+        "lon_max_deg": -38.556892932392984
+      },
+      {
+        "name": "near_c2",
+        "band": "near",
+        "index_in_band": 1,
+        "owner_id": 1,
+        "lon_min": -0.672944731009189,
+        "lon_max": 0.0979286094104157,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -38.556892932392984,
+        "lon_max_deg": 5.610896012801937
+      },
+      {
+        "name": "near_c3",
+        "band": "near",
+        "index_in_band": 2,
+        "owner_id": 2,
+        "lon_min": 0.0979286094104157,
+        "lon_max": 0.8688019498300206,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 5.610896012801937,
+        "lon_max_deg": 49.778684957996866
+      },
+      {
+        "name": "near_c4",
+        "band": "near",
+        "index_in_band": 3,
+        "owner_id": 3,
+        "lon_min": 0.8688019498300206,
+        "lon_max": 1.639675290249625,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 49.778684957996866,
+        "lon_max_deg": 93.94647390319177
+      },
+      {
+        "name": "far_c1",
+        "band": "far",
+        "index_in_band": 0,
+        "owner_id": 4,
+        "lon_min": -0.886622020389965,
+        "lon_max": -0.39335042437152457,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -50.79969979170701,
+        "lon_max_deg": -22.537319186168236
+      },
+      {
+        "name": "far_c2",
+        "band": "far",
+        "index_in_band": 1,
+        "owner_id": 5,
+        "lon_min": -0.39335042437152457,
+        "lon_max": 0.09992117164691583,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -22.537319186168236,
+        "lon_max_deg": 5.725061419370542
+      },
+      {
+        "name": "far_c3",
+        "band": "far",
+        "index_in_band": 2,
+        "owner_id": 6,
+        "lon_min": 0.09992117164691583,
+        "lon_max": 0.5931927676653562,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 5.725061419370542,
+        "lon_max_deg": 33.98744202490932
+      },
+      {
+        "name": "far_c4",
+        "band": "far",
+        "index_in_band": 3,
+        "owner_id": 7,
+        "lon_min": 0.5931927676653562,
+        "lon_max": 1.0864643636837965,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 33.98744202490932,
+        "lon_max_deg": 62.24982263044809
+      }
+    ]
+  },
+  "tight_ownership_diagnostics": {
+    "sampled_ground_points": 31161,
+    "owner_counts": {
+      "near_c1": 5152,
+      "near_c2": 2548,
+      "near_c3": 2550,
+      "near_c4": 5220,
+      "far_c1": 3725,
+      "far_c2": 4085,
+      "far_c3": 4123,
+      "far_c4": 3758
+    },
+    "all_points_have_exactly_one_owner": true
+  },
+  "context_ownership_diagnostics": {
+    "sampled_ground_points": 32112,
+    "owner_counts": {
+      "near_c1": 5222,
+      "near_c2": 2548,
+      "near_c3": 2550,
+      "near_c4": 5290,
+      "far_c1": 3897,
+      "far_c2": 4317,
+      "far_c3": 4356,
+      "far_c4": 3932
+    },
+    "all_points_have_exactly_one_owner": true
+  },
+  "shared_band_latitudes_deg": {
+    "tight": {
+      "near": -43.601318019984305,
+      "far": -0.0004616699532307345
+    },
+    "context": {
+      "near": -43.601221549758186,
+      "far": 0.00014867897866390967
+    }
+  },
+  "cameras": [
+    {
+      "name": "tight_near_c1",
+      "mode": "tight",
+      "cell": {
+        "name": "near_c1",
+        "band": "near",
+        "index_in_band": 0,
+        "owner_id": 0,
+        "lon_min": -1.4438180714287936,
+        "lon_max": -0.672944731009189,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -82.7246818775879,
+        "lon_max_deg": -38.556892932392984
+      },
+      "longitude": -0.5487082021721853,
+      "latitude": -0.7609865576578608,
+      "hfov": 2.1024631358137573,
+      "vfov": 1.5540771347375417,
+      "required_ground_points": 6265,
+      "required_world_points": 12530,
+      "required_point_valid_fraction": 0.9919393455706305,
+      "required_invalid_world_points": 101,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": -31.438664168677327,
+      "latitude_deg": -43.601318019984305,
+      "hfov_deg": 120.46226426396869,
+      "vfov_deg": 89.04206085824492,
+      "left_valid_fraction": 0.40321397569444445,
+      "right_valid_fraction": 0.2951150173611111,
+      "either_lens_valid_fraction": 0.6354861111111111,
+      "both_lenses_valid_fraction": 0.06284288194444444,
+      "rendered_invalid_fraction": 0.3645138888888889
+    },
+    {
+      "name": "tight_near_c2",
+      "mode": "tight",
+      "cell": {
+        "name": "near_c2",
+        "band": "near",
+        "index_in_band": 1,
+        "owner_id": 1,
+        "lon_min": -0.672944731009189,
+        "lon_max": 0.0979286094104157,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -38.556892932392984,
+        "lon_max_deg": 5.610896012801937
+      },
+      "longitude": -0.12804066864862523,
+      "latitude": -0.7609865576578608,
+      "hfov": 2.110012954690783,
+      "vfov": 1.56285489153488,
+      "required_ground_points": 4421,
+      "required_world_points": 8842,
+      "required_point_valid_fraction": 0.9859760235240895,
+      "required_invalid_world_points": 124,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": -7.3361899195992635,
+      "latitude_deg": -43.601318019984305,
+      "hfov_deg": 120.89483702171047,
+      "vfov_deg": 89.54498927632469,
+      "left_valid_fraction": 0.35706271701388886,
+      "right_valid_fraction": 0.34837348090277775,
+      "either_lens_valid_fraction": 0.6680034722222222,
+      "both_lenses_valid_fraction": 0.037432725694444446,
+      "rendered_invalid_fraction": 0.3319965277777778
+    },
+    {
+      "name": "tight_near_c3",
+      "mode": "tight",
+      "cell": {
+        "name": "near_c3",
+        "band": "near",
+        "index_in_band": 2,
+        "owner_id": 2,
+        "lon_min": 0.0979286094104157,
+        "lon_max": 0.8688019498300206,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 5.610896012801937,
+        "lon_max_deg": 49.778684957996866
+      },
+      "longitude": 0.31535799954970667,
+      "latitude": -0.7609865576578608,
+      "hfov": 2.110000583625685,
+      "vfov": 1.5628404754209493,
+      "required_ground_points": 4423,
+      "required_world_points": 8846,
+      "required_point_valid_fraction": 0.9859823649106941,
+      "required_invalid_world_points": 124,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": 18.06868240988671,
+      "latitude_deg": -43.601318019984305,
+      "hfov_deg": 120.89412821189227,
+      "vfov_deg": 89.54416329383946,
+      "left_valid_fraction": 0.31052191840277776,
+      "right_valid_fraction": 0.3960687934027778,
+      "either_lens_valid_fraction": 0.6645073784722222,
+      "both_lenses_valid_fraction": 0.042083333333333334,
+      "rendered_invalid_fraction": 0.33549262152777776
+    },
+    {
+      "name": "tight_near_c4",
+      "mode": "tight",
+      "cell": {
+        "name": "near_c4",
+        "band": "near",
+        "index_in_band": 3,
+        "owner_id": 3,
+        "lon_min": 0.8688019498300206,
+        "lon_max": 1.639675290249625,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 49.778684957996866,
+        "lon_max_deg": 93.94647390319177
+      },
+      "longitude": 0.7384549525403654,
+      "latitude": -0.7609865576578608,
+      "hfov": 2.0867792342514315,
+      "vfov": 1.5359705137714375,
+      "required_ground_points": 6341,
+      "required_world_points": 12682,
+      "required_point_valid_fraction": 0.9924302160542501,
+      "required_invalid_world_points": 96,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": 42.310352141096445,
+      "latitude_deg": -43.601318019984305,
+      "hfov_deg": 119.56364289814879,
+      "vfov_deg": 88.00462789564405,
+      "left_valid_fraction": 0.28978407118055555,
+      "right_valid_fraction": 0.406220703125,
+      "either_lens_valid_fraction": 0.5823882378472223,
+      "both_lenses_valid_fraction": 0.11361653645833333,
+      "rendered_invalid_fraction": 0.4176117621527778
+    },
+    {
+      "name": "tight_far_c1",
+      "mode": "tight",
+      "cell": {
+        "name": "far_c1",
+        "band": "far",
+        "index_in_band": 0,
+        "owner_id": 4,
+        "lon_min": -0.886622020389965,
+        "lon_max": -0.39335042437152457,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -50.79969979170701,
+        "lon_max_deg": -22.537319186168236
+      },
+      "longitude": -0.6396401851295521,
+      "latitude": -8.05766074140455e-06,
+      "hfov": 0.5260354189813423,
+      "vfov": 0.300627538614094,
+      "required_ground_points": 3976,
+      "required_world_points": 7952,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": -36.648683014889976,
+      "latitude_deg": -0.0004616699532307345,
+      "hfov_deg": 30.13960938202687,
+      "vfov_deg": 17.224689167993773,
+      "left_valid_fraction": 1.0,
+      "right_valid_fraction": 0.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "tight_far_c2",
+      "mode": "tight",
+      "cell": {
+        "name": "far_c2",
+        "band": "far",
+        "index_in_band": 1,
+        "owner_id": 5,
+        "lon_min": -0.39335042437152457,
+        "lon_max": 0.09992117164691583,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -22.537319186168236,
+        "lon_max_deg": 5.725061419370542
+      },
+      "longitude": -0.1526689599501797,
+      "latitude": -8.05766074140455e-06,
+      "hfov": 0.5185288812339794,
+      "vfov": 0.2962035164753047,
+      "required_ground_points": 4344,
+      "required_world_points": 8688,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": -8.747287067797092,
+      "latitude_deg": -0.0004616699532307345,
+      "hfov_deg": 29.709516450347337,
+      "vfov_deg": 16.971211370968703,
+      "left_valid_fraction": 0.9425618489583333,
+      "right_valid_fraction": 0.39332139756944445,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.3358832465277778,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "tight_far_c3",
+      "mode": "tight",
+      "cell": {
+        "name": "far_c3",
+        "band": "far",
+        "index_in_band": 2,
+        "owner_id": 6,
+        "lon_min": 0.09992117164691583,
+        "lon_max": 0.5931927676653562,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 5.725061419370542,
+        "lon_max_deg": 33.98744202490932
+      },
+      "longitude": 0.35068928042828873,
+      "latitude": -8.05766074140455e-06,
+      "hfov": 0.5220290494228466,
+      "vfov": 0.2982656230742842,
+      "required_ground_points": 4383,
+      "required_world_points": 8766,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": 20.093015689020728,
+      "latitude_deg": -0.0004616699532307345,
+      "hfov_deg": 29.91006131515537,
+      "vfov_deg": 17.089361375996308,
+      "left_valid_fraction": 0.0,
+      "right_valid_fraction": 1.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "tight_far_c4",
+      "mode": "tight",
+      "cell": {
+        "name": "far_c4",
+        "band": "far",
+        "index_in_band": 3,
+        "owner_id": 7,
+        "lon_min": 0.5931927676653562,
+        "lon_max": 1.0864643636837965,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 33.98744202490932,
+        "lon_max_deg": 62.24982263044809
+      },
+      "longitude": 0.8399107845138263,
+      "latitude": -8.05766074140455e-06,
+      "hfov": 0.5256098252195213,
+      "vfov": 0.30037655341232816,
+      "required_ground_points": 4012,
+      "required_world_points": 8024,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.0,
+        "x_max": 55.0,
+        "z_min": -34.85322570800781,
+        "z_max": 34.85322570800781
+      },
+      "longitude_deg": 48.123343120164186,
+      "latitude_deg": -0.0004616699532307345,
+      "hfov_deg": 30.115224655687427,
+      "vfov_deg": 17.21030877521235,
+      "left_valid_fraction": 0.0,
+      "right_valid_fraction": 1.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "context_near_c1",
+      "mode": "context",
+      "cell": {
+        "name": "near_c1",
+        "band": "near",
+        "index_in_band": 0,
+        "owner_id": 0,
+        "lon_min": -1.4438180714287936,
+        "lon_max": -0.672944731009189,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -82.7246818775879,
+        "lon_max_deg": -38.556892932392984
+      },
+      "longitude": -0.5488567590939277,
+      "latitude": -0.760984873934785,
+      "hfov": 2.102466387567333,
+      "vfov": 1.5540809067108061,
+      "required_ground_points": 6343,
+      "required_world_points": 12686,
+      "required_point_valid_fraction": 0.992038467602081,
+      "required_invalid_world_points": 101,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": -31.447175853310625,
+      "latitude_deg": -43.601221549758186,
+      "hfov_deg": 120.4624505757246,
+      "vfov_deg": 89.04227697639341,
+      "left_valid_fraction": 0.4032161458333333,
+      "right_valid_fraction": 0.2951019965277778,
+      "either_lens_valid_fraction": 0.635458984375,
+      "both_lenses_valid_fraction": 0.06285915798611111,
+      "rendered_invalid_fraction": 0.364541015625
+    },
+    {
+      "name": "context_near_c2",
+      "mode": "context",
+      "cell": {
+        "name": "near_c2",
+        "band": "near",
+        "index_in_band": 1,
+        "owner_id": 1,
+        "lon_min": -0.672944731009189,
+        "lon_max": 0.0979286094104157,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": -38.556892932392984,
+        "lon_max_deg": 5.610896012801937
+      },
+      "longitude": -0.12804066864862523,
+      "latitude": -0.760984873934785,
+      "hfov": 2.110012767410723,
+      "vfov": 1.5628546732949262,
+      "required_ground_points": 4421,
+      "required_world_points": 8842,
+      "required_point_valid_fraction": 0.9859760235240895,
+      "required_invalid_world_points": 124,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": -7.3361899195992635,
+      "latitude_deg": -43.601221549758186,
+      "hfov_deg": 120.89482629135345,
+      "vfov_deg": 89.5449767720964,
+      "left_valid_fraction": 0.35706597222222225,
+      "right_valid_fraction": 0.3483745659722222,
+      "either_lens_valid_fraction": 0.6680067274305556,
+      "both_lenses_valid_fraction": 0.03743381076388889,
+      "rendered_invalid_fraction": 0.33199327256944444
+    },
+    {
+      "name": "context_near_c3",
+      "mode": "context",
+      "cell": {
+        "name": "near_c3",
+        "band": "near",
+        "index_in_band": 2,
+        "owner_id": 2,
+        "lon_min": 0.0979286094104157,
+        "lon_max": 0.8688019498300206,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 5.610896012801937,
+        "lon_max_deg": 49.778684957996866
+      },
+      "longitude": 0.31535799954970667,
+      "latitude": -0.760984873934785,
+      "hfov": 2.110001369941091,
+      "vfov": 1.5628413917181716,
+      "required_ground_points": 4423,
+      "required_world_points": 8846,
+      "required_point_valid_fraction": 0.9859823649106941,
+      "required_invalid_world_points": 124,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": 18.06868240988671,
+      "latitude_deg": -43.601221549758186,
+      "hfov_deg": 120.89417326444641,
+      "vfov_deg": 89.54421579380308,
+      "left_valid_fraction": 0.31052191840277776,
+      "right_valid_fraction": 0.39606987847222225,
+      "either_lens_valid_fraction": 0.6645084635416667,
+      "both_lenses_valid_fraction": 0.042083333333333334,
+      "rendered_invalid_fraction": 0.33549153645833335
+    },
+    {
+      "name": "context_near_c4",
+      "mode": "context",
+      "cell": {
+        "name": "near_c4",
+        "band": "near",
+        "index_in_band": 3,
+        "owner_id": 3,
+        "lon_min": 0.8688019498300206,
+        "lon_max": 1.639675290249625,
+        "depth_min_m": 0.0,
+        "depth_max_m": 32.35322570800781,
+        "lon_min_deg": 49.778684957996866,
+        "lon_max_deg": 93.94647390319177
+      },
+      "longitude": 0.7386001619970106,
+      "latitude": -0.760984873934785,
+      "hfov": 2.0867835009315105,
+      "vfov": 1.535975416114897,
+      "required_ground_points": 6419,
+      "required_world_points": 12838,
+      "required_point_valid_fraction": 0.9925221997195824,
+      "required_invalid_world_points": 96,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": 42.31867203010761,
+      "latitude_deg": -43.601221549758186,
+      "hfov_deg": 119.56388736090985,
+      "vfov_deg": 88.00490877923401,
+      "left_valid_fraction": 0.2897710503472222,
+      "right_valid_fraction": 0.40620225694444445,
+      "either_lens_valid_fraction": 0.5823502604166667,
+      "both_lenses_valid_fraction": 0.113623046875,
+      "rendered_invalid_fraction": 0.41764973958333335
+    },
+    {
+      "name": "context_far_c1",
+      "mode": "context",
+      "cell": {
+        "name": "far_c1",
+        "band": "far",
+        "index_in_band": 0,
+        "owner_id": 4,
+        "lon_min": -0.886622020389965,
+        "lon_max": -0.39335042437152457,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -50.79969979170701,
+        "lon_max_deg": -22.537319186168236
+      },
+      "longitude": -0.6416686456608861,
+      "latitude": 2.5949377061876234e-06,
+      "hfov": 0.5301791111041999,
+      "vfov": 0.3030722033325887,
+      "required_ground_points": 4155,
+      "required_world_points": 8310,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": -36.764905242244275,
+      "latitude_deg": 0.00014867897866390967,
+      "hfov_deg": 30.377025452268214,
+      "vfov_deg": 17.364758138688057,
+      "left_valid_fraction": 1.0,
+      "right_valid_fraction": 0.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "context_far_c2",
+      "mode": "context",
+      "cell": {
+        "name": "far_c2",
+        "band": "far",
+        "index_in_band": 1,
+        "owner_id": 5,
+        "lon_min": -0.39335042437152457,
+        "lon_max": 0.09992117164691583,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": -22.537319186168236,
+        "lon_max_deg": 5.725061419370542
+      },
+      "longitude": -0.152651180908696,
+      "latitude": 2.5949377061876234e-06,
+      "hfov": 0.5184919102462581,
+      "vfov": 0.2961817420494993,
+      "required_ground_points": 4584,
+      "required_world_points": 9168,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": -8.746268403756288,
+      "latitude_deg": 0.00014867897866390967,
+      "hfov_deg": 29.707398168786472,
+      "vfov_deg": 16.969963788268736,
+      "left_valid_fraction": 0.9425618489583333,
+      "right_valid_fraction": 0.3933376736111111,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.33589952256944444,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "context_far_c3",
+      "mode": "context",
+      "cell": {
+        "name": "far_c3",
+        "band": "far",
+        "index_in_band": 2,
+        "owner_id": 6,
+        "lon_min": 0.09992117164691583,
+        "lon_max": 0.5931927676653562,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 5.725061419370542,
+        "lon_max_deg": 33.98744202490932
+      },
+      "longitude": 0.3506714216353502,
+      "latitude": 2.5949377061876234e-06,
+      "hfov": 0.5219919904798708,
+      "vfov": 0.29824378324718726,
+      "required_ground_points": 4623,
+      "required_world_points": 9246,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": 20.091992455558152,
+      "latitude_deg": 0.00014867897866390967,
+      "hfov_deg": 29.907937994129643,
+      "vfov_deg": 17.088110046078356,
+      "left_valid_fraction": 0.0,
+      "right_valid_fraction": 1.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    },
+    {
+      "name": "context_far_c4",
+      "mode": "context",
+      "cell": {
+        "name": "far_c4",
+        "band": "far",
+        "index_in_band": 3,
+        "owner_id": 7,
+        "lon_min": 0.5931927676653562,
+        "lon_max": 1.0864643636837965,
+        "depth_min_m": 32.35322570800781,
+        "depth_max_m": 64.70645141601562,
+        "lon_min_deg": 33.98744202490932,
+        "lon_max_deg": 62.24982263044809
+      },
+      "longitude": 0.8419107491504358,
+      "latitude": 2.5949377061876234e-06,
+      "hfov": 0.5296968051398654,
+      "vfov": 0.30278756183625855,
+      "required_ground_points": 4192,
+      "required_world_points": 8384,
+      "required_point_valid_fraction": 1.0,
+      "required_invalid_world_points": 0,
+      "physical_bounds": {
+        "x_min": -55.5,
+        "x_max": 55.5,
+        "z_min": -34.85322570800781,
+        "z_max": 36.35322570800781
+      },
+      "longitude_deg": 48.23793265301733,
+      "latitude_deg": 0.00014867897866390967,
+      "hfov_deg": 30.34939135607786,
+      "vfov_deg": 17.34844938227405,
+      "left_valid_fraction": 0.0,
+      "right_valid_fraction": 1.0,
+      "either_lens_valid_fraction": 1.0,
+      "both_lenses_valid_fraction": 0.0,
+      "rendered_invalid_fraction": 0.0
+    }
+  ],
+  "frames": [
+    {
+      "source": {
+        "fps": 29.97002997002997,
+        "requested_time_s": 0.0,
+        "requested_frame": 0,
+        "actual_frame": 0,
+        "actual_time_s": 0.0,
+        "source_width": 2048,
+        "source_height": 2048
+      },
+      "comparison": "experiments/virtual_camera_coverage/output_8cam/frame_000000/comparison.jpg"
+    },
+    {
+      "source": {
+        "fps": 29.97002997002997,
+        "requested_time_s": 15.0,
+        "requested_frame": 450,
+        "actual_frame": 450,
+        "actual_time_s": 15.015,
+        "source_width": 2048,
+        "source_height": 2048
+      },
+      "comparison": "experiments/virtual_camera_coverage/output_8cam/frame_000450/comparison.jpg"
+    },
+    {
+      "source": {
+        "fps": 29.97002997002997,
+        "requested_time_s": 30.0,
+        "requested_frame": 899,
+        "actual_frame": 899,
+        "actual_time_s": 29.996633333333335,
+        "source_width": 2048,
+        "source_height": 2048
+      },
+      "comparison": "experiments/virtual_camera_coverage/output_8cam/frame_000899/comparison.jpg"
+    },
+    {
+      "source": {
+        "fps": 29.97002997002997,
+        "requested_time_s": 45.0,
+        "requested_frame": 1349,
+        "actual_frame": 1349,
+        "actual_time_s": 45.011633333333336,
+        "source_width": 2048,
+        "source_height": 2048
+      },
+      "comparison": "experiments/virtual_camera_coverage/output_8cam/frame_001349/comparison.jpg"
+    },
+    {
+      "source": {
+        "fps": 29.97002997002997,
+        "requested_time_s": 60.0,
+        "requested_frame": 1798,
+        "actual_frame": 1798,
+        "actual_time_s": 59.99326666666667,
+        "source_width": 2048,
+        "source_height": 2048
+      },
+      "comparison": "experiments/virtual_camera_coverage/output_8cam/frame_001798/comparison.jpg"
+    }
+  ]
+}
