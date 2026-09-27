@@ -17,9 +17,9 @@ export default function ClipWorkspace({ matchId, clip, source, onBack, onChanged
   const [job, setJob] = useState<ClipJob | null>(null)
   const [error, setError] = useState('')
   const video = useRef<HTMLVideoElement>(null)
-  const duration = clip.end_s - clip.start_s
-  const absoluteTime = clip.start_s + localTime
-  const seek = (value: number) => { const next = Math.max(0, Math.min(duration, value)); setLocalTime(next); if (video.current) video.current.currentTime = clip.start_s + next }
+  const duration = clip.duration_s ?? 0
+  const absoluteTime = (clip.source_start_s ?? 0) + localTime
+  const seek = (value: number) => { const next = Math.max(0, Math.min(duration, value)); setLocalTime(next); if (video.current) video.current.currentTime = next }
   const startJob = async (action: 'all' | 'tracking') => { try { setJob(await api.startClipAnalysis(matchId, clip.id, action)) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo iniciar el análisis.') } }
 
   useEffect(() => {
@@ -29,23 +29,23 @@ export default function ClipWorkspace({ matchId, clip, source, onBack, onChanged
   }, [job, onChanged])
   useEffect(() => {
     if (view !== 'cameras' && view !== 'ultra') return
-    const timer = window.setTimeout(() => api.clipViews(matchId, clip.id, absoluteTime).then((next) => setRenders(next)).catch((reason: Error) => setError(reason.message)), 180)
+    const timer = window.setTimeout(() => api.clipViews(matchId, clip.id, localTime).then((next) => setRenders(next)).catch((reason: Error) => setError(reason.message)), 180)
     return () => window.clearTimeout(timer)
-  }, [absoluteTime, clip.id, matchId, view])
+  }, [clip.id, localTime, matchId, view])
   useEffect(() => {
     if (view !== 'field' || !clip.analysis?.tracking_artifact_id) return
-    const timer = window.setTimeout(() => api.clipTracks(matchId, clip.id, absoluteTime).then(setTracks).catch((reason: Error) => setError(reason.message)), 100)
+    const timer = window.setTimeout(() => api.clipTracks(matchId, clip.id, localTime).then(setTracks).catch((reason: Error) => setError(reason.message)), 100)
     return () => window.clearTimeout(timer)
-  }, [absoluteTime, clip.analysis?.tracking_artifact_id, clip.id, matchId, view])
+  }, [clip.analysis?.tracking_artifact_id, clip.id, localTime, matchId, view])
 
   const cameraNames = ['tight_far_c1', 'tight_far_c2', 'tight_far_c3', 'tight_far_c4', 'tight_near_c1', 'tight_near_c2']
   return <Box sx={{ maxWidth: 1280, mx: 'auto', py: 2 }}>
-    <Button onClick={onBack}>← Clips</Button><Typography variant="h5">{clip.name || 'Clip'}</Typography><Typography color="text.secondary">{formatMediaTime(clip.start_s)} → {formatMediaTime(clip.end_s)} · {formatMediaTime(duration)}</Typography>
+    <Button onClick={onBack}>← Clips</Button><Typography variant="h5">{clip.name || 'Clip'}</Typography><Typography color="text.secondary">{formatMediaTime(clip.source_start_s)} → {formatMediaTime((clip.source_start_s ?? 0) + duration)} · {formatMediaTime(duration)}</Typography>
     <ToggleButtonGroup sx={{ mt: 2 }} size="small" exclusive value={view} onChange={(_, next: View | null) => next && setView(next)}><ToggleButton value="source">Fuente</ToggleButton><ToggleButton value="cameras">6 cámaras</ToggleButton><ToggleButton value="ultra">Ultra panorama</ToggleButton><ToggleButton value="tracking">Tracking</ToggleButton><ToggleButton value="field">Campo 2D</ToggleButton></ToggleButtonGroup>
     {error && <Alert severity="error" sx={{ mt: 1 }} onClose={() => setError('')}>{error}</Alert>}
     <Box sx={{ mt: 1, background: '#080a0c', minHeight: 320, display: 'grid', placeItems: 'center' }}>
-      {view === 'source' && source && <video ref={video} controls preload="metadata" src={api.url(source.url)} style={{ width: '100%', maxHeight: '64vh' }} onLoadedMetadata={() => seek(localTime)} onTimeUpdate={() => { const current = (video.current?.currentTime ?? clip.start_s) - clip.start_s; if (current >= duration) { video.current?.pause(); setPlaying(false); seek(duration) } else setLocalTime(Math.max(0, current)) }} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />}
-      {view === 'source' && !source && <Alert severity="info">No hay fuente dual_lens.</Alert>}
+      {view === 'source' && source && <video ref={video} controls preload="metadata" src={api.url(source.url)} style={{ width: '100%', maxHeight: '64vh' }} onLoadedMetadata={() => seek(localTime)} onTimeUpdate={() => setLocalTime(Math.min(duration, Math.max(0, video.current?.currentTime ?? 0)))} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setLocalTime(duration) }} onError={() => setError('No se puede reproducir source.mp4.')} />}
+      {view === 'source' && !source && <Alert severity="info">Clip antiguo — archivo no generado.</Alert>}
       {view === 'cameras' && <Box sx={{ width: '100%', p: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>{cameraNames.map((name) => <Box key={name}><Typography variant="caption" color="common.white">{name}</Typography>{renders?.cameras[name] ? <img src={renders.cameras[name]} alt={name} style={{ width: '100%', display: 'block' }} /> : <LinearProgress />}</Box>)}</Box>}
       {view === 'ultra' && (renders?.ultra_panorama ? <img src={renders.ultra_panorama} alt="Ultra panorama" style={{ width: '100%', maxHeight: '64vh', objectFit: 'contain' }} /> : <LinearProgress sx={{ width: '80%' }} />)}
       {view === 'tracking' && (clip.debug_video_url ? <video controls src={api.url(clip.debug_video_url)} style={{ width: '100%', maxHeight: '64vh' }} /> : <Alert severity="info">Ejecuta el análisis para generar el vídeo de tracking.</Alert>)}

@@ -76,7 +76,7 @@ class RenameMatchRequest(BaseModel):
 class CreateClipRequest(BaseModel):
     source_media_id: str
     start_s: float = Field(ge=0, allow_inf_nan=False)
-    end_s: float = Field(gt=0, allow_inf_nan=False)
+    duration_s: float = Field(gt=0, allow_inf_nan=False)
     name: str = Field(default="", max_length=120)
 
 

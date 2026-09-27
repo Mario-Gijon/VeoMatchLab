@@ -61,8 +61,13 @@ export interface ClipAnalysis {
 export interface Clip {
   id: string
   source_media_id: string
-  start_s: number
-  end_s: number
+  source_start_s?: number
+  source_end_s?: number
+  duration_s?: number
+  start_s?: number
+  end_s?: number
+  clip_media_id?: string | null
+  generation?: { status: string; job_id?: string; error?: string }
   name: string
   created_at: string
   analysis: ClipAnalysis | null
@@ -74,7 +79,7 @@ export interface ClipJob {
   match_id: string
   clip_id: string
   status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
-  stage: 'detection' | 'tracking' | 'rendering'
+  stage: 'generating' | 'detection' | 'tracking' | 'rendering'
   processed_frames: number
   total_frames: number
   progress: number

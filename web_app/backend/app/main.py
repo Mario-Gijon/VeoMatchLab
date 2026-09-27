@@ -139,6 +139,12 @@ def public_clip(match_id: str, clip: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def clip_source(match: dict[str, Any], clip: dict[str, Any]) -> dict[str, Any] | None:
+    """Resolve the physical clip source; legacy virtual clips deliberately have none."""
+    media_id = clip.get("clip_media_id")
+    return next((item for item in match["media"] if item["id"] == media_id), None)
+
+
 def active_clip_jobs() -> ClipAnalysisService:
     """Keep test/runtime store replacement from retaining a stale job service."""
     global clip_jobs
@@ -278,14 +284,12 @@ def create_clip(match_id: str, payload: CreateClipRequest) -> dict[str, Any]:
     source = next((item for item in match["media"] if item["id"] == payload.source_media_id), None)
     if source is None or source.get("role") != "dual_lens" or source.get("kind") != "video":
         raise api_error(422, "Select the match dual_lens video as clip source.", "clip_source_invalid")
-    if payload.end_s <= payload.start_s:
-        raise api_error(422, "Clip end must be after its start.", "clip_interval_invalid")
-    if source.get("duration_s") is not None and payload.end_s > float(source["duration_s"]):
-        raise api_error(422, "Clip end lies outside the source video.", "clip_interval_invalid")
-    clip = store.create_clip(match_id, source["id"], payload.start_s, payload.end_s, payload.name.strip())
+    if source.get("duration_s") is not None and payload.start_s + payload.duration_s > float(source["duration_s"]):
+        raise api_error(422, "Clip interval lies outside the source video.", "clip_interval_invalid")
+    clip = store.create_clip(match_id, source["id"], payload.start_s, payload.duration_s, payload.name.strip())
     if clip is None:
         raise api_error(404, "Workspace not found.", "match_not_found")
-    return public_clip(match_id, clip)
+    return active_clip_jobs().start_generation(match, clip, source).public_dict()
 
 
 @app.delete("/api/matches/{match_id}/clips/{clip_id}")
@@ -302,13 +306,32 @@ def delete_clip(match_id: str, clip_id: str) -> dict[str, bool]:
     return {"deleted": True}
 
 
+@app.post("/api/matches/{match_id}/clips/{clip_id}/materialize", status_code=202)
+def materialize_legacy_clip(match_id: str, clip_id: str) -> dict[str, Any]:
+    """Generate the missing physical media for a pre-physical virtual clip."""
+    match = require_match(match_id)
+    clip = store.clip(match_id, clip_id)
+    if clip is None:
+        raise api_error(404, "Clip not found.", "clip_not_found")
+    source = next((item for item in match["media"] if item["id"] == clip["source_media_id"]), None)
+    if source is None:
+        raise api_error(409, "Clip source is unavailable.", "clip_source_missing")
+    if not clip.get("duration_s"):
+        start, end = clip.get("start_s"), clip.get("end_s")
+        if start is None or end is None or end <= start:
+            raise api_error(422, "Legacy clip interval is invalid.", "clip_interval_invalid")
+        store.update_clip(match_id, clip_id, lambda value: value.update(source_start_s=start, source_end_s=end, duration_s=end - start, clip_media_id=None, generation={"status": "queued"}))
+        clip = store.clip(match_id, clip_id)
+    return active_clip_jobs().start_generation(match, clip, source).public_dict()
+
+
 @app.post("/api/matches/{match_id}/clips/{clip_id}/analysis", status_code=202)
 def start_clip_analysis(match_id: str, clip_id: str, payload: StartClipAnalysisRequest) -> dict[str, Any]:
     match = require_match(match_id)
     clip = store.clip(match_id, clip_id)
     if clip is None:
         raise api_error(404, "Clip not found.", "clip_not_found")
-    source = next((item for item in match["media"] if item["id"] == clip["source_media_id"]), None)
+    source = clip_source(match, clip)
     if source is None or not match.get("calibration"):
         raise api_error(409, "Clip analysis requires dual_lens media and calibration.", "clip_analysis_unavailable")
     job = active_clip_jobs().start(match, clip, source, action=payload.action)
@@ -350,9 +373,9 @@ def clip_development_views(match_id: str, clip_id: str, timestamp_s: float) -> d
     """Development-only same-timestamp renders; no detector is invoked here."""
     match = require_match(match_id)
     clip = store.clip(match_id, clip_id)
-    if clip is None or not clip["start_s"] <= timestamp_s <= clip["end_s"]:
+    if clip is None or not 0 <= timestamp_s <= float(clip.get("duration_s", -1)):
         raise api_error(422, "Timestamp lies outside the clip.", "clip_timestamp_invalid")
-    source = next((item for item in match["media"] if item["id"] == clip["source_media_id"]), None)
+    source = clip_source(match, clip)
     if source is None:
         raise api_error(409, "Clip source is unavailable.", "clip_source_missing")
     from experiments.virtual_camera_coverage.coverage import DEFAULT_FAR_CAMERAS, DEFAULT_NEAR_CAMERAS, build_map, derive_specs, read_frame, render_map

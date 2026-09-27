@@ -117,10 +117,11 @@ class WorkspaceStore:
     def clip(self, match_id: str, clip_id: str) -> dict | None:
         return next((item for item in self.clips(match_id) if item["id"] == clip_id), None)
 
-    def create_clip(self, match_id: str, source_media_id: str, start_s: float, end_s: float, name: str) -> dict | None:
+    def create_clip(self, match_id: str, source_media_id: str, start_s: float, duration_s: float, name: str) -> dict | None:
         clip = {"id": self.new_id("clip"), "source_media_id": source_media_id,
-                "start_s": start_s, "end_s": end_s, "name": name,
-                "created_at": self.now(), "analysis": None}
+                "source_start_s": start_s, "source_end_s": start_s + duration_s,
+                "duration_s": duration_s, "name": name, "clip_media_id": None,
+                "generation": {"status": "queued"}, "created_at": self.now(), "analysis": None}
         result = self.update_match(match_id, lambda item: item.setdefault("clips", []).append(clip))
         return clip if result else None
 
@@ -138,9 +139,14 @@ class WorkspaceStore:
 
     def delete_clip(self, match_id: str, clip_id: str) -> bool:
         match = self.match(match_id)
-        if match is None or not any(item["id"] == clip_id for item in match.get("clips", [])):
+        clip = next((item for item in (match or {}).get("clips", []) if item["id"] == clip_id), None)
+        if clip is None:
             return False
-        self.update_match(match_id, lambda item: item.update(clips=[value for value in item.get("clips", []) if value["id"] != clip_id]))
+        media_id = clip.get("clip_media_id")
+        self.update_match(match_id, lambda item: item.update(
+            clips=[value for value in item.get("clips", []) if value["id"] != clip_id],
+            media=[value for value in item.get("media", []) if value["id"] != media_id],
+        ))
         return True
 
     def media(self, media_id: str) -> tuple[dict[str, Any], dict[str, Any]] | None:

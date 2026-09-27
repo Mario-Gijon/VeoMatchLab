@@ -1,54 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, Box, Button, LinearProgress, Stack, TextField, Typography } from '@mui/material'
 import { api } from '../api/client'
-import { formatMediaTime } from './mediaTime'
+import { formatMediaTime, parseMediaTime } from './mediaTime'
 import type { Clip, ClipJob, MediaItem } from '../types'
 
 interface Props { matchId: string; source?: MediaItem; time: number; clips: Clip[]; onOpen: (clip: Clip) => void; onChanged: () => void }
+const startOf = (clip: Clip) => clip.source_start_s ?? clip.start_s ?? 0
+const durationOf = (clip: Clip) => clip.duration_s ?? Math.max(0, (clip.end_s ?? 0) - (clip.start_s ?? 0))
 
 export default function ClipsPanel({ matchId, source, time, clips, onOpen, onChanged }: Props) {
-  const [creating, setCreating] = useState(false)
-  const [start, setStart] = useState(time)
-  const [end, setEnd] = useState(Math.min(source?.duration_s ?? time + 10, time + 10))
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [jobs, setJobs] = useState<Record<string, ClipJob>>({})
-  const activeJobs = useMemo(() => Object.values(jobs).filter((job) => ['queued', 'running'].includes(job.status)), [jobs])
-
-  useEffect(() => {
-    if (!activeJobs.length) return
-    const timer = window.setInterval(() => activeJobs.forEach((job) => api.clipJob(job.job_id).then((next) => {
-      setJobs((items) => ({ ...items, [next.job_id]: next }))
-      if (next.status === 'completed') onChanged()
-    }).catch((reason: Error) => setError(reason.message))), 1000)
-    return () => window.clearInterval(timer)
-  }, [activeJobs, onChanged])
-
-  const showCreate = () => { setStart(time); setEnd(Math.min(source?.duration_s ?? time + 10, time + 10)); setName(''); setCreating(true) }
-  const create = async () => {
-    if (!source) return
-    try { await api.createClip(matchId, source.id, start, end, name); setCreating(false); onChanged() } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo crear el clip.') }
-  }
-  const startJob = async (clip: Clip, action: 'all' | 'tracking') => {
-    try { const job = await api.startClipAnalysis(matchId, clip.id, action); setJobs((items) => ({ ...items, [job.job_id]: job })) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo iniciar el análisis.') }
-  }
-  const remove = async (clip: Clip) => {
-    try { await api.deleteClip(matchId, clip.id); setConfirmDelete(null); onChanged() } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo eliminar el clip.') }
-  }
-
-  return <Box sx={{ maxWidth: 1120, mx: 'auto', py: 2 }}>
-    <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1} mb={2}><Typography variant="h5">Clips</Typography><Button variant="contained" disabled={!source} onClick={showCreate}>Crear clip</Button></Stack>
-    {!source && <Alert severity="info">Añade un vídeo dual_lens para crear clips virtuales.</Alert>}
-    {error && <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>{error}</Alert>}
-    {creating && <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2, mb: 2 }}><Typography variant="subtitle1">Crear clip virtual</Typography><Stack direction={{ xs: 'column', sm: 'row' }} gap={1} mt={1}><TextField label="Nombre opcional" value={name} onChange={(event) => setName(event.target.value)} /><TextField label="Inicio (s)" type="number" value={start} onChange={(event) => setStart(Number(event.target.value))} /><TextField label="Fin (s)" type="number" value={end} onChange={(event) => setEnd(Number(event.target.value))} /></Stack><Stack direction="row" gap={1} mt={1} flexWrap="wrap"><Button size="small" onClick={() => setStart(time)}>Usar como inicio</Button><Button size="small" onClick={() => setEnd(time)}>Usar como fin</Button><Typography variant="body2" sx={{ alignSelf: 'center' }}>Duración: {formatMediaTime(Math.max(0, end - start))}</Typography><Box flex={1} /><Button onClick={() => setCreating(false)}>Cancelar</Button><Button variant="contained" disabled={end <= start} onClick={() => void create()}>Crear</Button></Stack></Box>}
-    <Stack spacing={1}>
-      {clips.length === 0 && <Typography color="text.secondary">Aún no hay clips para este partido.</Typography>}
-      {clips.map((clip) => {
-        const job = Object.values(jobs).find((item) => item.clip_id === clip.id && ['queued', 'running'].includes(item.status))
-        const analysis = clip.analysis
-        return <Box key={clip.id} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={1}><Box><Typography variant="subtitle1">{clip.name || `${formatMediaTime(clip.start_s)} → ${formatMediaTime(clip.end_s)}`}</Typography><Typography variant="body2" color="text.secondary">{formatMediaTime(clip.start_s)} → {formatMediaTime(clip.end_s)} · {formatMediaTime(clip.end_s - clip.start_s)}</Typography><Typography variant="caption">Detección: {analysis?.detection_artifact_id ? 'completada' : 'pendiente'} · Tracking: {analysis?.tracking_artifact_id ? 'completado' : 'pendiente'}</Typography></Box><Stack direction="row" gap={1} flexWrap="wrap" alignItems="center"><Button size="small" onClick={() => onOpen(clip)}>Abrir</Button><Button size="small" variant="outlined" onClick={() => void startJob(clip, 'all')}>Ejecutar todo</Button><Button size="small" disabled={!analysis?.detection_artifact_id} onClick={() => void startJob(clip, 'tracking')}>Rehacer tracking</Button><Button size="small" color="error" onClick={() => setConfirmDelete(clip.id)}>Eliminar</Button></Stack></Stack>{job && <Box mt={1}><Typography variant="caption">{job.status} · {job.stage} · {job.processed_frames} / {job.total_frames} frames</Typography><LinearProgress variant="determinate" value={Math.min(100, job.progress * 100)} />{job.error && <Alert severity="error">{job.error}</Alert>}</Box>}{confirmDelete === clip.id && <Alert severity="warning" sx={{ mt: 1 }} action={<Stack direction="row"><Button color="inherit" size="small" onClick={() => setConfirmDelete(null)}>Cancelar</Button><Button color="inherit" size="small" onClick={() => void remove(clip)}>Eliminar</Button></Stack>}>Eliminará la definición y outputs exclusivos de este clip.</Alert>}</Box>
-      })}
-    </Stack>
-  </Box>
+  const [creating, setCreating] = useState(false), [start, setStart] = useState(formatMediaTime(time)), [duration, setDuration] = useState('00:00:30'), [name, setName] = useState('')
+  const [error, setError] = useState(''), [confirmDelete, setConfirmDelete] = useState<string | null>(null), [jobs, setJobs] = useState<Record<string, ClipJob>>({})
+  const active = useMemo(() => Object.values(jobs).filter((job) => ['queued', 'running'].includes(job.status)), [jobs])
+  const parsedStart = parseMediaTime(start), parsedDuration = parseMediaTime(duration), end = parsedStart !== null && parsedDuration !== null ? parsedStart + parsedDuration : null
+  useEffect(() => { if (!active.length) return; const timer = window.setInterval(() => active.forEach((job) => api.clipJob(job.job_id).then((next) => { setJobs((items) => ({ ...items, [next.job_id]: next })); if (next.status === 'completed') onChanged() }).catch((reason: Error) => setError(reason.message))), 800); return () => window.clearInterval(timer) }, [active, onChanged])
+  const showCreate = () => { setStart(formatMediaTime(time)); setDuration('00:00:30'); setName(''); setError(''); setCreating(true) }
+  const create = async () => { if (!source || parsedStart === null || parsedDuration === null) return; try { const job = await api.createClip(matchId, source.id, parsedStart, parsedDuration, name); setJobs((items) => ({ ...items, [job.job_id]: job })); setCreating(false); onChanged() } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo generar el clip.') } }
+  const materialize = async (clip: Clip) => { try { const job = await api.materializeClip(matchId, clip.id); setJobs((items) => ({ ...items, [job.job_id]: job })) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo generar el archivo.') } }
+  const startJob = async (clip: Clip, action: 'all' | 'tracking') => { try { const job = await api.startClipAnalysis(matchId, clip.id, action); setJobs((items) => ({ ...items, [job.job_id]: job })) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo iniciar el análisis.') } }
+  const remove = async (clip: Clip) => { try { await api.deleteClip(matchId, clip.id); setConfirmDelete(null); onChanged() } catch (reason) { setError(reason instanceof Error ? reason.message : 'No se pudo eliminar el clip.') } }
+  const valid = parsedStart !== null && parsedDuration !== null && parsedDuration > 0 && end !== null && end <= (source?.duration_s ?? 0)
+  return <Box sx={{ maxWidth: 1120, mx: 'auto', py: 2 }}><Stack direction="row" justifyContent="space-between" mb={2}><Typography variant="h5">Clips</Typography><Button variant="contained" disabled={!source} onClick={showCreate}>Crear clip</Button></Stack>{error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{creating && <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2, mb: 2 }}><Typography variant="subtitle1">Generar clip físico</Typography><Stack direction={{ xs: 'column', sm: 'row' }} gap={1} mt={1}><TextField label="Inicio" value={start} helperText="HH:MM:SS[.mmm]" onChange={(event) => setStart(event.target.value)} /><TextField label="Duración" value={duration} helperText="HH:MM:SS[.mmm]" onChange={(event) => setDuration(event.target.value)} /><TextField label="Final" value={end === null ? '—' : formatMediaTime(end)} InputProps={{ readOnly: true }} /><TextField label="Nombre" value={name} onChange={(event) => setName(event.target.value)} /></Stack><Stack direction="row" gap={1} mt={1}><Button size="small" onClick={() => setStart(formatMediaTime(time))}>Usar tiempo actual</Button><Box flex={1} /><Button onClick={() => setCreating(false)}>Cancelar</Button><Button variant="contained" disabled={!valid} onClick={() => void create()}>Generar clip</Button></Stack></Box>}<Stack spacing={1}>{clips.length === 0 && <Typography color="text.secondary">Aún no hay clips.</Typography>}{clips.map((clip) => { const job = Object.values(jobs).find((item) => item.clip_id === clip.id && ['queued', 'running'].includes(item.status)); const ready = !!clip.clip_media_id; return <Box key={clip.id} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={1}><Box><Typography variant="subtitle1">{clip.name || `${formatMediaTime(startOf(clip))} → ${formatMediaTime(startOf(clip) + durationOf(clip))}`}</Typography><Typography variant="body2" color="text.secondary">{formatMediaTime(startOf(clip))} → {formatMediaTime(startOf(clip) + durationOf(clip))} · {formatMediaTime(durationOf(clip))}</Typography><Typography variant="caption">{ready ? `Archivo: ${clip.generation?.status ?? 'completed'} · ` : 'Clip antiguo — archivo no generado · '}Detección: {clip.analysis?.detection_artifact_id ? 'completada' : 'pendiente'} · Tracking: {clip.analysis?.tracking_artifact_id ? 'completado' : 'pendiente'}</Typography></Box><Stack direction="row" gap={1} flexWrap="wrap">{!ready && <Button size="small" onClick={() => void materialize(clip)}>Generar archivo</Button>}<Button size="small" disabled={!ready} onClick={() => onOpen(clip)}>Abrir</Button><Button size="small" variant="outlined" disabled={!ready} onClick={() => void startJob(clip, 'all')}>Ejecutar todo</Button><Button size="small" disabled={!ready || !clip.analysis?.detection_artifact_id} onClick={() => void startJob(clip, 'tracking')}>Rehacer tracking</Button><Button size="small" color="error" onClick={() => setConfirmDelete(clip.id)}>Eliminar</Button></Stack></Stack>{job && <Box mt={1}><Typography variant="caption">{job.status} · {job.stage} · {job.processed_frames}%</Typography><LinearProgress variant="determinate" value={Math.min(100, job.progress * 100)} /></Box>}{confirmDelete === clip.id && <Alert severity="warning" sx={{ mt: 1 }} action={<Stack direction="row"><Button color="inherit" onClick={() => setConfirmDelete(null)}>Cancelar</Button><Button color="inherit" onClick={() => void remove(clip)}>Eliminar</Button></Stack>}>Eliminar archivo físico y resultados exclusivos.</Alert>}</Box>})}</Stack></Box>
 }

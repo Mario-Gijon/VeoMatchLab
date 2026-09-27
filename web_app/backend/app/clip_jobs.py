@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import subprocess
 import threading
 from argparse import Namespace
 from dataclasses import dataclass, field
@@ -14,6 +15,7 @@ from .analysis_layers import AnalysisRun
 from .artifacts import LocalArtifactStore
 from .match_data import Provenance
 from .storage import WorkspaceStore
+from .services import media_record
 
 
 SAMPLE_PERIOD_S = 1.0 / 15.0
@@ -76,12 +78,67 @@ class ClipAnalysisService:
             self.cancel(job.job_id)
 
     def start(self, match: dict, clip: dict, source: dict, *, action: str) -> ClipJob:
-        total = int(math.floor((clip["end_s"] - clip["start_s"]) / SAMPLE_PERIOD_S + 1e-9)) + 1
+        total = int(math.floor(float(clip["duration_s"]) / SAMPLE_PERIOD_S + 1e-9)) + 1
         job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total)
         with self._lock:
             self._jobs[job.job_id] = job
         threading.Thread(target=self._run, args=(job, match, clip, source), daemon=True).start()
         return job
+
+    def start_generation(self, match: dict, clip: dict, source: dict) -> ClipJob:
+        job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], "generate", 100, stage="generating")
+        with self._lock:
+            self._jobs[job.job_id] = job
+        threading.Thread(target=self._run_generation, args=(job, match, clip, source), daemon=True).start()
+        return job
+
+    def _run_generation(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
+        output = self.store.asset_dir(job.match_id, "clips") / clip["id"] / "source.mp4"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with job._lock:
+                job.status, job.stage = "running", "generating"
+            self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "generating", "job_id": job.job_id}))
+            command = ["ffmpeg", "-y", "-v", "error", "-i", str(source["path"]), "-ss", str(clip["source_start_s"]),
+                       "-t", str(clip["duration_s"]), "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264",
+                       "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart",
+                       "-progress", "pipe:1", "-nostats", str(output)]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            assert process.stdout is not None
+            for line in process.stdout:
+                if job.cancel_requested:
+                    process.terminate()
+                    raise JobCancelled()
+                key, _, value = line.strip().partition("=")
+                if key == "out_time_ms":
+                    try:
+                        progress = int(float(value) / (clip["duration_s"] * 10_000))
+                    except ValueError:
+                        continue
+                    with job._lock:
+                        job.processed_frames = min(99, max(0, progress))
+            stderr = process.stderr.read() if process.stderr else ""
+            if process.wait() != 0:
+                raise RuntimeError(stderr.strip() or "ffmpeg could not generate the clip")
+            self._check_cancelled(job)
+            record = media_record(output, name="source.mp4", kind="clip", source="generated")
+            if record["width"] != source["width"] or record["height"] != source["height"] or not record.get("fps") or not record.get("duration_s") or abs(record["duration_s"] - clip["duration_s"]) > max(.5, clip["duration_s"] * .1):
+                raise ValueError("Generated clip failed media validation")
+            record.update(id=self.store.new_id("media"), role="clip", ownership="managed")
+            self.store.attach_media(job.match_id, record)
+            self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(clip_media_id=record["id"], generation={"status": "completed", "job_id": job.job_id}))
+            with job._lock:
+                job.status, job.processed_frames = "completed", 100
+        except JobCancelled:
+            output.unlink(missing_ok=True)
+            self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "cancelled", "job_id": job.job_id}))
+            with job._lock:
+                job.status = "cancelled"
+        except Exception as exc:
+            output.unlink(missing_ok=True)
+            self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "failed", "job_id": job.job_id, "error": str(exc)}))
+            with job._lock:
+                job.status, job.error = "failed", str(exc)
 
     def _check_cancelled(self, job: ClipJob) -> None:
         if job.cancel_requested:
@@ -105,7 +162,7 @@ class ClipAnalysisService:
         return Namespace(
             video=Path(source["path"]), calibration=Path(calibration["path"]),
             weights=Path("person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/c2_football_images_plus_veo/best.pth"),
-            device=None, start_s=clip["start_s"], duration_s=clip["end_s"] - clip["start_s"],
+            device=None, start_s=0.0, duration_s=clip["duration_s"],
             sample_period_s=SAMPLE_PERIOD_S, threshold=0.40, width=1280, height=720,
             split_fraction=0.50, guard_margin_m=0.50,
             grid_step_m=0.50, field_margin_m=0.60,
@@ -206,7 +263,7 @@ class ClipAnalysisService:
         track_rows = []
         render_rows: list[tuple[dict[str, Any], tuple[TrackingMeasurement, ...], Any]] = []
         try:
-            for detection_row in self.artifacts.read_window(job.match_id, detection_id, clip["start_s"], clip["end_s"]):
+            for detection_row in self.artifacts.read_window(job.match_id, detection_id, 0.0, clip["duration_s"]):
                 self._check_cancelled(job)
                 measurements = tuple(TrackingMeasurement(**item) for item in detection_row["measurements"])
                 frame = tracker.update(measurements, timestamp=detection_row["timestamp_s"], frame_index=detection_row["frame_index"])
