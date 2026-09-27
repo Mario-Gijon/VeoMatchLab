@@ -17,6 +17,7 @@ import PitchSvg from '../components/PitchSvg'
 import ValidationTable from '../components/ValidationTable'
 import EventsPanel from '../components/EventsPanel'
 import MatchTimeline from '../components/MatchTimeline'
+import ClipsPanel from '../components/ClipsPanel'
 import { useMatchEvents } from '../hooks/useMatchEvents'
 import type { MatchEvent } from '../types/matchData'
 import type { Calibration, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, ViewContext } from '../types'
@@ -127,6 +128,7 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
       {mode === 'dual_lens' && <ToggleButtonGroup size="small" exclusive value={crop} onChange={(_, value: string | null) => value && setCrop(value)}><ToggleButton value="stacked">Apilado</ToggleButton><ToggleButton value="left">IZQUIERDA</ToggleButton><ToggleButton value="right">DERECHA</ToggleButton></ToggleButtonGroup>}
       {mode === 'panorama' && <Select size="small" value={width} onChange={(e) => { setWidth(Number(e.target.value)); setFrameRender(null); generation.current++ }}><MenuItem value={1920}>1920×1080</MenuItem><MenuItem value={3840}>3840×2160</MenuItem></Select>}
     </Stack>
+    <ClipsPanel matchId={matchId} source={match.media.find((item) => item.role === 'dual_lens')} time={time} clips={match.clips ?? []} onChanged={() => { void api.match(matchId).then(setMatch).catch((reason: Error) => setError(reason.message)) }} />
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 7fr) minmax(280px, 3fr)' }, gap: 2 }}>
       <Box minWidth={0}>
         {stillImage ? <Box><img src={api.url(stillImage.url)} alt={stillImage.name} style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain' }} /><Button onClick={() => setStillImage(null)}>Volver al vídeo</Button></Box> : frameRender ? <PanoramaViewer panorama={frameRender} points={selectionEnabled ? displayPoints : []} onPixelClick={(x, y) => selectionEnabled && void measure(x, y)} /> : source && (!['panorama', 'ultra_panorama', 'interactive'].includes(mode) || context) ? <MatchViewer key={source.id} media={source} mode={mode} crop={crop} context={context} width={width} initialTime={time} videoRef={video} cameraRef={interactiveCamera} onTime={setTime} onPlayback={setPlaying} points={selectionEnabled ? displayPoints : []} selectionEnabled={selectionEnabled} trackingAvailable={!!context?.tracking_geometry.available} onClick={(x, y, pick) => void measure(x, y, pick)} /> : <Alert severity="info">{['panorama', 'ultra_panorama', 'interactive'].includes(mode) && !context ? 'Falta la calibración.' : 'Falta el vídeo. Añádelo en Gestionar archivos.'}</Alert>}

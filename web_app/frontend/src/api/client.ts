@@ -1,4 +1,4 @@
-import type { Calibration, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
+import type { Calibration, Clip, ClipJob, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
 
 // Production and LAN development use the Vite origin. The optional override
 // remains useful for isolated development or an externally hosted API.
@@ -26,6 +26,11 @@ export const api = {
   calibrations: () => request<Calibration[]>('/api/calibrations'),
   matches: () => request<MatchWorkspace[]>('/api/matches'),
   match: (id: string) => request<MatchWorkspace>(`/api/matches/${id}`),
+  clips: (id: string) => request<Clip[]>(`/api/matches/${id}/clips`),
+  createClip: (matchId: string, sourceMediaId: string, startS: number, endS: number, name: string) => request<Clip>(`/api/matches/${matchId}/clips`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source_media_id: sourceMediaId, start_s: startS, end_s: endS, name }) }),
+  startClipAnalysis: (matchId: string, clipId: string, action: 'all' | 'tracking') => request<ClipJob>(`/api/matches/${matchId}/clips/${clipId}/analysis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) }),
+  clipJob: (jobId: string) => request<ClipJob>(`/api/clip-jobs/${jobId}`),
+  cancelClipJob: (jobId: string) => request<ClipJob>(`/api/clip-jobs/${jobId}`, { method: 'DELETE' }),
   renameMatch: (id: string, name: string) => request<MatchWorkspace>(`/api/matches/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }),
   deleteMatch: (id: string) => request(`/api/matches/${id}`, { method: 'DELETE' }),
   removeMedia: (id: string) => request(`/api/media/${id}`, { method: 'DELETE' }),

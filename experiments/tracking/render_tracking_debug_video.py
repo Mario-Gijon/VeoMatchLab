@@ -123,10 +123,11 @@ def _draw_field(
 
 
 class TrackingDebugVideo:
-    def __init__(self, output_path: Path, *, width: int, height: int) -> None:
+    def __init__(self, output_path: Path, *, width: int, height: int, fps: float = 5.0) -> None:
         self.output_path = output_path
         self.width = width
         self.height = height
+        self.fps = fps
         self.writer: cv2.VideoWriter | None = None
 
     def __call__(self, *, frame: np.ndarray, metadata: Any, spec_by_name: dict[str, Any], tracking_frame: Any, measurements: tuple[Any, ...], record: dict[str, Any]) -> None:
@@ -169,7 +170,7 @@ class TrackingDebugVideo:
         output = np.concatenate((panorama, field), axis=1)
         if self.writer is None:
             self.writer = cv2.VideoWriter(
-                str(self.output_path), cv2.VideoWriter_fourcc(*"mp4v"), 5.0,
+                str(self.output_path), cv2.VideoWriter_fourcc(*"mp4v"), self.fps,
                 (output.shape[1], output.shape[0]),
             )
             if not self.writer.isOpened():
@@ -184,7 +185,10 @@ class TrackingDebugVideo:
 
 def main() -> None:
     args = parse_args()
-    renderer = TrackingDebugVideo(args.out_dir / VIDEO_NAME, width=args.width, height=args.height)
+    renderer = TrackingDebugVideo(
+        args.out_dir / VIDEO_NAME, width=args.width, height=args.height,
+        fps=1.0 / args.sample_period_s,
+    )
     try:
         run(args, frame_callback=renderer)
     finally:

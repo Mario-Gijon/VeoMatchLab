@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from .importers.veo.service import VeoImportService
-from .schemas import CreateMatchRequest, ExtractFrameRequest, GroundPointRequest, PathImportRequest, RenderRequest, VeoImportRequest, VeoInspectRequest
+from .schemas import CreateClipRequest, CreateMatchRequest, ExtractFrameRequest, GroundPointRequest, PathImportRequest, RenderRequest, StartClipAnalysisRequest, VeoImportRequest, VeoInspectRequest
 from .services import (
     ROOT,
     extract_frame,
@@ -33,6 +33,7 @@ from .services import (
     validate_media_role,
 )
 from .storage import WorkspaceStore
+from .clip_jobs import ClipAnalysisService
 from .data_api import data_router
 from .schemas import MediaRoleRequest, ViewPointRequest, RenameMatchRequest, TrackingPointRequest
 from .view_geometry import view_context, contexts
@@ -53,6 +54,7 @@ store = WorkspaceStore(RUNTIME_ROOT)
 render_cache: dict[str, dict[str, Any]] = {}
 tracking_cache: dict[tuple[str, int], LegacyCameraDirections] = {}
 veo_imports = VeoImportService(store, RUNTIME_ROOT)
+clip_jobs = ClipAnalysisService(store)
 
 app = FastAPI(title="Veo Match Lab", version="2.0.0")
 app.include_router(data_router(lambda: store))
@@ -124,6 +126,22 @@ def match_summary(match: dict[str, Any]) -> dict[str, Any]:
 
 def public_media(media: dict[str, Any]) -> dict[str, Any]:
     return {**media, "url": f"/api/media/{media['id']}/content"}
+
+
+def public_clip(match_id: str, clip: dict[str, Any]) -> dict[str, Any]:
+    result = dict(clip)
+    analysis = result.get("analysis")
+    if analysis and analysis.get("debug_video"):
+        result["debug_video_url"] = f"/api/matches/{match_id}/clips/{clip['id']}/debug-video"
+    return result
+
+
+def active_clip_jobs() -> ClipAnalysisService:
+    """Keep test/runtime store replacement from retaining a stale job service."""
+    global clip_jobs
+    if clip_jobs.store is not store:
+        clip_jobs = ClipAnalysisService(store)
+    return clip_jobs
 
 
 @app.get("/api/health")
@@ -241,7 +259,73 @@ def remove_calibration(match_id: str) -> dict:
 @app.get("/api/matches/{match_id}")
 def get_match(match_id: str) -> dict[str, Any]:
     match = require_match(match_id)
-    return {**match_summary(match), "media": [public_media(item) for item in match["media"]]}
+    return {**match_summary(match), "media": [public_media(item) for item in match["media"]],
+            "clips": [public_clip(match_id, item) for item in match.get("clips", [])]}
+
+
+@app.get("/api/matches/{match_id}/clips")
+def list_clips(match_id: str) -> list[dict[str, Any]]:
+    require_match(match_id)
+    return [public_clip(match_id, item) for item in store.clips(match_id)]
+
+
+@app.post("/api/matches/{match_id}/clips", status_code=201)
+def create_clip(match_id: str, payload: CreateClipRequest) -> dict[str, Any]:
+    match = require_match(match_id)
+    source = next((item for item in match["media"] if item["id"] == payload.source_media_id), None)
+    if source is None or source.get("role") != "dual_lens" or source.get("kind") != "video":
+        raise api_error(422, "Select the match dual_lens video as clip source.", "clip_source_invalid")
+    if payload.end_s <= payload.start_s:
+        raise api_error(422, "Clip end must be after its start.", "clip_interval_invalid")
+    if source.get("duration_s") is not None and payload.end_s > float(source["duration_s"]):
+        raise api_error(422, "Clip end lies outside the source video.", "clip_interval_invalid")
+    clip = store.create_clip(match_id, source["id"], payload.start_s, payload.end_s, payload.name.strip())
+    if clip is None:
+        raise api_error(404, "Workspace not found.", "match_not_found")
+    return public_clip(match_id, clip)
+
+
+@app.post("/api/matches/{match_id}/clips/{clip_id}/analysis", status_code=202)
+def start_clip_analysis(match_id: str, clip_id: str, payload: StartClipAnalysisRequest) -> dict[str, Any]:
+    match = require_match(match_id)
+    clip = store.clip(match_id, clip_id)
+    if clip is None:
+        raise api_error(404, "Clip not found.", "clip_not_found")
+    source = next((item for item in match["media"] if item["id"] == clip["source_media_id"]), None)
+    if source is None or not match.get("calibration"):
+        raise api_error(409, "Clip analysis requires dual_lens media and calibration.", "clip_analysis_unavailable")
+    job = active_clip_jobs().start(match, clip, source, action=payload.action)
+    return job.public_dict()
+
+
+@app.get("/api/clip-jobs/{job_id}")
+def clip_job_status(job_id: str) -> dict[str, Any]:
+    job = active_clip_jobs().job(job_id)
+    if job is None:
+        raise api_error(404, "Clip analysis job not found.", "clip_job_not_found")
+    return job.public_dict()
+
+
+@app.delete("/api/clip-jobs/{job_id}")
+def cancel_clip_job(job_id: str) -> dict[str, Any]:
+    job = active_clip_jobs().cancel(job_id)
+    if job is None:
+        raise api_error(404, "Clip analysis job not found.", "clip_job_not_found")
+    return job.public_dict()
+
+
+@app.get("/api/matches/{match_id}/clips/{clip_id}/debug-video")
+def clip_debug_video(match_id: str, clip_id: str):
+    clip = store.clip(match_id, clip_id)
+    analysis = clip.get("analysis") if clip else None
+    relative = analysis.get("debug_video") if analysis else None
+    if not relative:
+        raise api_error(404, "No debug video is available for this clip.", "clip_debug_missing")
+    root = store.match_dir(match_id).resolve()
+    path = (root / relative).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise api_error(404, "Debug video is no longer available.", "clip_debug_missing")
+    return FileResponse(path, media_type="video/mp4", filename="tracking_debug.mp4", content_disposition_type="inline")
 
 
 @app.get("/api/matches/{match_id}/view-context")

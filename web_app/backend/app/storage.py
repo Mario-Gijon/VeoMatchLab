@@ -95,6 +95,7 @@ class WorkspaceStore:
                 "media": [],
                 "metadata": {},
                 "artifacts": [],
+                "clips": [],
             }
             self._save_match(item)
             return item
@@ -108,6 +109,32 @@ class WorkspaceStore:
             item["updated_at"] = self.now()
             self._save_match(item)
             return item
+
+    def clips(self, match_id: str) -> list[dict]:
+        match = self.match(match_id)
+        return list(match.get("clips", [])) if match else []
+
+    def clip(self, match_id: str, clip_id: str) -> dict | None:
+        return next((item for item in self.clips(match_id) if item["id"] == clip_id), None)
+
+    def create_clip(self, match_id: str, source_media_id: str, start_s: float, end_s: float, name: str) -> dict | None:
+        clip = {"id": self.new_id("clip"), "source_media_id": source_media_id,
+                "start_s": start_s, "end_s": end_s, "name": name,
+                "created_at": self.now(), "analysis": None}
+        result = self.update_match(match_id, lambda item: item.setdefault("clips", []).append(clip))
+        return clip if result else None
+
+    def update_clip(self, match_id: str, clip_id: str, callback) -> dict | None:
+        updated = None
+        def apply(match):
+            nonlocal updated
+            for clip in match.setdefault("clips", []):
+                if clip["id"] == clip_id:
+                    callback(clip)
+                    updated = clip
+                    break
+        self.update_match(match_id, apply)
+        return updated
 
     def media(self, media_id: str) -> tuple[dict[str, Any], dict[str, Any]] | None:
         for match in self.matches():

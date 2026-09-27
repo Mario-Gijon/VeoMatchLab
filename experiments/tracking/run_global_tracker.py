@@ -129,6 +129,7 @@ def run(
     args: argparse.Namespace,
     *,
     frame_callback: Callable[..., None] | None = None,
+    measurement_callback: Callable[..., None] | None = None,
 ) -> None:
     metadata = load_veo_metadata(args.calibration)
     specs, layout, _, _ = derive_specs(
@@ -207,6 +208,13 @@ def run(
                     skipped_no_position += 1
                 else:
                     measurements.append(measurement)
+
+            if measurement_callback is not None:
+                measurement_callback(
+                    frame_index=frame_index,
+                    timestamp=timestamp,
+                    measurements=tuple(measurements),
+                )
 
             tracking_frame = tracker.update(measurements, timestamp=timestamp, frame_index=frame_index)
             total_measurements += len(measurements)

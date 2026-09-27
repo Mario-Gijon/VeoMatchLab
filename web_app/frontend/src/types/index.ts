@@ -48,6 +48,39 @@ export interface MatchWorkspace {
   calibration: Calibration | null
   media: MediaItem[]
   media_count?: number
+  clips?: Clip[]
+}
+
+export interface ClipAnalysis {
+  status: string
+  detection_artifact_id?: string
+  tracking_artifact_id?: string
+  run_id?: string
+}
+
+export interface Clip {
+  id: string
+  source_media_id: string
+  start_s: number
+  end_s: number
+  name: string
+  created_at: string
+  analysis: ClipAnalysis | null
+  debug_video_url?: string
+}
+
+export interface ClipJob {
+  job_id: string
+  match_id: string
+  clip_id: string
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+  stage: 'detection' | 'tracking' | 'rendering'
+  processed_frames: number
+  total_frames: number
+  progress: number
+  error: string | null
+  detection_artifact_id?: string | null
+  tracking_artifact_id?: string | null
 }
 
 export interface Landmark { id: string; name: string; x: number; z: number }

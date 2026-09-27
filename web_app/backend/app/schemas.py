@@ -73,6 +73,17 @@ class RenameMatchRequest(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
 
+class CreateClipRequest(BaseModel):
+    source_media_id: str
+    start_s: float = Field(ge=0, allow_inf_nan=False)
+    end_s: float = Field(gt=0, allow_inf_nan=False)
+    name: str = Field(default="", max_length=120)
+
+
+class StartClipAnalysisRequest(BaseModel):
+    action: Literal["all", "tracking"] = "all"
+
+
 class ApiError(BaseModel):
     detail: str
     code: str
