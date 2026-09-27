@@ -81,9 +81,16 @@ def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
     }
 
 
-def _timestamps(start_s: float, duration_s: float, period_s: float) -> list[float]:
-    count = int(math.floor(duration_s / period_s + 1e-9)) + 1
+def sample_timestamps(start_s: float, duration_s: float, period_s: float) -> list[float]:
+    """Return samples in the half-open interval [start_s, start_s + duration_s)."""
+    if duration_s <= 0.0 or period_s <= 0.0:
+        return []
+    count = int(math.ceil(duration_s / period_s - 1e-12))
     return [start_s + index * period_s for index in range(count)]
+
+
+# Private compatibility name for existing experiment callers.
+_timestamps = sample_timestamps
 
 
 def parse_args() -> argparse.Namespace:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import subprocess
 import threading
@@ -19,6 +20,7 @@ from .services import media_record
 
 
 SAMPLE_PERIOD_S = 1.0 / 15.0
+logger = logging.getLogger(__name__)
 
 
 class JobCancelled(Exception):
@@ -102,7 +104,8 @@ class ClipAnalysisService:
             self.cancel(job.job_id)
 
     def start(self, match: dict, clip: dict, source: dict, *, action: str) -> ClipJob:
-        total = int(math.floor(float(clip["duration_s"]) / SAMPLE_PERIOD_S + 1e-9)) + 1
+        from experiments.tracking.run_global_tracker import sample_timestamps
+        total = len(sample_timestamps(0.0, float(clip["duration_s"]), SAMPLE_PERIOD_S))
         with self._lock:
             key = (match["id"], clip["id"])
             existing = self._analysis_jobs.get(key)
@@ -261,6 +264,7 @@ class ClipAnalysisService:
             with job._lock:
                 job.status = "cancelled"
         except Exception as exc:
+            logger.exception("[clip-analysis] failed clip=%s job=%s action=%s", job.clip_id, job.job_id, job.action)
             with job._lock:
                 job.status, job.error = "failed", str(exc)
         finally:
