@@ -54,6 +54,7 @@ export interface MatchWorkspace {
 export interface ClipAnalysis {
   status: string
   detection_artifact_id?: string
+  association_artifact_id?: string
   tracking_artifact_id?: string
   run_id?: string
 }
@@ -79,7 +80,7 @@ export interface ClipJob {
   match_id: string
   clip_id: string
   status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
-  stage: 'generating' | 'detection' | 'tracking' | 'rendering'
+  stage: 'generating' | 'processing' | 'detection' | 'tracking' | 'rendering'
   processed_frames: number
   total_frames: number
   progress: number

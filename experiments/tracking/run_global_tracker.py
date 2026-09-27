@@ -130,6 +130,7 @@ def run(
     *,
     frame_callback: Callable[..., None] | None = None,
     measurement_callback: Callable[..., None] | None = None,
+    analysis_callback: Callable[..., None] | None = None,
 ) -> None:
     metadata = load_veo_metadata(args.calibration)
     specs, layout, _, _ = derive_specs(
@@ -141,6 +142,7 @@ def run(
     spec_by_name = {spec.name: spec for spec in tight_specs}
     maps = {spec.name: build_map(metadata, spec, args.width, args.height) for spec in tight_specs}
     backend = RFDETR2XLBackend(args.weights, device=args.device)
+    print(f"[clip-analysis] detector={backend.name} device={backend.device} weights={args.weights}")
     tracker = GlobalTracker()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -217,6 +219,11 @@ def run(
                 )
 
             tracking_frame = tracker.update(measurements, timestamp=timestamp, frame_index=frame_index)
+            if analysis_callback is not None:
+                analysis_callback(
+                    frame_index=frame_index, timestamp=timestamp, association=association,
+                    measurements=tuple(measurements), tracking_frame=tracking_frame,
+                )
             total_measurements += len(measurements)
             observed_samples += sum(sample.position_kind is PositionKind.OBSERVED for sample in tracking_frame.tracks)
             predicted_samples += sum(sample.position_kind is PositionKind.PREDICTED for sample in tracking_frame.tracks)

@@ -60,6 +60,7 @@ class ClipAnalysisService:
         self.artifacts = LocalArtifactStore(store)
         self._jobs: dict[str, ClipJob] = {}
         self._generation_jobs: dict[tuple[str, str], ClipJob] = {}
+        self._analysis_jobs: dict[tuple[str, str], ClipJob] = {}
         self._lock = threading.RLock()
 
     def job(self, job_id: str) -> ClipJob | None:
@@ -102,9 +103,14 @@ class ClipAnalysisService:
 
     def start(self, match: dict, clip: dict, source: dict, *, action: str) -> ClipJob:
         total = int(math.floor(float(clip["duration_s"]) / SAMPLE_PERIOD_S + 1e-9)) + 1
-        job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total)
         with self._lock:
+            key = (match["id"], clip["id"])
+            existing = self._analysis_jobs.get(key)
+            if existing and existing.status in {"queued", "running"}:
+                return existing
+            job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total)
             self._jobs[job.job_id] = job
+            self._analysis_jobs[key] = job
         threading.Thread(target=self._run, args=(job, match, clip, source), daemon=True).start()
         return job
 
@@ -151,7 +157,7 @@ class ClipAnalysisService:
             with job._lock:
                 job.status, job.stage = "running", "generating"
             self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "generating", "job_id": job.job_id}))
-            command = ["ffmpeg", "-y", "-v", "error", "-i", str(source["path"]), "-ss", str(clip["source_start_s"]),
+            command = ["ffmpeg", "-y", "-v", "error", "-ss", str(clip["source_start_s"]), "-i", str(source["path"]),
                        "-t", str(clip["duration_s"]), "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264",
                        "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart",
                        "-progress", "pipe:1", "-nostats", str(temporary)]
@@ -257,6 +263,10 @@ class ClipAnalysisService:
         except Exception as exc:
             with job._lock:
                 job.status, job.error = "failed", str(exc)
+        finally:
+            with self._lock:
+                if self._analysis_jobs.get((job.match_id, job.clip_id)) is job:
+                    self._analysis_jobs.pop((job.match_id, job.clip_id), None)
 
     def _run_all(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
         # Keep the web API importable in lightweight environments. Detection
@@ -268,6 +278,7 @@ class ClipAnalysisService:
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / job.job_id
         output_dir.mkdir(parents=True, exist_ok=True)
         rows: list[dict] = []
+        association_rows: list[dict] = []
         renderer = TrackingDebugVideo(output_dir / "tracking_debug.mp4", width=1280, height=720, fps=1.0 / SAMPLE_PERIOD_S)
         args = self._runner_args(source, calibration, output_dir, clip)
 
@@ -275,21 +286,26 @@ class ClipAnalysisService:
             self._check_cancelled(job)
             rows.append(self._measurement_row(data["frame_index"], data["timestamp"], data["measurements"]))
             with job._lock:
-                job.stage, job.processed_frames = "detection", len(rows)
+                job.stage, job.processed_frames = "processing", len(rows)
+
+        def analysed(**data: Any) -> None:
+            association_rows.append({"timestamp_s": data["timestamp"], "frame_index": data["frame_index"], **data["association"].to_dict()})
 
         def rendered(**data: Any) -> None:
             renderer(**data)
 
         try:
-            run_tracker(args, frame_callback=rendered, measurement_callback=detected)
+            print(f"[clip-analysis] clip={clip['id']} source={source['path']} duration={clip['duration_s']:.3f} sample_period={SAMPLE_PERIOD_S:.7f} expected_frames={job.total_frames}")
+            run_tracker(args, frame_callback=rendered, measurement_callback=detected, analysis_callback=analysed)
         finally:
             renderer.close()
         self._check_cancelled(job)
         provenance = Provenance(source="our_analysis", run_id=f"run_{job.job_id}_detection", parser_version="clip-v1")
         detection = self.artifacts.write_records(job.match_id, "detections.person_measurements", rows, provenance, source_media_ids=[source["id"]])
+        association_debug = self.artifacts.write_records(job.match_id, "association.person_frames", association_rows, provenance, source_media_ids=[source["id"]])
         job.detection_artifact_id = detection["id"]
         self._save_run(job, stage="person_detection", status="completed", source_media_id=source["id"],
-                       configuration={"clip_id": clip["id"], "threshold": .40, "sample_period_s": SAMPLE_PERIOD_S}, outputs=[detection["id"]])
+                       configuration={"clip_id": clip["id"], "threshold": .40, "sample_period_s": SAMPLE_PERIOD_S}, outputs=[detection["id"], association_debug["id"]])
         with job._lock:
             job.stage, job.processed_frames = "tracking", 0
         track_rows = [json.loads(line) | {"timestamp_s": json.loads(line)["timestamp"]}
@@ -301,6 +317,7 @@ class ClipAnalysisService:
                        configuration={"clip_id": clip["id"], "sample_period_s": SAMPLE_PERIOD_S}, upstream=[detection["id"]], outputs=[tracks["id"]])
         self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(analysis={
             "status": "completed", "detection_artifact_id": detection["id"], "tracking_artifact_id": tracks["id"],
+            "association_artifact_id": association_debug["id"],
             "run_id": job.job_id, "debug_video": f"clips/{clip['id']}/{job.job_id}/tracking_debug.mp4",
         }))
         with job._lock:

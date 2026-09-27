@@ -12,6 +12,7 @@ import math
 import uuid
 import shutil
 import base64
+import threading
 from pathlib import Path
 from typing import Annotated, Any
 from functools import wraps
@@ -58,6 +59,8 @@ render_cache: dict[str, dict[str, Any]] = {}
 tracking_cache: dict[tuple[str, int], LegacyCameraDirections] = {}
 veo_imports = VeoImportService(store, RUNTIME_ROOT)
 clip_jobs = ClipAnalysisService(store)
+clip_view_geometry_cache: dict[tuple[str, int, int], tuple[Any, Any, dict[str, Any]]] = {}
+clip_view_geometry_lock = threading.RLock()
 
 app = FastAPI(title="Veo Match Lab", version="2.0.0")
 app.include_router(data_router(lambda: store))
@@ -148,6 +151,23 @@ def clip_source(match: dict[str, Any], clip: dict[str, Any]) -> dict[str, Any] |
     """Resolve the physical clip source; legacy virtual clips deliberately have none."""
     media_id = clip.get("clip_media_id")
     return next((item for item in match["media"] if item["id"] == media_id), None)
+
+
+def cached_clip_view_geometry(match: dict[str, Any], width: int = 1280, height: int = 720):
+    calibration = match.get("calibration") or {}
+    key = (str(calibration.get("path", "")), width, height)
+    with clip_view_geometry_lock:
+        cached = clip_view_geometry_cache.get(key)
+        if cached is not None:
+            return cached
+        from experiments.virtual_camera_coverage.coverage import DEFAULT_FAR_CAMERAS, DEFAULT_NEAR_CAMERAS, build_map, derive_specs
+        from experiments.virtual_camera_coverage.detect import ordered_tight_specs
+        metadata = with_calibration(match)
+        specs, _, _, _ = derive_specs(metadata, width, height, split_fraction=.50, near_count=DEFAULT_NEAR_CAMERAS, far_count=DEFAULT_FAR_CAMERAS, guard_margin_m=.50, grid_step_m=.50)
+        ordered = ordered_tight_specs(specs)
+        cached = (metadata, ordered, {spec.name: build_map(metadata, spec, width, height) for spec in ordered})
+        clip_view_geometry_cache[key] = cached
+        return cached
 
 
 def active_clip_jobs() -> ClipAnalysisService:
@@ -374,7 +394,7 @@ def clip_debug_video(match_id: str, clip_id: str):
 
 
 @app.get("/api/matches/{match_id}/clips/{clip_id}/development-views")
-def clip_development_views(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, Any]:
+def clip_development_views(match_id: str, clip_id: str, timestamp_s: float, view: str = "all") -> dict[str, Any]:
     """Development-only same-timestamp renders; no detector is invoked here."""
     match = require_match(match_id)
     clip = store.clip(match_id, clip_id)
@@ -383,21 +403,20 @@ def clip_development_views(match_id: str, clip_id: str, timestamp_s: float) -> d
     source = clip_source(match, clip)
     if source is None:
         raise api_error(409, "Clip source is unavailable.", "clip_source_missing")
-    from experiments.virtual_camera_coverage.coverage import DEFAULT_FAR_CAMERAS, DEFAULT_NEAR_CAMERAS, build_map, derive_specs, read_frame, render_map
-    from experiments.virtual_camera_coverage.detect import ordered_tight_specs
+    if view not in {"all", "cameras", "ultra"}:
+        raise api_error(422, "View must be cameras or ultra.", "clip_view_invalid")
+    from experiments.virtual_camera_coverage.coverage import read_frame, render_map
     from experiments.virtual_camera_coverage.ultra_panorama_overlay import render_ultra_panorama
-    metadata = with_calibration(match)
     frame, info = read_frame(Path(source["path"]), timestamp_s)
-    specs, _, _, _ = derive_specs(metadata, 1280, 720, split_fraction=.50, near_count=DEFAULT_NEAR_CAMERAS, far_count=DEFAULT_FAR_CAMERAS, guard_margin_m=.50, grid_step_m=.50)
+    metadata, specs, maps = cached_clip_view_geometry(match)
     def encoded(image: Any) -> str:
         ok, value = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 85])
         if not ok:
             raise RuntimeError("Could not encode development view")
         return "data:image/jpeg;base64," + base64.b64encode(value.tobytes()).decode("ascii")
-    cameras = {}
-    for spec in ordered_tight_specs(specs):
-        cameras[spec.name] = encoded(render_map(frame, build_map(metadata, spec, 1280, 720)))
-    return {"timestamp_s": info["actual_time_s"], "cameras": cameras, "ultra_panorama": encoded(render_ultra_panorama(frame, metadata))}
+    cameras = {spec.name: encoded(render_map(frame, maps[spec.name])) for spec in specs} if view in {"all", "cameras"} else {}
+    ultra = encoded(render_ultra_panorama(frame, metadata)) if view in {"all", "ultra"} else None
+    return {"timestamp_s": info["actual_time_s"], "cameras": cameras, "ultra_panorama": ultra}
 
 
 @app.get("/api/matches/{match_id}/clips/{clip_id}/tracks")
@@ -415,6 +434,23 @@ def clip_tracks(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, An
     metadata = with_calibration(match)
     return {"timestamp_s": row["timestamp_s"], "tracks": row["tracks"],
             "field_length": metadata.field_length, "field_width": metadata.field_width}
+
+
+@app.get("/api/matches/{match_id}/clips/{clip_id}/debug-frames")
+def clip_debug_frames(match_id: str, clip_id: str) -> dict[str, Any]:
+    """Small immutable debug sequences; frontend selects nearest real sample."""
+    match = require_match(match_id)
+    clip = store.clip(match_id, clip_id)
+    analysis = (clip or {}).get("analysis") or {}
+    tracking_id, association_id = analysis.get("tracking_artifact_id"), analysis.get("association_artifact_id")
+    if not tracking_id or not association_id:
+        raise api_error(404, "Detection association and tracking artifacts are required.", "clip_debug_missing")
+    artifacts = LocalArtifactStore(store)
+    end = float(clip["duration_s"])
+    return {
+        "tracks": list(artifacts.read_window(match_id, tracking_id, 0.0, end)),
+        "association": list(artifacts.read_window(match_id, association_id, 0.0, end)),
+    }
 
 
 @app.get("/api/matches/{match_id}/view-context")
