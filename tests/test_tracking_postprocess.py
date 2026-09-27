@@ -1,4 +1,7 @@
 import json
+import math
+
+import numpy as np
 
 from tracking.models import PositionKind, TrackLifecycle, TrackSample
 from web_app.backend.app.tracking_postprocess import (
@@ -59,3 +62,41 @@ def test_postprocess_writes_final_separately_from_raw_diagnostic(tmp_path):
     written_report = json.loads((tmp_path / "tracking_postprocess_report.json").read_text(encoding="utf-8"))
     assert set(written_report) >= {"identity_resolution", "participant_validation", "smoothing", "interpolation"}
     assert json_safe({"bad": float("nan")}) == {"bad": None}
+
+
+def test_json_safe_preserves_scalar_types_and_handles_non_finite_values():
+    value = json_safe({
+        "frame_index": 101,
+        "track_id": 7,
+        "enabled": True,
+        "ratio": 1.25,
+        "nan": math.nan,
+        "positive_inf": math.inf,
+        "negative_inf": -math.inf,
+        "ids": [1, 7],
+        "enum": PositionKind.INTERPOLATED,
+        "numpy_int": np.int64(3),
+        "numpy_float": np.float32(2.5),
+    })
+    assert value["frame_index"] == 101 and isinstance(value["frame_index"], int)
+    assert value["track_id"] == 7 and isinstance(value["track_id"], int)
+    assert value["enabled"] is True and isinstance(value["enabled"], bool)
+    assert value["ratio"] == 1.25 and isinstance(value["ratio"], float)
+    assert value["nan"] is None
+    assert value["positive_inf"] is None
+    assert value["negative_inf"] is None
+    assert value["ids"] == [1, 7] and all(isinstance(item, int) for item in value["ids"])
+    assert value["enum"] == "interpolated"
+    assert value["numpy_int"] == 3 and isinstance(value["numpy_int"], int)
+    assert value["numpy_float"] == 2.5 and isinstance(value["numpy_float"], float)
+
+
+def test_written_final_jsonl_preserves_integer_frame_and_track_ids(tmp_path):
+    write_postprocess_outputs(tmp_path, [{
+        "frame_index": 101,
+        "timestamp_s": 3.375,
+        "tracks": [{"track_id": 7, "x": 1.0}],
+    }], {})
+    row = json.loads((tmp_path / "tracking_frames_final.jsonl").read_text(encoding="utf-8"))
+    assert row["frame_index"] == 101 and isinstance(row["frame_index"], int)
+    assert row["tracks"][0]["track_id"] == 7 and isinstance(row["tracks"][0]["track_id"], int)

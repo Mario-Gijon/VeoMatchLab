@@ -6,7 +6,7 @@ import json
 import math
 from collections import defaultdict
 from enum import Enum
-from numbers import Real
+from numbers import Integral, Real
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -113,15 +113,27 @@ def postprocess_tracking_rows(raw_rows: Iterable[Mapping[str, Any]]) -> tuple[li
 
 def json_safe(value: Any) -> Any:
     """Recursively make diagnostic data valid strict JSON (not NaN/Infinity)."""
-    if isinstance(value, Real) and not isinstance(value, bool):
-        number = float(value)
-        return number if math.isfinite(number) else None
     if isinstance(value, Enum):
         return json_safe(value.value)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, Integral):
+        return int(value)
+    if isinstance(value, Real):
+        number = float(value)
+        return number if math.isfinite(number) else None
     if isinstance(value, Mapping):
         return {str(key): json_safe(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
         return [json_safe(item) for item in value]
+    # numpy scalar types expose item() even when they do not register with the
+    # stdlib numbers ABCs. Convert only scalar-like values and recurse so the
+    # same int/float/bool semantics apply to their native Python value.
+    item = getattr(value, "item", None)
+    if callable(item):
+        native = item()
+        if native is not value:
+            return json_safe(native)
     return value
 
 

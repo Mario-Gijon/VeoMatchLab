@@ -298,8 +298,7 @@ class ClipAnalysisService:
         # Keep the web API importable in lightweight environments. Detection
         # dependencies are only needed by the worker that actually runs a clip.
         from experiments.tracking.run_global_tracker import PipelineProfile, run as run_tracker
-        from experiments.virtual_camera_coverage.ultra_panorama_overlay import build_ultra_panorama_maps, render_ultra_panorama
-        import cv2
+        from .ultra_presentation import render_ultra_presentation
 
         calibration = match["calibration"]
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / job.job_id
@@ -308,8 +307,6 @@ class ClipAnalysisService:
         association_rows: list[dict] = []
         ultra_path = output_dir / "ultra_base.mp4"
         ultra_intermediate_path = output_dir / "ultra_base.intermediate.mp4"
-        ultra_writer: Any = None
-        panorama_maps: Any = None
         pipeline_profile: Any = PipelineProfile()
         args = self._runner_args(source, calibration, output_dir, clip)
         job_started = time.perf_counter()
@@ -323,27 +320,16 @@ class ClipAnalysisService:
         def analysed(**data: Any) -> None:
             association_rows.append({"timestamp_s": data["timestamp"], "frame_index": data["frame_index"], **data["association"].to_dict()})
 
-        def rendered(**data: Any) -> None:
-            nonlocal ultra_writer, panorama_maps, pipeline_profile
-            started = time.perf_counter()
-            if panorama_maps is None:
-                panorama_maps = build_ultra_panorama_maps(data["frame"], data["metadata"])
-            panorama = render_ultra_panorama(data["frame"], data["metadata"], panorama_maps)
-            pipeline_profile.ultra_render_seconds += time.perf_counter() - started
-            if ultra_writer is None:
-                ultra_writer = cv2.VideoWriter(str(ultra_intermediate_path), cv2.VideoWriter_fourcc(*"mp4v"), 1.0 / SAMPLE_PERIOD_S, (panorama.shape[1], panorama.shape[0]))
-                if not ultra_writer.isOpened():
-                    raise RuntimeError("Could not open ultra panorama video writer")
-            started = time.perf_counter()
-            ultra_writer.write(panorama)
-            pipeline_profile.video_encode_seconds += time.perf_counter() - started
-
-        try:
-            print(f"[clip-analysis] clip={clip['id']} source={source['path']} duration={clip['duration_s']:.3f} sample_period={SAMPLE_PERIOD_S:.7f} expected_frames={job.total_frames}")
-            run_tracker(args, frame_callback=rendered, measurement_callback=detected, analysis_callback=analysed, profile=pipeline_profile)
-        finally:
-            if ultra_writer is not None:
-                ultra_writer.release()
+        print(f"[clip-analysis] clip={clip['id']} source={source['path']} duration={clip['duration_s']:.3f} sample_period={SAMPLE_PERIOD_S:.7f} expected_frames={job.total_frames}")
+        run_tracker(args, measurement_callback=detected, analysis_callback=analysed, profile=pipeline_profile)
+        with job._lock:
+            job.stage = "rendering"
+        ultra_presentation = render_ultra_presentation(
+            video=Path(source["path"]), calibration=Path(calibration["path"]), output=ultra_intermediate_path,
+            start_s=0.0, duration_s=float(clip["duration_s"]), check_cancelled=lambda: self._check_cancelled(job),
+        )
+        pipeline_profile.ultra_render_seconds += ultra_presentation.render_seconds
+        pipeline_profile.video_encode_seconds += ultra_presentation.encode_seconds
         if ultra_intermediate_path.exists():
             started = time.perf_counter()
             _transcode_web_video(ultra_intermediate_path, ultra_path)
@@ -389,6 +375,7 @@ class ClipAnalysisService:
             summary_path = output_dir / "tracking_summary.json"
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
             summary["profile"] = pipeline_profile.as_dict()
+            summary["ultra_presentation"] = {"fps": ultra_presentation.fps, "frames": ultra_presentation.frames}
             started = time.perf_counter()
             summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
             pipeline_profile.persist_seconds += time.perf_counter() - started

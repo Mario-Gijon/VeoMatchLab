@@ -9,7 +9,8 @@ def test_run_all_does_not_create_tracking_debug_video_and_keeps_ultra_base():
     source = inspect.getsource(ClipAnalysisService._run_all)
     assert "TrackingDebugVideo" not in source
     assert "ultra_base.mp4" in source
-    assert "build_ultra_panorama_maps" in source
+    assert "render_ultra_presentation" in source
+    assert "frame_callback=" not in source
 
 
 def test_cached_tracking_does_not_render_ultra_base_again():
@@ -17,6 +18,7 @@ def test_cached_tracking_does_not_render_ultra_base_again():
     assert "render_ultra_panorama" not in source
     assert "TrackingDebugVideo" not in source
     assert "read_frame" not in source
+    assert "render_ultra_presentation" not in source
 
 
 def test_full_and_cached_tracking_share_the_v2_postprocess_helper():
