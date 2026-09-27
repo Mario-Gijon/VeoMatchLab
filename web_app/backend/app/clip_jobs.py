@@ -39,6 +39,7 @@ class ClipJob:
     cancel_requested: bool = False
     detection_artifact_id: str | None = None
     tracking_artifact_id: str | None = None
+    process: subprocess.Popen[str] | None = field(default=None, repr=False)
     _lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
 
     def public_dict(self) -> dict[str, Any]:
@@ -58,6 +59,7 @@ class ClipAnalysisService:
         self.store = store
         self.artifacts = LocalArtifactStore(store)
         self._jobs: dict[str, ClipJob] = {}
+        self._generation_jobs: dict[tuple[str, str], ClipJob] = {}
         self._lock = threading.RLock()
 
     def job(self, job_id: str) -> ClipJob | None:
@@ -69,7 +71,28 @@ class ClipAnalysisService:
         if job:
             with job._lock:
                 job.cancel_requested = True
+                process = job.process
+            self._stop_process(process)
         return job
+
+    @staticmethod
+    def _stop_process(process: subprocess.Popen[str] | None) -> None:
+        if process is None or process.poll() is not None:
+            return
+        process.terminate()
+        try:
+            process.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=1)
+
+    def shutdown(self) -> None:
+        """Reap only ffmpeg processes created by this service (including reload)."""
+        with self._lock:
+            jobs = list(self._jobs.values())
+        for job in jobs:
+            if job.action == "generate" and job.status in {"queued", "running"}:
+                self.cancel(job.job_id)
 
     def cancel_for_clip(self, match_id: str, clip_id: str) -> None:
         with self._lock:
@@ -86,14 +109,43 @@ class ClipAnalysisService:
         return job
 
     def start_generation(self, match: dict, clip: dict, source: dict) -> ClipJob:
-        job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], "generate", 100, stage="generating")
         with self._lock:
+            key = (match["id"], clip["id"])
+            existing = self._generation_jobs.get(key)
+            if existing and existing.status in {"queued", "running"}:
+                return existing
+            media_id = clip.get("clip_media_id")
+            media = self.store.media(media_id)[1] if media_id and self.store.media(media_id) else None
+            if media and Path(media["path"]).is_file():
+                try:
+                    media_record(Path(media["path"]), kind="clip")
+                    job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], "generate", 100, status="completed", stage="generating", processed_frames=100)
+                    self._jobs[job.job_id] = job
+                    return job
+                except ValueError:
+                    pass
+            job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], "generate", 100, stage="generating")
             self._jobs[job.job_id] = job
+            self._generation_jobs[key] = job
         threading.Thread(target=self._run_generation, args=(job, match, clip, source), daemon=True).start()
         return job
 
+    @staticmethod
+    def _progress_seconds(key: str, value: str) -> float | None:
+        try:
+            if key in {"out_time_us", "out_time_ms"}:
+                # This installed ffmpeg emits microseconds for both names.
+                return float(value) / 1_000_000
+            if key == "out_time":
+                hours, minutes, seconds = value.split(":")
+                return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+        except (ValueError, OverflowError):
+            return None
+        return None
+
     def _run_generation(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
         output = self.store.asset_dir(job.match_id, "clips") / clip["id"] / "source.mp4"
+        temporary = output.with_name("source.part.mp4")
         output.parent.mkdir(parents=True, exist_ok=True)
         try:
             with job._lock:
@@ -102,43 +154,53 @@ class ClipAnalysisService:
             command = ["ffmpeg", "-y", "-v", "error", "-i", str(source["path"]), "-ss", str(clip["source_start_s"]),
                        "-t", str(clip["duration_s"]), "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264",
                        "-preset", "veryfast", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart",
-                       "-progress", "pipe:1", "-nostats", str(output)]
+                       "-progress", "pipe:1", "-nostats", str(temporary)]
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            with job._lock:
+                job.process = process
             assert process.stdout is not None
             for line in process.stdout:
                 if job.cancel_requested:
-                    process.terminate()
+                    self._stop_process(process)
                     raise JobCancelled()
                 key, _, value = line.strip().partition("=")
-                if key == "out_time_ms":
-                    try:
-                        progress = int(float(value) / (clip["duration_s"] * 10_000))
-                    except ValueError:
-                        continue
+                seconds = self._progress_seconds(key, value)
+                if seconds is not None:
                     with job._lock:
-                        job.processed_frames = min(99, max(0, progress))
+                        job.processed_frames = min(99, max(0, int(seconds / clip["duration_s"] * 100)))
             stderr = process.stderr.read() if process.stderr else ""
+            self._check_cancelled(job)
             if process.wait() != 0:
                 raise RuntimeError(stderr.strip() or "ffmpeg could not generate the clip")
             self._check_cancelled(job)
-            record = media_record(output, name="source.mp4", kind="clip", source="generated")
+            record = media_record(temporary, name="source.mp4", kind="clip", source="generated")
             if record["width"] != source["width"] or record["height"] != source["height"] or not record.get("fps") or not record.get("duration_s") or abs(record["duration_s"] - clip["duration_s"]) > max(.5, clip["duration_s"] * .1):
                 raise ValueError("Generated clip failed media validation")
+            temporary.replace(output)
+            record["path"] = str(output.resolve())
             record.update(id=self.store.new_id("media"), role="clip", ownership="managed")
             self.store.attach_media(job.match_id, record)
             self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(clip_media_id=record["id"], generation={"status": "completed", "job_id": job.job_id}))
             with job._lock:
                 job.status, job.processed_frames = "completed", 100
         except JobCancelled:
-            output.unlink(missing_ok=True)
+            self._stop_process(job.process)
+            temporary.unlink(missing_ok=True)
             self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "cancelled", "job_id": job.job_id}))
             with job._lock:
                 job.status = "cancelled"
         except Exception as exc:
-            output.unlink(missing_ok=True)
+            self._stop_process(job.process)
+            temporary.unlink(missing_ok=True)
             self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(generation={"status": "failed", "job_id": job.job_id, "error": str(exc)}))
             with job._lock:
                 job.status, job.error = "failed", str(exc)
+        finally:
+            with job._lock:
+                job.process = None
+            with self._lock:
+                if self._generation_jobs.get((job.match_id, job.clip_id)) is job:
+                    self._generation_jobs.pop((job.match_id, job.clip_id), None)
 
     def _check_cancelled(self, job: ClipJob) -> None:
         if job.cancel_requested:

@@ -70,6 +70,11 @@ app.add_middleware(
 )
 
 
+@app.on_event("shutdown")
+def cleanup_clip_workers() -> None:
+    active_clip_jobs().shutdown()
+
+
 @app.exception_handler(RequestValidationError)
 async def invalid_request(_request, exc):
     # Do not echo submitted signed URLs or other input values in validation errors.
