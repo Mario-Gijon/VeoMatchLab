@@ -50,8 +50,6 @@ from experiments.virtual_camera_coverage.coverage import (  # noqa: E402
 from experiments.virtual_camera_coverage.detect import (  # noqa: E402
     DEFAULT_C2_WEIGHTS,
     DEFAULT_RESCUE_CONFIRM_MAX_WORLD_DISTANCE_M,
-    DEFAULT_RESCUE_CONFIRM_THRESHOLD,
-    DEFAULT_THRESHOLD,
     confirm_deferred_rescues_from_owner_images,
     ordered_tight_specs,
     predict_persons,
@@ -62,6 +60,10 @@ from tracking import GlobalTracker, PositionKind, TrackLifecycle  # noqa: E402
 
 
 DEFAULT_OUT_DIR = Path("experiments/tracking/output")
+# Tracking V1 diagnostics use the agreed C2 operating threshold.  Keep this
+# local to the tracking experiment: detect.py remains an independent
+# same-frame-association experiment with its own CLI defaults.
+DEFAULT_TRACKING_THRESHOLD = 0.40
 
 
 def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
@@ -93,14 +95,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--start-s", type=float, default=0.0)
     parser.add_argument("--duration-s", type=float, default=25.0)
     parser.add_argument("--sample-period-s", type=float, default=1.0)
-    parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=DEFAULT_TRACKING_THRESHOLD,
+    )
     parser.add_argument("--width", type=int, default=1280)
     parser.add_argument("--height", type=int, default=720)
     parser.add_argument("--split-fraction", type=float, default=DEFAULT_SPLIT_FRACTION)
     parser.add_argument("--guard-margin-m", type=float, default=DEFAULT_GUARD_M)
     parser.add_argument("--grid-step-m", type=float, default=DEFAULT_GRID_STEP_M)
     parser.add_argument("--field-margin-m", type=float, default=DEFAULT_FIELD_MARGIN_M)
-    parser.add_argument("--rescue-confirm-threshold", type=float, default=DEFAULT_RESCUE_CONFIRM_THRESHOLD)
+    parser.add_argument(
+        "--rescue-confirm-threshold",
+        type=float,
+        default=DEFAULT_TRACKING_THRESHOLD,
+    )
     parser.add_argument("--rescue-confirm-max-world-distance-m", type=float, default=DEFAULT_RESCUE_CONFIRM_MAX_WORLD_DISTANCE_M)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     args = parser.parse_args()
