@@ -1,5 +1,5 @@
 import type { ViewContext } from '../types'
-import { inverseMatrix } from './interactiveCamera.ts'
+import { inverseMatrix, multiplyMatrix } from './interactiveCamera.ts'
 
 export interface VirtualCameraSpec { longitude: number; latitude: number; vfov: number }
 
@@ -28,11 +28,21 @@ export function projectVirtualPixelToUltra(context: ViewContext, spec: VirtualCa
   return [u, v].every(Number.isFinite) && u >= 0 && u <= 1 && v >= 0 && v <= 1 ? { u, v } : null
 }
 
-export function projectVirtualRayToInteractive(viewToWorld: number[], fov: number, direction: number[], aspect: number) {
+export function projectVirtualRayToInteractive(context: ViewContext, viewToWorld: number[], fov: number, direction: number[], aspect: number) {
   if (direction.length !== 3 || !(aspect > 0) || !Number.isFinite(fov) || !direction.every(Number.isFinite)) return null
+  const camera2world = context.uniforms.camera2world?.value as number[] | undefined
+  const camera2presentation = context.uniforms.camera2presentation?.value as number[] | undefined
+  if (!camera2world || !camera2presentation || camera2world.length !== 16 || camera2presentation.length !== 16) return null
+  // presentationDirectionFromVirtualPixel returns a ray in PRESENTATION space.
+  // camera2presentation is already the inverse metadata transform, so this is
+  // the validated PRESENTATION -> WORLD conversion used by the view geometry.
+  const presentationToWorld = multiplyMatrix(camera2world, camera2presentation)
+  const worldDirection = [direction[0], direction[1], direction[2], 0].map((_value, row) =>
+    [direction[0], direction[1], direction[2], 0].reduce((sum, component, column) =>
+      sum + presentationToWorld[column * 4 + row] * component, 0))
   const worldToView = inverseMatrix(viewToWorld)
   if (!worldToView) return null
-  const view = [direction[0], direction[1], direction[2], 0].map((_, row) => [direction[0], direction[1], direction[2], 0].reduce((sum, value, column) => sum + worldToView[column * 4 + row] * value, 0))
+  const view = worldDirection.map((value, row) => worldDirection.reduce((sum, component, column) => sum + worldToView[column * 4 + row] * component, 0))
   const height = 2 * Math.tan(fov / 2), viewportWidth = height * aspect
   if (!(view[2] > 1e-9) || ![...view, height, viewportWidth].every(Number.isFinite)) return null
   const u = .5 + view[0] / view[2] / viewportWidth, v = .5 + view[1] / view[2] / height

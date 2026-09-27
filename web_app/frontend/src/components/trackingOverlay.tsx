@@ -28,14 +28,10 @@ export default function TrackingOverlay({ mode, context, cameraRef, tracks, asso
     const direction = spec && foot ? presentationDirectionFromVirtualPixel(spec, foot.x, foot.y, 1280, 720) : null
     const projected = mode === 'ultra'
       ? context && bounds && spec && foot ? projectVirtualPixelToUltra(context, spec, foot.x, foot.y, 1280, 720) : null
-      : context && camera && direction && aspect > 0 ? projectVirtualRayToInteractive(interactiveTransform(context, camera), camera.fov, direction, aspect) : null
+      : context && camera && direction && aspect > 0 ? projectVirtualRayToInteractive(context, interactiveTransform(context, camera), camera.fov, direction, aspect) : null
     return projected ? { track, ...projected } : null
   }).filter((value): value is { track: OverlayTrack; u: number; v: number } => value !== null)
   return <svg ref={surface} viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
-    {points.map(({ track, u, v }) => <g key={track.track_id}>
-      <circle cx={u} cy={v} r="0.003" fill="#f6cf4a" stroke="#101820" strokeWidth="0.001" />
-      <line x1={u} y1={v} x2={u} y2={Math.min(1, v + 0.009)} stroke="#f6cf4a" strokeWidth="0.001" />
-      <text x={u} y={Math.min(1, v + 0.020)} textAnchor="middle" fontSize="0.015" fill="#fff" stroke="#101820" strokeWidth="0.0015" paintOrder="stroke">{track.track_id}</text>
-    </g>)}
+    {points.map(({ track, u, v }) => <circle key={track.track_id} cx={u} cy={v} r="0.003" fill="#f6cf4a" stroke="#101820" strokeWidth="0.001" />)}
   </svg>
 }
