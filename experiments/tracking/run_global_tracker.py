@@ -9,7 +9,7 @@ import math
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
@@ -125,7 +125,11 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def run(args: argparse.Namespace) -> None:
+def run(
+    args: argparse.Namespace,
+    *,
+    frame_callback: Callable[..., None] | None = None,
+) -> None:
     metadata = load_veo_metadata(args.calibration)
     specs, layout, _, _ = derive_specs(
         metadata, args.width, args.height, split_fraction=args.split_fraction,
@@ -218,6 +222,15 @@ def run(args: argparse.Namespace) -> None:
                 "skipped_measurements_without_position": len(association.measurements) - len(measurements),
                 "tracks": [_snapshot_dict(sample) for sample in tracking_frame.tracks],
             }
+            if frame_callback is not None:
+                frame_callback(
+                    frame=frame,
+                    metadata=metadata,
+                    spec_by_name=spec_by_name,
+                    tracking_frame=tracking_frame,
+                    measurements=tuple(measurements),
+                    record=record,
+                )
             output.write(json.dumps(record, allow_nan=False) + "\n")
             print(f"frame={frame_index} t={timestamp:.3f}s measurements={len(measurements)} tracks={len(tracking_frame.tracks)}")
 
