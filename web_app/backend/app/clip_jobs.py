@@ -69,6 +69,12 @@ class ClipAnalysisService:
                 job.cancel_requested = True
         return job
 
+    def cancel_for_clip(self, match_id: str, clip_id: str) -> None:
+        with self._lock:
+            jobs = [item for item in self._jobs.values() if item.match_id == match_id and item.clip_id == clip_id]
+        for job in jobs:
+            self.cancel(job.job_id)
+
     def start(self, match: dict, clip: dict, source: dict, *, action: str) -> ClipJob:
         total = int(math.floor((clip["end_s"] - clip["start_s"]) / SAMPLE_PERIOD_S + 1e-9)) + 1
         job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total)
@@ -182,6 +188,10 @@ class ClipAnalysisService:
             job.stage, job.processed_frames = "rendering", job.total_frames
 
     def _run_cached_tracking(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
+        from experiments.tracking.render_tracking_debug_video import TrackingDebugVideo
+        from experiments.virtual_camera_coverage.coverage import DEFAULT_FAR_CAMERAS, DEFAULT_NEAR_CAMERAS, derive_specs, read_frame
+        from experiments.virtual_camera_coverage.detect import ordered_tight_specs
+        from geometry.veo_metadata import load_veo_metadata
         from tracking import GlobalTracker, TrackingMeasurement
         analysis = clip.get("analysis") or {}
         detection_id = analysis.get("detection_artifact_id")
@@ -190,19 +200,37 @@ class ClipAnalysisService:
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / job.job_id
         output_dir.mkdir(parents=True, exist_ok=True)
         tracker = GlobalTracker()
+        metadata = load_veo_metadata(match["calibration"]["path"])
+        specs, _, _, _ = derive_specs(metadata, 1280, 720, split_fraction=.50, near_count=DEFAULT_NEAR_CAMERAS, far_count=DEFAULT_FAR_CAMERAS, guard_margin_m=.50, grid_step_m=.50)
+        spec_by_name = {spec.name: spec for spec in ordered_tight_specs(specs)}
         track_rows = []
-        for detection_row in self.artifacts.read_window(job.match_id, detection_id, clip["start_s"], clip["end_s"]):
-            self._check_cancelled(job)
-            measurements = [TrackingMeasurement(**item) for item in detection_row["measurements"]]
-            frame = tracker.update(measurements, timestamp=detection_row["timestamp_s"], frame_index=detection_row["frame_index"])
-            track_rows.append({"timestamp_s": frame.timestamp, "frame_index": frame.frame_index,
+        render_rows: list[tuple[dict[str, Any], tuple[TrackingMeasurement, ...], Any]] = []
+        try:
+            for detection_row in self.artifacts.read_window(job.match_id, detection_id, clip["start_s"], clip["end_s"]):
+                self._check_cancelled(job)
+                measurements = tuple(TrackingMeasurement(**item) for item in detection_row["measurements"])
+                frame = tracker.update(measurements, timestamp=detection_row["timestamp_s"], frame_index=detection_row["frame_index"])
+                track_rows.append({"timestamp_s": frame.timestamp, "frame_index": frame.frame_index,
                                "timestamp": frame.timestamp, "measurement_count": len(measurements),
                                "tracks": [{"track_id": item.track_id, "x": item.x, "z": item.z, "vx": item.vx, "vz": item.vz,
                                            "lifecycle": item.lifecycle.value, "position_kind": item.position_kind.value,
                                            "measurement_id": item.measurement_id, "missed_seconds": item.missed_seconds, "hits": item.hits}
                                           for item in frame.tracks]})
-            with job._lock:
-                job.stage, job.processed_frames = "tracking", len(track_rows)
+                render_rows.append((detection_row, measurements, frame))
+                with job._lock:
+                    job.stage, job.processed_frames = "tracking", len(track_rows)
+            renderer = TrackingDebugVideo(output_dir / "tracking_debug.mp4", width=1280, height=720, fps=1.0 / SAMPLE_PERIOD_S)
+            try:
+                for index, (detection_row, measurements, frame) in enumerate(render_rows, start=1):
+                    self._check_cancelled(job)
+                    raw_frame, _ = read_frame(Path(source["path"]), detection_row["timestamp_s"])
+                    renderer(frame=raw_frame, metadata=metadata, spec_by_name=spec_by_name, tracking_frame=frame, measurements=measurements, record={"measurement_count": len(measurements)})
+                    with job._lock:
+                        job.stage, job.processed_frames = "rendering", index
+            finally:
+                renderer.close()
+        finally:
+            pass
         provenance = Provenance(source="our_analysis", run_id=f"run_{job.job_id}_tracking", parser_version="clip-v1", upstream_artifact_ids=[detection_id])
         tracks = self.artifacts.write_records(job.match_id, "tracks.person", track_rows, provenance, source_media_ids=[source["id"]])
         job.detection_artifact_id, job.tracking_artifact_id = detection_id, tracks["id"]
@@ -212,9 +240,8 @@ class ClipAnalysisService:
                    "source_detection_artifact_id": detection_id}
         (output_dir / "tracking_frames.jsonl").write_text("".join(json.dumps(row, allow_nan=False) + "\n" for row in track_rows), encoding="utf-8")
         (output_dir / "tracking_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-        previous_debug = analysis.get("debug_video")
         self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(analysis={
             "status": "completed", "detection_artifact_id": detection_id,
             "tracking_artifact_id": tracks["id"], "run_id": job.job_id,
-            **({"debug_video": previous_debug} if previous_debug else {}),
+            "debug_video": f"clips/{clip['id']}/{job.job_id}/tracking_debug.mp4",
         }))

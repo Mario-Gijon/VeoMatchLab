@@ -136,6 +136,13 @@ class WorkspaceStore:
         self.update_match(match_id, apply)
         return updated
 
+    def delete_clip(self, match_id: str, clip_id: str) -> bool:
+        match = self.match(match_id)
+        if match is None or not any(item["id"] == clip_id for item in match.get("clips", [])):
+            return False
+        self.update_match(match_id, lambda item: item.update(clips=[value for value in item.get("clips", []) if value["id"] != clip_id]))
+        return True
+
     def media(self, media_id: str) -> tuple[dict[str, Any], dict[str, Any]] | None:
         for match in self.matches():
             item = next((value for value in match["media"] if value["id"] == media_id), None)

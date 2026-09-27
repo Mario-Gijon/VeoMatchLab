@@ -10,6 +10,8 @@ import sys
 import os
 import math
 import uuid
+import shutil
+import base64
 from pathlib import Path
 from typing import Annotated, Any
 from functools import wraps
@@ -34,6 +36,7 @@ from .services import (
 )
 from .storage import WorkspaceStore
 from .clip_jobs import ClipAnalysisService
+from .artifacts import LocalArtifactStore
 from .data_api import data_router
 from .schemas import MediaRoleRequest, ViewPointRequest, RenameMatchRequest, TrackingPointRequest
 from .view_geometry import view_context, contexts
@@ -285,6 +288,20 @@ def create_clip(match_id: str, payload: CreateClipRequest) -> dict[str, Any]:
     return public_clip(match_id, clip)
 
 
+@app.delete("/api/matches/{match_id}/clips/{clip_id}")
+def delete_clip(match_id: str, clip_id: str) -> dict[str, bool]:
+    clip = store.clip(match_id, clip_id)
+    if clip is None:
+        raise api_error(404, "Clip not found.", "clip_not_found")
+    active_clip_jobs().cancel_for_clip(match_id, clip_id)
+    root = store.asset_dir(match_id, "clips").resolve()
+    output = (root / clip_id).resolve()
+    if output.is_relative_to(root) and output.exists() and not output.is_symlink():
+        shutil.rmtree(output)
+    store.delete_clip(match_id, clip_id)
+    return {"deleted": True}
+
+
 @app.post("/api/matches/{match_id}/clips/{clip_id}/analysis", status_code=202)
 def start_clip_analysis(match_id: str, clip_id: str, payload: StartClipAnalysisRequest) -> dict[str, Any]:
     match = require_match(match_id)
@@ -326,6 +343,50 @@ def clip_debug_video(match_id: str, clip_id: str):
     if not path.is_relative_to(root) or not path.is_file():
         raise api_error(404, "Debug video is no longer available.", "clip_debug_missing")
     return FileResponse(path, media_type="video/mp4", filename="tracking_debug.mp4", content_disposition_type="inline")
+
+
+@app.get("/api/matches/{match_id}/clips/{clip_id}/development-views")
+def clip_development_views(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, Any]:
+    """Development-only same-timestamp renders; no detector is invoked here."""
+    match = require_match(match_id)
+    clip = store.clip(match_id, clip_id)
+    if clip is None or not clip["start_s"] <= timestamp_s <= clip["end_s"]:
+        raise api_error(422, "Timestamp lies outside the clip.", "clip_timestamp_invalid")
+    source = next((item for item in match["media"] if item["id"] == clip["source_media_id"]), None)
+    if source is None:
+        raise api_error(409, "Clip source is unavailable.", "clip_source_missing")
+    from experiments.virtual_camera_coverage.coverage import DEFAULT_FAR_CAMERAS, DEFAULT_NEAR_CAMERAS, build_map, derive_specs, read_frame, render_map
+    from experiments.virtual_camera_coverage.detect import ordered_tight_specs
+    from experiments.virtual_camera_coverage.ultra_panorama_overlay import render_ultra_panorama
+    metadata = with_calibration(match)
+    frame, info = read_frame(Path(source["path"]), timestamp_s)
+    specs, _, _, _ = derive_specs(metadata, 1280, 720, split_fraction=.50, near_count=DEFAULT_NEAR_CAMERAS, far_count=DEFAULT_FAR_CAMERAS, guard_margin_m=.50, grid_step_m=.50)
+    def encoded(image: Any) -> str:
+        ok, value = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if not ok:
+            raise RuntimeError("Could not encode development view")
+        return "data:image/jpeg;base64," + base64.b64encode(value.tobytes()).decode("ascii")
+    cameras = {}
+    for spec in ordered_tight_specs(specs):
+        cameras[spec.name] = encoded(render_map(frame, build_map(metadata, spec, 1280, 720)))
+    return {"timestamp_s": info["actual_time_s"], "cameras": cameras, "ultra_panorama": encoded(render_ultra_panorama(frame, metadata))}
+
+
+@app.get("/api/matches/{match_id}/clips/{clip_id}/tracks")
+def clip_tracks(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, Any]:
+    match = require_match(match_id)
+    clip = store.clip(match_id, clip_id)
+    analysis = (clip or {}).get("analysis") or {}
+    artifact_id = analysis.get("tracking_artifact_id")
+    if not artifact_id:
+        raise api_error(404, "No tracking artifact is available for this clip.", "clip_tracking_missing")
+    rows = list(LocalArtifactStore(store).read_window(match_id, artifact_id, timestamp_s - .05, timestamp_s + .05))
+    row = min(rows, key=lambda item: abs(item["timestamp_s"] - timestamp_s)) if rows else None
+    if row is None:
+        raise api_error(404, "No tracking sample exists at this timestamp.", "clip_tracking_sample_missing")
+    metadata = with_calibration(match)
+    return {"timestamp_s": row["timestamp_s"], "tracks": row["tracks"],
+            "field_length": metadata.field_length, "field_width": metadata.field_width}
 
 
 @app.get("/api/matches/{match_id}/view-context")

@@ -18,9 +18,10 @@ import ValidationTable from '../components/ValidationTable'
 import EventsPanel from '../components/EventsPanel'
 import MatchTimeline from '../components/MatchTimeline'
 import ClipsPanel from '../components/ClipsPanel'
+import ClipWorkspace from '../components/ClipWorkspace'
 import { useMatchEvents } from '../hooks/useMatchEvents'
 import type { MatchEvent } from '../types/matchData'
-import type { Calibration, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, ViewContext } from '../types'
+import type { Calibration, Clip, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, ViewContext } from '../types'
 
 interface Props { matchId: string; calibrations: Calibration[]; onBack: () => void }
 
@@ -43,6 +44,8 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
   const [error, setError] = useState('')
   const [selectionEnabled, setSelectionEnabled] = useState(true)
   const [highlightsOpen, setHighlightsOpen] = useState(false)
+  const [section, setSection] = useState<'visualization' | 'clips'>('visualization')
+  const [openClip, setOpenClip] = useState<Clip | null>(null)
   const highlightsVideo = useRef<HTMLVideoElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const interactiveCamera = useRef<InteractiveCamera | null>(null)
@@ -120,6 +123,8 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
     <Stack direction="row" alignItems="center" gap={2} mb={1}><Button onClick={onBack}>← Partidos</Button><Typography variant="h6">{match.name}</Typography><Box flex={1} /><Button variant="outlined" size="small" onClick={() => setFilesOpen(true)}>Gestionar archivos</Button></Stack>
     {error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{busy && <LinearProgress />}
     {filesOpen && <ManageFilesDialog match={match} calibrations={calibrations} onClose={() => setFilesOpen(false)} onUpdated={(result) => { video.current?.pause(); setPlaying(false); setFrameRender(null); setStillImage(null); setMatch(result); generation.current++ }} onImage={(item) => { video.current?.pause(); setPlaying(false); setStillImage(item); setFrameRender(null); setFilesOpen(false) }} onRender={(item) => { setFilesOpen(false); void run(() => renderImage(item)) }} />}
+    <ToggleButtonGroup size="small" exclusive value={section} onChange={(_, value: 'visualization' | 'clips' | null) => value && setSection(value)} sx={{ mb: 1 }}><ToggleButton value="visualization">Visualización</ToggleButton><ToggleButton value="clips">Clips</ToggleButton></ToggleButtonGroup>
+    {section === 'clips' ? (openClip ? <ClipWorkspace matchId={matchId} clip={openClip} source={match.media.find((item) => item.role === 'dual_lens')} onBack={() => setOpenClip(null)} onChanged={() => { void api.match(matchId).then((next) => { setMatch(next); setOpenClip(next.clips?.find((item) => item.id === openClip.id) ?? null) }).catch((reason: Error) => setError(reason.message)) }} /> : <ClipsPanel matchId={matchId} source={match.media.find((item) => item.role === 'dual_lens')} time={time} clips={match.clips ?? []} onOpen={setOpenClip} onChanged={() => { void api.match(matchId).then(setMatch).catch((reason: Error) => setError(reason.message)) }} />) : <>
     <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1} mb={1}>
       <ToggleButtonGroup size="small" exclusive value={mode} onChange={(_, value: ViewMode | null) => value && switchView(value)}>{VIEW_MODES.map((view) => <ToggleButton key={view} value={view}>{viewLabel(view)}</ToggleButton>)}</ToggleButtonGroup>
       <ToggleButton size="small" value="select" selected={selectionEnabled} onChange={() => setSelectionEnabled((value) => !value)}>Seleccionar</ToggleButton>
@@ -127,8 +132,8 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
       {roleMedia.length > 1 && <Select size="small" value={source?.id ?? ''} displayEmpty onChange={(e) => { video.current?.pause(); setPlaying(false); setSourceId(e.target.value); setFrameRender(null); setStillImage(null); generation.current++ }}><MenuItem value="">Sin fuente asignada</MenuItem>{roleMedia.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select>}
       {mode === 'dual_lens' && <ToggleButtonGroup size="small" exclusive value={crop} onChange={(_, value: string | null) => value && setCrop(value)}><ToggleButton value="stacked">Apilado</ToggleButton><ToggleButton value="left">IZQUIERDA</ToggleButton><ToggleButton value="right">DERECHA</ToggleButton></ToggleButtonGroup>}
       {mode === 'panorama' && <Select size="small" value={width} onChange={(e) => { setWidth(Number(e.target.value)); setFrameRender(null); generation.current++ }}><MenuItem value={1920}>1920×1080</MenuItem><MenuItem value={3840}>3840×2160</MenuItem></Select>}
+      <Button size="small" variant="outlined" onClick={() => setSection('clips')}>Crear clip</Button>
     </Stack>
-    <ClipsPanel matchId={matchId} source={match.media.find((item) => item.role === 'dual_lens')} time={time} clips={match.clips ?? []} onChanged={() => { void api.match(matchId).then(setMatch).catch((reason: Error) => setError(reason.message)) }} />
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 7fr) minmax(280px, 3fr)' }, gap: 2 }}>
       <Box minWidth={0}>
         {stillImage ? <Box><img src={api.url(stillImage.url)} alt={stillImage.name} style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain' }} /><Button onClick={() => setStillImage(null)}>Volver al vídeo</Button></Box> : frameRender ? <PanoramaViewer panorama={frameRender} points={selectionEnabled ? displayPoints : []} onPixelClick={(x, y) => selectionEnabled && void measure(x, y)} /> : source && (!['panorama', 'ultra_panorama', 'interactive'].includes(mode) || context) ? <MatchViewer key={source.id} media={source} mode={mode} crop={crop} context={context} width={width} initialTime={time} videoRef={video} cameraRef={interactiveCamera} onTime={setTime} onPlayback={setPlaying} points={selectionEnabled ? displayPoints : []} selectionEnabled={selectionEnabled} trackingAvailable={!!context?.tracking_geometry.available} onClick={(x, y, pick) => void measure(x, y, pick)} /> : <Alert severity="info">{['panorama', 'ultra_panorama', 'interactive'].includes(mode) && !context ? 'Falta la calibración.' : 'Falta el vídeo. Añádelo en Gestionar archivos.'}</Alert>}
@@ -149,5 +154,6 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
     <EventsPanel events={events.events} total={events.total} canSeek={canSeekEvent} loading={events.loading} hasMore={events.next !== null} onMore={events.loadMore} onEvent={seekEvent} />
     {points.length > 0 && <><Divider sx={{ my: 1 }} /><Accordion disableGutters><AccordionSummary>Mediciones · {points.length} puntos</AccordionSummary><AccordionDetails><ValidationTable points={points} /></AccordionDetails></Accordion></>}
     {highlights && <Dialog open={highlightsOpen} onClose={() => { highlightsVideo.current?.pause(); setHighlightsOpen(false) }} fullWidth maxWidth="lg"><DialogTitle>Jugadas destacadas</DialogTitle><DialogContent><video ref={highlightsVideo} controls preload="metadata" src={api.url(highlights.url)} style={{ width: '100%', maxHeight: '70vh', background: '#080a0c' }} /></DialogContent><DialogActions><Button onClick={() => { highlightsVideo.current?.pause(); setHighlightsOpen(false) }}>Cerrar</Button></DialogActions></Dialog>}
+    </>}
   </Box>
 }
