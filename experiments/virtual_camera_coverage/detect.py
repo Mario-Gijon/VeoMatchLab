@@ -32,7 +32,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import cv2
 import numpy as np
@@ -1499,6 +1499,7 @@ def confirm_deferred_rescues_from_owner_images(
     field_margin_m: float,
     threshold: float,
     max_world_distance_m: float,
+    predict: Callable[[RFDETR2XLBackend, np.ndarray], list[PersonDetection]] | None = None,
 ) -> tuple[
     AssociationResult,
     list[RescueImageConfirmation],
@@ -1689,11 +1690,7 @@ def confirm_deferred_rescues_from_owner_images(
             crop_x1:crop_x2,
         ]
 
-        detections = predict_persons(
-            backend,
-            crop,
-            threshold=threshold,
-        )
+        detections = (predict or (lambda model, image: predict_persons(model, image, threshold=threshold)))(backend, crop)
 
         candidates: list[
             tuple[

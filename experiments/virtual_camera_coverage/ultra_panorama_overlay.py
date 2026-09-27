@@ -21,7 +21,12 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
-from geometry.reproduce_veo_panorama import render as render_panorama
+from geometry.reproduce_veo_panorama import (
+    PanoramaRenderMaps,
+    build_panorama_maps,
+    render as render_panorama,
+    render_panorama_with_maps,
+)
 from person_detect.views.interactive_view.renderer import rot_x, rot_y
 
 
@@ -88,20 +93,22 @@ def ultra_panorama_size(metadata) -> tuple[int, int]:
 def render_ultra_panorama(
     frame: np.ndarray,
     metadata,
+    maps: PanoramaRenderMaps | None = None,
 ) -> np.ndarray:
     """Render the panorama with the repository's validated CPU renderer."""
     width, height = ultra_panorama_size(
         metadata
     )
-
-    result = render_panorama(
-        frame,
-        metadata,
-        width,
-        height,
-    )
+    result = (render_panorama_with_maps(frame, maps) if maps is not None else render_panorama(frame, metadata, width, height))
 
     return result["panorama"]
+
+
+def build_ultra_panorama_maps(frame: np.ndarray, metadata) -> PanoramaRenderMaps:
+    """Build the static Ultra panorama remap tables once for a clip."""
+    width, height = ultra_panorama_size(metadata)
+    raw_height, raw_width = frame.shape[:2]
+    return build_panorama_maps(metadata, raw_width, raw_height, width, height)
 
 
 def _presentation_direction_from_virtual_pixel(

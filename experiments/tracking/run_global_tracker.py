@@ -8,6 +8,7 @@ import json
 import math
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
@@ -64,6 +65,58 @@ DEFAULT_OUT_DIR = Path("experiments/tracking/output")
 # local to the tracking experiment: detect.py remains an independent
 # same-frame-association experiment with its own CLI defaults.
 DEFAULT_TRACKING_THRESHOLD = 0.40
+
+
+@dataclass
+class PipelineProfile:
+    frame_read_seconds: float = 0.0
+    virtual_camera_render_seconds: float = 0.0
+    detector_base_seconds: float = 0.0
+    rescue_detector_seconds: float = 0.0
+    association_seconds: float = 0.0
+    tracker_seconds: float = 0.0
+    ultra_render_seconds: float = 0.0
+    video_encode_seconds: float = 0.0
+    persist_seconds: float = 0.0
+    total_seconds: float = 0.0
+    samples: int = 0
+    base_detector_calls: int = 0
+    rescue_detector_calls: int = 0
+    measurements: int = 0
+    tracks: int = 0
+
+    def as_dict(self) -> dict[str, float | int]:
+        return {
+            "frame_read_seconds": self.frame_read_seconds,
+            "virtual_camera_render_seconds": self.virtual_camera_render_seconds,
+            "detector_base_seconds": self.detector_base_seconds,
+            "rescue_detector_seconds": self.rescue_detector_seconds,
+            "rescue_detector_mean_seconds": self.rescue_detector_seconds / self.rescue_detector_calls if self.rescue_detector_calls else 0.0,
+            "association_seconds": self.association_seconds,
+            "tracker_seconds": self.tracker_seconds,
+            "ultra_render_seconds": self.ultra_render_seconds,
+            "video_encode_seconds": self.video_encode_seconds,
+            "persist_seconds": self.persist_seconds,
+            "job_total_seconds": self.total_seconds,
+            "samples": self.samples,
+            "base_detector_calls": self.base_detector_calls,
+            "rescue_detector_calls": self.rescue_detector_calls,
+            "measurements": self.measurements,
+            "tracks": self.tracks,
+        }
+
+    def print_compact(self) -> None:
+        print(
+            "[clip-profile] "
+            f"samples={self.samples} frame_read={self.frame_read_seconds:.3f} "
+            f"virtual_cameras={self.virtual_camera_render_seconds:.3f} "
+            f"detector_base={self.detector_base_seconds:.3f} detector_base_calls={self.base_detector_calls} "
+            f"detector_rescue={self.rescue_detector_seconds:.3f} detector_rescue_calls={self.rescue_detector_calls} "
+            f"rescue_mean={self.rescue_detector_seconds / self.rescue_detector_calls if self.rescue_detector_calls else 0.0:.3f} "
+            f"association={self.association_seconds:.3f} tracker={self.tracker_seconds:.3f} "
+            f"ultra={self.ultra_render_seconds:.3f} encoding={self.video_encode_seconds:.3f} "
+            f"persist={self.persist_seconds:.3f} measurements={self.measurements} tracks={self.tracks} total={self.total_seconds:.3f}"
+        )
 
 
 def _snapshot_dict(snapshot: Any) -> dict[str, Any]:
@@ -138,7 +191,10 @@ def run(
     frame_callback: Callable[..., None] | None = None,
     measurement_callback: Callable[..., None] | None = None,
     analysis_callback: Callable[..., None] | None = None,
-) -> None:
+    profile: PipelineProfile | None = None,
+) -> dict[str, Any]:
+    started_total = time.perf_counter()
+    profile = profile or PipelineProfile()
     metadata = load_veo_metadata(args.calibration)
     specs, layout, _, _ = derive_specs(
         metadata, args.width, args.height, split_fraction=args.split_fraction,
@@ -160,11 +216,12 @@ def run(
     max_confirmed = 0
     confirmed_ids: set[int] = set()
     skipped_no_position = 0
-    detector_seconds = 0.0
 
     with frames_path.open("w", encoding="utf-8") as output:
         for requested_time in _timestamps(args.start_s, args.duration_s, args.sample_period_s):
+            started = time.perf_counter()
             frame, frame_info = read_frame(args.video, requested_time)
+            profile.frame_read_seconds += time.perf_counter() - started
             frame_index = int(frame_info["actual_frame"])
             timestamp = float(frame_info["actual_time_s"])
             rendered: dict[str, np.ndarray] = {}
@@ -172,11 +229,14 @@ def run(
             observation_id = 1
 
             for spec in tight_specs:
+                started = time.perf_counter()
                 image = render_map(frame, maps[spec.name])
+                profile.virtual_camera_render_seconds += time.perf_counter() - started
                 rendered[spec.name] = image
                 started = time.perf_counter()
                 detections = predict_persons(backend, image, threshold=args.threshold)
-                detector_seconds += time.perf_counter() - started
+                profile.detector_base_seconds += time.perf_counter() - started
+                profile.base_detector_calls += 1
                 for detection in detections:
                     observations.append(build_observation(
                         observation_id=observation_id, frame_number=frame_index,
@@ -186,6 +246,7 @@ def run(
                     ))
                     observation_id += 1
 
+            started = time.perf_counter()
             association = associate_observations(
                 observations, layout,
                 min_source_iou=DEFAULT_MIN_SOURCE_IOU,
@@ -198,6 +259,18 @@ def run(
                 max_containment_world_distance_m=DEFAULT_MAX_CONTAINMENT_WORLD_DISTANCE_M,
                 max_truncated_world_distance_m=DEFAULT_MAX_TRUNCATED_WORLD_DISTANCE_M,
             )
+            profile.association_seconds += time.perf_counter() - started
+
+            def predict_rescue(model: Any, image: np.ndarray) -> list[Any]:
+                profile.rescue_detector_calls += 1
+                started_prediction = time.perf_counter()
+                try:
+                    return predict_persons(model, image, threshold=args.rescue_confirm_threshold)
+                finally:
+                    profile.rescue_detector_seconds += time.perf_counter() - started_prediction
+
+            rescue_detector_before = profile.rescue_detector_seconds
+            started = time.perf_counter()
             association, _, _ = confirm_deferred_rescues_from_owner_images(
                 backend=backend, metadata=metadata, layout=layout, rendered=rendered,
                 maps=maps, spec_by_name=spec_by_name, association=association,
@@ -205,7 +278,9 @@ def run(
                 field_margin_m=args.field_margin_m,
                 threshold=args.rescue_confirm_threshold,
                 max_world_distance_m=args.rescue_confirm_max_world_distance_m,
+                predict=predict_rescue,
             )
+            profile.association_seconds += max(0.0, time.perf_counter() - started - (profile.rescue_detector_seconds - rescue_detector_before))
             observations_by_id = {item.observation_id: item for item in association.observations}
             measurements = []
             for person in association.measurements:
@@ -225,13 +300,18 @@ def run(
                     measurements=tuple(measurements),
                 )
 
+            started = time.perf_counter()
             tracking_frame = tracker.update(measurements, timestamp=timestamp, frame_index=frame_index)
+            profile.tracker_seconds += time.perf_counter() - started
             if analysis_callback is not None:
                 analysis_callback(
                     frame_index=frame_index, timestamp=timestamp, association=association,
                     measurements=tuple(measurements), tracking_frame=tracking_frame,
                 )
             total_measurements += len(measurements)
+            profile.samples += 1
+            profile.measurements += len(measurements)
+            profile.tracks += len(tracking_frame.tracks)
             observed_samples += sum(sample.position_kind is PositionKind.OBSERVED for sample in tracking_frame.tracks)
             predicted_samples += sum(sample.position_kind is PositionKind.PREDICTED for sample in tracking_frame.tracks)
             confirmed = [sample for sample in tracking_frame.tracks if sample.is_confirmed]
@@ -253,7 +333,9 @@ def run(
                     measurements=tuple(measurements),
                     record=record,
                 )
+            started = time.perf_counter()
             output.write(json.dumps(record, allow_nan=False) + "\n")
+            profile.persist_seconds += time.perf_counter() - started
             print(f"frame={frame_index} t={timestamp:.3f}s measurements={len(measurements)} tracks={len(tracking_frame.tracks)}")
 
     lifecycles = [tracker.track_lifecycle(track_id) for track_id in tracker.trajectories()]
@@ -267,14 +349,20 @@ def run(
         "observed_samples": observed_samples,
         "predicted_samples": predicted_samples,
         "skipped_measurements_without_position": skipped_no_position,
-        "detector_inference_seconds": detector_seconds,
+        "detector_inference_seconds": profile.detector_base_seconds,
         "sample_period_seconds": args.sample_period_s,
     }
+    profile.total_seconds = time.perf_counter() - started_total
+    summary["profile"] = profile.as_dict()
     summary_path = args.out_dir / "tracking_summary.json"
+    started = time.perf_counter()
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    profile.persist_seconds += time.perf_counter() - started
     print(json.dumps(summary, indent=2))
+    profile.print_compact()
     print(f"frames: {frames_path}")
     print(f"summary: {summary_path}")
+    return summary
 
 
 if __name__ == "__main__":

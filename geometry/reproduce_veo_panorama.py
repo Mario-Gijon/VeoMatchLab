@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -29,6 +30,23 @@ BOTTOM_SOURCE_RATIO = 1.0 - TOP_SOURCE_RATIO
 BLEND_DISTANCE = 0.3
 PROJECTION_BUBBLE_RADIUS = 1000.0
 BLEND_BUBBLE_RADIUS = 20.0
+
+
+@dataclass(frozen=True)
+class PanoramaRenderMaps:
+    """Static panorama projection data for one calibration and image shape."""
+
+    raw_width: int
+    raw_height: int
+    width: int
+    height: int
+    left_x: np.ndarray
+    left_y: np.ndarray
+    right_x: np.ndarray
+    right_y: np.ndarray
+    left_valid: np.ndarray
+    right_valid: np.ndarray
+    blend: np.ndarray
 
 
 def parse_args():
@@ -714,22 +732,13 @@ def build_output_world_geometry(
     )
 
 
-def render(
-    frame: np.ndarray,
-    metadata,
-    width: int,
-    height: int,
-):
-    raw_h, raw_w = (
-        frame.shape[:2]
-    )
-
-    if raw_w != 2048 or raw_h != 2048:
+def build_panorama_maps(metadata, raw_width: int, raw_height: int, width: int, height: int) -> PanoramaRenderMaps:
+    """Precompute the unchanged CPU panorama geometry and lens remap tables."""
+    if raw_width != 2048 or raw_height != 2048:
         print(
             "WARNING: Veo shader input was observed as "
-            f"2048x2048, but input is {raw_w}x{raw_h}."
+            f"2048x2048, but input is {raw_width}x{raw_height}."
         )
-
     print(
         "Building world-space panorama geometry..."
     )
@@ -751,8 +760,8 @@ def render(
             target_world,
             metadata.left,
             metadata.camera2world,
-            raw_w,
-            raw_h,
+            raw_width,
+            raw_height,
             True,
         )
     )
@@ -766,8 +775,8 @@ def render(
             target_world,
             metadata.right,
             metadata.camera2world,
-            raw_w,
-            raw_h,
+            raw_width,
+            raw_height,
             False,
         )
     )
@@ -802,10 +811,22 @@ def render(
         width,
     )
 
+    return PanoramaRenderMaps(
+        raw_width=raw_width, raw_height=raw_height, width=width, height=height,
+        left_x=left_x, left_y=left_y, right_x=right_x, right_y=right_y,
+        left_valid=left_valid, right_valid=right_valid, blend=blend,
+    )
+
+
+def render_panorama_with_maps(frame: np.ndarray, maps: PanoramaRenderMaps):
+    """Render one source frame with already-computed panorama maps."""
+    raw_h, raw_w = frame.shape[:2]
+    if (raw_w, raw_h) != (maps.raw_width, maps.raw_height):
+        raise ValueError("Frame shape does not match precomputed panorama maps")
     left = cv2.remap(
         frame,
-        left_x,
-        left_y,
+        maps.left_x,
+        maps.left_y,
         interpolation=cv2.INTER_LINEAR,
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=(0, 0, 0),
@@ -813,15 +834,15 @@ def render(
 
     right = cv2.remap(
         frame,
-        right_x,
-        right_y,
+        maps.right_x,
+        maps.right_y,
         interpolation=cv2.INTER_LINEAR,
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=(0, 0, 0),
     )
 
     blend3 = (
-        blend[..., None]
+        maps.blend[..., None]
         .astype(np.float32)
     )
 
@@ -845,10 +866,17 @@ def render(
         "panorama": panorama,
         "left": left,
         "right": right,
-        "left_valid": left_valid,
-        "right_valid": right_valid,
-        "blend": blend,
+        "left_valid": maps.left_valid,
+        "right_valid": maps.right_valid,
+        "blend": maps.blend,
     }
+
+
+def render(frame: np.ndarray, metadata, width: int, height: int):
+    """Compatibility API for one-off renders."""
+    raw_h, raw_w = frame.shape[:2]
+    maps = build_panorama_maps(metadata, raw_w, raw_h, width, height)
+    return render_panorama_with_maps(frame, maps)
 
 
 def main():
