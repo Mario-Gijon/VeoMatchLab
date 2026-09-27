@@ -73,6 +73,7 @@ export interface Clip {
   created_at: string
   analysis: ClipAnalysis | null
   debug_video_url?: string
+  ultra_base_url?: string
 }
 
 export interface ClipJob {

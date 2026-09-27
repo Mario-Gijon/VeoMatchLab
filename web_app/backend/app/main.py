@@ -144,6 +144,8 @@ def public_clip(match_id: str, clip: dict[str, Any]) -> dict[str, Any]:
     analysis = result.get("analysis")
     if analysis and analysis.get("debug_video"):
         result["debug_video_url"] = f"/api/matches/{match_id}/clips/{clip['id']}/debug-video"
+    if analysis and analysis.get("ultra_base"):
+        result["ultra_base_url"] = f"/api/matches/{match_id}/clips/{clip['id']}/ultra-base"
     return result
 
 
@@ -391,6 +393,17 @@ def clip_debug_video(match_id: str, clip_id: str):
     if not path.is_relative_to(root) or not path.is_file():
         raise api_error(404, "Debug video is no longer available.", "clip_debug_missing")
     return FileResponse(path, media_type="video/mp4", filename="tracking_debug.mp4", content_disposition_type="inline")
+
+
+@app.get("/api/matches/{match_id}/clips/{clip_id}/ultra-base")
+def clip_ultra_base(match_id: str, clip_id: str):
+    clip = store.clip(match_id, clip_id)
+    relative = ((clip or {}).get("analysis") or {}).get("ultra_base")
+    root = store.match_dir(match_id).resolve()
+    path = (root / relative).resolve() if relative else None
+    if path is None or not path.is_relative_to(root) or not path.is_file():
+        raise api_error(404, "No ultra panorama video is available for this clip.", "clip_ultra_missing")
+    return FileResponse(path, media_type="video/mp4", filename="ultra_base.mp4", content_disposition_type="inline")
 
 
 @app.get("/api/matches/{match_id}/clips/{clip_id}/development-views")

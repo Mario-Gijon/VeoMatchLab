@@ -277,6 +277,8 @@ class ClipAnalysisService:
         # dependencies are only needed by the worker that actually runs a clip.
         from experiments.tracking.render_tracking_debug_video import TrackingDebugVideo
         from experiments.tracking.run_global_tracker import run as run_tracker
+        from experiments.virtual_camera_coverage.ultra_panorama_overlay import render_ultra_panorama
+        import cv2
 
         calibration = match["calibration"]
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / job.job_id
@@ -284,6 +286,8 @@ class ClipAnalysisService:
         rows: list[dict] = []
         association_rows: list[dict] = []
         renderer = TrackingDebugVideo(output_dir / "tracking_debug.mp4", width=1280, height=720, fps=1.0 / SAMPLE_PERIOD_S)
+        ultra_path = output_dir / "ultra_base.mp4"
+        ultra_writer: Any = None
         args = self._runner_args(source, calibration, output_dir, clip)
 
         def detected(**data: Any) -> None:
@@ -296,13 +300,22 @@ class ClipAnalysisService:
             association_rows.append({"timestamp_s": data["timestamp"], "frame_index": data["frame_index"], **data["association"].to_dict()})
 
         def rendered(**data: Any) -> None:
+            nonlocal ultra_writer
             renderer(**data)
+            panorama = render_ultra_panorama(data["frame"], data["metadata"])
+            if ultra_writer is None:
+                ultra_writer = cv2.VideoWriter(str(ultra_path), cv2.VideoWriter_fourcc(*"mp4v"), 1.0 / SAMPLE_PERIOD_S, (panorama.shape[1], panorama.shape[0]))
+                if not ultra_writer.isOpened():
+                    raise RuntimeError("Could not open ultra panorama video writer")
+            ultra_writer.write(panorama)
 
         try:
             print(f"[clip-analysis] clip={clip['id']} source={source['path']} duration={clip['duration_s']:.3f} sample_period={SAMPLE_PERIOD_S:.7f} expected_frames={job.total_frames}")
             run_tracker(args, frame_callback=rendered, measurement_callback=detected, analysis_callback=analysed)
         finally:
             renderer.close()
+            if ultra_writer is not None:
+                ultra_writer.release()
         self._check_cancelled(job)
         provenance = Provenance(source="our_analysis", run_id=f"run_{job.job_id}_detection", parser_version="clip-v1")
         detection = self.artifacts.write_records(job.match_id, "detections.person_measurements", rows, provenance, source_media_ids=[source["id"]])
@@ -323,6 +336,7 @@ class ClipAnalysisService:
             "status": "completed", "detection_artifact_id": detection["id"], "tracking_artifact_id": tracks["id"],
             "association_artifact_id": association_debug["id"],
             "run_id": job.job_id, "debug_video": f"clips/{clip['id']}/{job.job_id}/tracking_debug.mp4",
+            "ultra_base": f"clips/{clip['id']}/{job.job_id}/ultra_base.mp4",
         }))
         with job._lock:
             job.stage, job.processed_frames = "rendering", job.total_frames
@@ -384,4 +398,6 @@ class ClipAnalysisService:
             "status": "completed", "detection_artifact_id": detection_id,
             "tracking_artifact_id": tracks["id"], "run_id": job.job_id,
             "debug_video": f"clips/{clip['id']}/{job.job_id}/tracking_debug.mp4",
+            **({"association_artifact_id": analysis["association_artifact_id"]} if analysis.get("association_artifact_id") else {}),
+            **({"ultra_base": analysis["ultra_base"]} if analysis.get("ultra_base") else {}),
         }))
