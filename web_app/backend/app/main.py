@@ -453,8 +453,8 @@ def clip_tracks(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, An
 @app.get("/api/matches/{match_id}/clips/{clip_id}/debug-frames")
 def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual") -> dict[str, Any]:
     """Small immutable debug sequences; frontend selects nearest real sample."""
-    if tracking_mode not in {"actual", "v28_preview"}:
-        raise api_error(422, "tracking_mode must be 'actual' or 'v28_preview'.", "invalid_tracking_mode")
+    if tracking_mode not in {"actual", "v28_preview", "v8_canonical"}:
+        raise api_error(422, "tracking_mode must be 'actual', 'v28_preview', or 'v8_canonical'.", "invalid_tracking_mode")
     match = require_match(match_id)
     clip = store.clip(match_id, clip_id)
     analysis = (clip or {}).get("analysis") or {}
@@ -466,11 +466,23 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
     _, specs, _ = cached_clip_view_geometry(match, 1280, 720)
     if tracking_mode == "actual":
         tracks = list(artifacts.read_window(match_id, tracking_id, 0.0, end))
-    else:
+    elif tracking_mode == "v28_preview":
         preview_path = ROOT / "experiments" / "tracking" / "reid_similarity_debug" / "previews" / clip["id"] / "tracking_frames_v28_preview.jsonl"
         if not preview_path.is_file():
             raise api_error(404, "The V2.8 preview is not available for this clip.", "clip_v28_preview_missing")
         tracks = [json.loads(line) for line in preview_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    else:
+        preview_path = ROOT / "experiments" / "tracking" / "reid_similarity_debug_margin15" / "preview_v8_frames.jsonl"
+        if not preview_path.is_file():
+            raise api_error(404, "The V8 Canonical preview is not available for this clip.", "clip_v8_canonical_missing")
+        # Preserve every published V8 tracks.person object; only adapt its outer
+        # container to the established debug-frames response shape.
+        tracks = [
+            {"frame_index": row["frame_index"], "timestamp_s": row["timestamp_s"], "tracks": row["tracks"]["person"]}
+            for line in preview_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+            for row in [json.loads(line)]
+        ]
     return {
         "tracks": tracks,
         "association": list(artifacts.read_window(match_id, association_id, 0.0, end)),

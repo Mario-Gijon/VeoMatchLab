@@ -1,0 +1,957 @@
+{
+  "version": "tracking-kit-appearance-sprint-b1-v1",
+  "crop_dir": "/home/mario/Projects/VeoMatchLab/experiments/tracking/reid_crop_debug_margin15",
+  "config": {
+    "torso_x1": 0.18,
+    "torso_x2": 0.82,
+    "torso_y1": 0.12,
+    "torso_y2": 0.6,
+    "lower_x1": 0.18,
+    "lower_x2": 0.82,
+    "lower_y1": 0.52,
+    "lower_y2": 0.92,
+    "hue_bins": 12,
+    "saturation_bins": 6,
+    "value_bins": 6,
+    "torso_weight": 0.72,
+    "lower_weight": 0.28,
+    "green_h_min": 28,
+    "green_h_max": 95,
+    "green_s_min": 45,
+    "green_v_min": 35,
+    "min_non_grass_pixels": 24,
+    "min_clusters": 2,
+    "max_clusters": 5,
+    "kmeans_iterations": 80,
+    "kmeans_restarts": 6,
+    "tiny_cluster_crops": 3,
+    "tiny_cluster_penalty": 0.08,
+    "min_track_crops": 3,
+    "min_track_purity": 0.7,
+    "mixed_second_share": 0.22,
+    "min_team_distinct_tracks": 2
+  },
+  "chosen_k": 3,
+  "silhouette_score": 0.3952213983544379,
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "crop_count": 172,
+      "distinct_track_count": 32,
+      "support_weight": 125.15614951117132,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "semantic_label": "team_a"
+    },
+    {
+      "cluster_id": 1,
+      "crop_count": 141,
+      "distinct_track_count": 26,
+      "support_weight": 108.90225669604564,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "semantic_label": "team_b"
+    },
+    {
+      "cluster_id": 2,
+      "crop_count": 20,
+      "distinct_track_count": 2,
+      "support_weight": 14.526546684053011,
+      "representative_rgb": [
+        33,
+        42,
+        42
+      ],
+      "ui_color_hex": "#212A2A",
+      "semantic_label": "special"
+    }
+  ],
+  "track_decisions": {
+    "1": {
+      "track_id": 1,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.9492711508860765,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "2": {
+      "track_id": 2,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 6.952844438096854,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "3": {
+      "track_id": 3,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 6.743746865661215,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "4": {
+      "track_id": 4,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.733185893377455,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "5": {
+      "track_id": 5,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 6.616066094866945,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "6": {
+      "track_id": 6,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.124371010325334,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "7": {
+      "track_id": 7,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 9,
+      "support_weight": 6.838675555620499,
+      "top_share": 0.8877721539664422,
+      "second_share": 0.11222784603355788,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 0.8877721539664422,
+        "1": 0.11222784603355788
+      },
+      "confident": true
+    },
+    "8": {
+      "track_id": 8,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.8080358862580095,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "9": {
+      "track_id": 9,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.748039737257573,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "10": {
+      "track_id": 10,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 8.05436163707916,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "11": {
+      "track_id": 11,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 8.067411324695874,
+      "top_share": 0.8039806940774402,
+      "second_share": 0.1960193059225598,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "0": 0.1960193059225598,
+        "1": 0.8039806940774402
+      },
+      "confident": true
+    },
+    "12": {
+      "track_id": 12,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.686656344726926,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "13": {
+      "track_id": 13,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.714189892849609,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "14": {
+      "track_id": 14,
+      "label": "mixed",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.980057609501974,
+      "top_share": 0.7049776414927097,
+      "second_share": 0.2950223585072904,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "0": 0.2950223585072904,
+        "1": 0.7049776414927097
+      },
+      "confident": false
+    },
+    "15": {
+      "track_id": 15,
+      "label": "mixed",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.7337535240163024,
+      "top_share": 0.7046921032800861,
+      "second_share": 0.2953078967199139,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "0": 0.2953078967199139,
+        "1": 0.7046921032800861
+      },
+      "confident": false
+    },
+    "16": {
+      "track_id": 16,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.507442034481314,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "17": {
+      "track_id": 17,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.5860841265009782,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": false
+    },
+    "18": {
+      "track_id": 18,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.037103393912455,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "19": {
+      "track_id": 19,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 6.601687438411673,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "20": {
+      "track_id": 20,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.4130605617189556,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "21": {
+      "track_id": 21,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.907582408542776,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "22": {
+      "track_id": 22,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.504780487448119,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "23": {
+      "track_id": 23,
+      "label": "special",
+      "cluster_id": 2,
+      "crop_count": 10,
+      "support_weight": 6.377810936654591,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        33,
+        42,
+        42
+      ],
+      "ui_color_hex": "#212A2A",
+      "cluster_shares": {
+        "2": 1.0
+      },
+      "confident": true
+    },
+    "24": {
+      "track_id": 24,
+      "label": "special",
+      "cluster_id": 2,
+      "crop_count": 10,
+      "support_weight": 8.148735747398419,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        33,
+        42,
+        42
+      ],
+      "ui_color_hex": "#212A2A",
+      "cluster_shares": {
+        "2": 1.0
+      },
+      "confident": true
+    },
+    "25": {
+      "track_id": 25,
+      "label": "mixed",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.7862979741680665,
+      "top_share": 0.619144572687753,
+      "second_share": 0.3808554273122469,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "0": 0.3808554273122469,
+        "1": 0.619144572687753
+      },
+      "confident": false
+    },
+    "26": {
+      "track_id": 26,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.8456739313972399,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": false
+    },
+    "27": {
+      "track_id": 27,
+      "label": "mixed",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.916969252290372,
+      "top_share": 0.5003020072666977,
+      "second_share": 0.4996979927333024,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "0": 0.4996979927333024,
+        "1": 0.5003020072666977
+      },
+      "confident": false
+    },
+    "28": {
+      "track_id": 28,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.4591842084052717,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "29": {
+      "track_id": 29,
+      "label": "mixed",
+      "cluster_id": 0,
+      "crop_count": 8,
+      "support_weight": 5.97658072857314,
+      "top_share": 0.7399712683475675,
+      "second_share": 0.2600287316524324,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 0.7399712683475675,
+        "1": 0.2600287316524324
+      },
+      "confident": false
+    },
+    "30": {
+      "track_id": 30,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.6997362797094481,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": false
+    },
+    "31": {
+      "track_id": 31,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.49976312673556,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "32": {
+      "track_id": 32,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 10,
+      "support_weight": 7.839058426439492,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "33": {
+      "track_id": 33,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.2789686342625934,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "34": {
+      "track_id": 34,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.618932384159139,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "35": {
+      "track_id": 35,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 10,
+      "support_weight": 7.506107294096054,
+      "top_share": 0.7922683775354321,
+      "second_share": 0.20773162246456772,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 0.7922683775354321,
+        "1": 0.20773162246456772
+      },
+      "confident": true
+    },
+    "36": {
+      "track_id": 36,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.7686491674067376,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "37": {
+      "track_id": 37,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.7333233279650209,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "38": {
+      "track_id": 38,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.485477579581801,
+      "top_share": 0.5057530904863131,
+      "second_share": 0.4942469095136868,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 0.5057530904863131,
+        "1": 0.4942469095136868
+      },
+      "confident": false
+    },
+    "39": {
+      "track_id": 39,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.460088125346564,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": false
+    },
+    "40": {
+      "track_id": 40,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.7025712282550934,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "41": {
+      "track_id": 41,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.652659318027375,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "42": {
+      "track_id": 42,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 4,
+      "support_weight": 2.6362854604885273,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": true
+    },
+    "43": {
+      "track_id": 43,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.252806195600943,
+      "top_share": 0.5530561541361426,
+      "second_share": 0.4469438458638575,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 0.5530561541361426,
+        "1": 0.4469438458638575
+      },
+      "confident": false
+    },
+    "44": {
+      "track_id": 44,
+      "label": "team_a",
+      "cluster_id": 0,
+      "crop_count": 5,
+      "support_weight": 3.3453625445367123,
+      "top_share": 0.7821933045494609,
+      "second_share": 0.21780669545053924,
+      "representative_rgb": [
+        117,
+        66,
+        49
+      ],
+      "ui_color_hex": "#754231",
+      "cluster_shares": {
+        "0": 0.7821933045494609,
+        "1": 0.21780669545053924
+      },
+      "confident": true
+    },
+    "45": {
+      "track_id": 45,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.6939719157827607,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "46": {
+      "track_id": 46,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.414004996180502,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    },
+    "47": {
+      "track_id": 47,
+      "label": "team_b",
+      "cluster_id": 1,
+      "crop_count": 3,
+      "support_weight": 2.194494229192172,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": [
+        125,
+        128,
+        134
+      ],
+      "ui_color_hex": "#7D8086",
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": true
+    },
+    "48": {
+      "track_id": 48,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 1,
+      "support_weight": 0.7215661227353787,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "1": 1.0
+      },
+      "confident": false
+    },
+    "49": {
+      "track_id": 49,
+      "label": "unknown",
+      "cluster_id": null,
+      "crop_count": 2,
+      "support_weight": 1.261466339644914,
+      "top_share": 1.0,
+      "second_share": 0.0,
+      "representative_rgb": null,
+      "ui_color_hex": null,
+      "cluster_shares": {
+        "0": 1.0
+      },
+      "confident": false
+    }
+  }
+}

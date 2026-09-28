@@ -1,0 +1,31 @@
+{
+  "frames_processed": 451,
+  "measurements_processed": 10098,
+  "tracks_created": 49,
+  "tracks_confirmed": 44,
+  "tracks_lost": 22,
+  "maximum_simultaneous_confirmed_tracks": 30,
+  "observed_samples": 10098,
+  "predicted_samples": 2334,
+  "skipped_measurements_without_position": 0,
+  "detector_inference_seconds": 96.35308419200669,
+  "sample_period_seconds": 0.06666666666666667,
+  "profile": {
+    "frame_read_seconds": 1.093303936003167,
+    "virtual_camera_render_seconds": 93.50302422399909,
+    "detector_base_seconds": 96.35308419200669,
+    "rescue_detector_seconds": 1.9497094730002118,
+    "rescue_detector_mean_seconds": 0.033045923271190034,
+    "association_seconds": 2.037705812997956,
+    "tracker_seconds": 1.9067971149959249,
+    "ultra_render_seconds": 0.0,
+    "video_encode_seconds": 0.0,
+    "persist_seconds": 0.05771177800147598,
+    "job_total_seconds": 221.83032282199997,
+    "samples": 451,
+    "base_detector_calls": 2706,
+    "rescue_detector_calls": 59,
+    "measurements": 10098,
+    "tracks": 12432
+  }
+}

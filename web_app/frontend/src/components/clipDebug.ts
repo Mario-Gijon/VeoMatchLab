@@ -7,6 +7,16 @@ export function nearestSample<T extends { timestamp_s: number }>(rows: T[], time
   return rows.reduce<T | null>((best, row) => !best || Math.abs(row.timestamp_s - time) < Math.abs(best.timestamp_s - time) ? row : best, null)
 }
 
+/** Return the last published sample at or before the presentation time. */
+export function latestSampleAtMediaTime<T extends { timestamp_s: number }>(rows: T[], time: number) {
+  let result: T | null = null
+  for (const row of rows) {
+    if (row.timestamp_s > time) break
+    result = row
+  }
+  return result
+}
+
 export function frameSampleIndex<T extends { frame_index?: number }>(rows: T[]) {
   const result = new Map<number, T>()
   for (const row of rows) if (Number.isInteger(row.frame_index)) result.set(row.frame_index!, row)

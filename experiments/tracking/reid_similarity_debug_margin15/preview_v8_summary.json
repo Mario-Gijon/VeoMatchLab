@@ -1,0 +1,331 @@
+{
+  "version": "canonical-preview-v8-publication-v1",
+  "source_tracking_frames": "experiments/tracking/reid_crop_debug_margin15/_tracking_tmp/tracking_frames.jsonl",
+  "participants_report": "experiments/tracking/reid_similarity_debug_margin15/match_participants_v8_report.json",
+  "output_frames": "experiments/tracking/reid_similarity_debug_margin15/preview_v8_frames.jsonl",
+  "canonical_identity_count": 23,
+  "duplicate_attachments": [
+    {
+      "source_segment_key": "14:0",
+      "target_segment_key": "11:1",
+      "reason": "manual_visual_validation"
+    }
+  ],
+  "frames_written": 451,
+  "frames_with_people": 451,
+  "max_people_in_frame": 22,
+  "total_published_people_samples": 9599,
+  "source_kind_counts": {
+    "primary": 9486,
+    "duplicate": 113
+  },
+  "position_kind_counts": {
+    "observed": 8835,
+    "predicted": 764
+  },
+  "role_sample_counts": {
+    "player": 9347,
+    "referee": 252
+  },
+  "source_segment_counts": {
+    "1:0": 222,
+    "2:0": 451,
+    "3:0": 450,
+    "4:0": 451,
+    "5:0": 348,
+    "6:0": 451,
+    "7:0": 130,
+    "8:0": 414,
+    "9:0": 451,
+    "10:0": 177,
+    "12:0": 451,
+    "13:0": 411,
+    "16:0": 451,
+    "18:0": 451,
+    "19:0": 451,
+    "20:0": 451,
+    "21:0": 451,
+    "22:0": 451,
+    "23:0": 451,
+    "14:0": 113,
+    "25:0": 85,
+    "27:0": 154,
+    "11:1": 338,
+    "31:0": 309,
+    "32:0": 299,
+    "34:0": 261,
+    "27:1": 242,
+    "35:1": 98,
+    "44:0": 76,
+    "47:0": 40,
+    "49:0": 20
+  },
+  "identities": [
+    {
+      "canonical_id": 1,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "1:0",
+        "49:0"
+      ],
+      "published_samples": 242,
+      "first_published_frame": 0,
+      "last_published_frame": 883
+    },
+    {
+      "canonical_id": 2,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "2:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 3,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "3:0"
+      ],
+      "published_samples": 450,
+      "first_published_frame": 0,
+      "last_published_frame": 897
+    },
+    {
+      "canonical_id": 4,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "4:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 5,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "5:0",
+        "44:0"
+      ],
+      "published_samples": 424,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 6,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "6:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 7,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "7:0",
+        "34:0"
+      ],
+      "published_samples": 391,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 8,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "8:0"
+      ],
+      "published_samples": 414,
+      "first_published_frame": 0,
+      "last_published_frame": 825
+    },
+    {
+      "canonical_id": 9,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "9:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 10,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "10:0",
+        "27:1"
+      ],
+      "published_samples": 419,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 11,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "12:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 12,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "13:0",
+        "47:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 13,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "16:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 14,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "18:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 15,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "19:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 16,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "20:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 17,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "21:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 18,
+      "role": "player",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "22:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 19,
+      "role": "player",
+      "team_label": "unknown",
+      "primary_segment_keys": [
+        "23:0"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 20,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "25:0",
+        "32:0"
+      ],
+      "published_samples": 384,
+      "first_published_frame": 2,
+      "last_published_frame": 883
+    },
+    {
+      "canonical_id": 21,
+      "role": "referee",
+      "team_label": "team_a",
+      "primary_segment_keys": [
+        "27:0",
+        "35:1"
+      ],
+      "published_samples": 252,
+      "first_published_frame": 110,
+      "last_published_frame": 897
+    },
+    {
+      "canonical_id": 22,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "11:1"
+      ],
+      "published_samples": 451,
+      "first_published_frame": 0,
+      "last_published_frame": 899
+    },
+    {
+      "canonical_id": 23,
+      "role": "player",
+      "team_label": "team_b",
+      "primary_segment_keys": [
+        "31:0"
+      ],
+      "published_samples": 309,
+      "first_published_frame": 284,
+      "last_published_frame": 899
+    }
+  ],
+  "interpolation": {
+    "performed_here": false,
+    "endpoint_fill": false,
+    "long_gap_fill": false,
+    "note": "Publisher preserves raw tracker state only. No new positions are invented."
+  }
+}

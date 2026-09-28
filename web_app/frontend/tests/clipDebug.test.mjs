@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { frameSampleIndex, measurementTrack, nearestSample, sampleAtMediaTime, stackedLensBox } from '../src/components/clipDebug.ts'
+import { frameSampleIndex, latestSampleAtMediaTime, measurementTrack, nearestSample, sampleAtMediaTime, stackedLensBox } from '../src/components/clipDebug.ts'
 
 test('source lens evidence maps left/right coordinates into stacked dual-lens pixels', () => {
   assert.deepEqual(stackedLensBox({ lens: 'left', x_min: 0, y_min: 0, x_max: 2048, y_max: 1024 }), { left: 0, top: 0, width: 100, height: 50 })
@@ -23,4 +23,11 @@ test('sample lookup falls back to timestamp when a physical frame is unavailable
   const rows = [{ frame_index: 100, timestamp_s: 100 / 30 }, { frame_index: 102, timestamp_s: 102 / 30 }]
   assert.equal(sampleAtMediaTime(rows, frameSampleIndex(rows), 101 / 30, 30)?.frame_index, 100)
   assert.equal(sampleAtMediaTime(rows, frameSampleIndex(rows), 102 / 30, null)?.frame_index, 102)
+})
+
+test('sparse preview playback uses the last published sample without interpolation', () => {
+  const rows = [{ frame_index: 0, timestamp_s: 0 }, { frame_index: 2, timestamp_s: 2 / 30 }]
+  assert.equal(latestSampleAtMediaTime(rows, 1 / 30)?.frame_index, 0)
+  assert.equal(latestSampleAtMediaTime(rows, 2 / 30)?.frame_index, 2)
+  assert.equal(latestSampleAtMediaTime(rows, -.01), null)
 })
