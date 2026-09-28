@@ -9,6 +9,7 @@ from __future__ import annotations
 import sys
 import os
 import math
+import json
 import uuid
 import shutil
 import base64
@@ -450,19 +451,28 @@ def clip_tracks(match_id: str, clip_id: str, timestamp_s: float) -> dict[str, An
 
 
 @app.get("/api/matches/{match_id}/clips/{clip_id}/debug-frames")
-def clip_debug_frames(match_id: str, clip_id: str) -> dict[str, Any]:
+def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual") -> dict[str, Any]:
     """Small immutable debug sequences; frontend selects nearest real sample."""
+    if tracking_mode not in {"actual", "v28_preview"}:
+        raise api_error(422, "tracking_mode must be 'actual' or 'v28_preview'.", "invalid_tracking_mode")
     match = require_match(match_id)
     clip = store.clip(match_id, clip_id)
     analysis = (clip or {}).get("analysis") or {}
     tracking_id, association_id = analysis.get("tracking_artifact_id"), analysis.get("association_artifact_id")
-    if not tracking_id or not association_id:
+    if not association_id or (tracking_mode == "actual" and not tracking_id):
         raise api_error(404, "Detection association and tracking artifacts are required.", "clip_debug_missing")
     artifacts = LocalArtifactStore(store)
     end = float(clip["duration_s"])
     _, specs, _ = cached_clip_view_geometry(match, 1280, 720)
+    if tracking_mode == "actual":
+        tracks = list(artifacts.read_window(match_id, tracking_id, 0.0, end))
+    else:
+        preview_path = ROOT / "experiments" / "tracking" / "reid_similarity_debug" / "previews" / clip["id"] / "tracking_frames_v28_preview.jsonl"
+        if not preview_path.is_file():
+            raise api_error(404, "The V2.8 preview is not available for this clip.", "clip_v28_preview_missing")
+        tracks = [json.loads(line) for line in preview_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     return {
-        "tracks": list(artifacts.read_window(match_id, tracking_id, 0.0, end)),
+        "tracks": tracks,
         "association": list(artifacts.read_window(match_id, association_id, 0.0, end)),
         "camera_specs": {spec.name: {"longitude": spec.longitude, "latitude": spec.latitude, "vfov": spec.vfov} for spec in specs},
     }
