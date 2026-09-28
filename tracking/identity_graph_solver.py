@@ -410,9 +410,38 @@ def generate_candidate_identity_graphs(
         TemporalTransitionEvidence,
     ],
     *,
+    eligible_anchor_keys: set[str] | frozenset[str] | None = None,
     config: IdentityGraphSolverConfig | None = None,
 ) -> tuple[CandidateIdentityGraph, ...]:
     cfg = config or IdentityGraphSolverConfig()
+
+    eligible_anchors = (
+        frozenset(
+            unit.key
+            for unit in units
+        )
+        if eligible_anchor_keys is None
+        else frozenset(
+            eligible_anchor_keys
+        )
+    )
+
+    unknown_anchors = (
+        eligible_anchors
+        - {
+            unit.key
+            for unit in units
+        }
+    )
+    if unknown_anchors:
+        raise ValueError(
+            "eligible_anchor_keys contains unknown units: "
+            + ", ".join(
+                sorted(
+                    unknown_anchors
+                )
+            )
+        )
 
     unit_by_key = {
         unit.key: unit
@@ -492,6 +521,7 @@ def generate_candidate_identity_graphs(
             pair_evidence=pair_evidence,
             transitions=transitions,
             edges=edges,
+            eligible_anchor_keys=eligible_anchors,
             config=cfg,
         )
 
@@ -514,9 +544,21 @@ def solve_identity_graphs(
         TemporalTransitionEvidence,
     ],
     *,
+    eligible_anchor_keys: set[str] | frozenset[str] | None = None,
     config: IdentityGraphSolverConfig | None = None,
 ) -> IdentityGraphSolution:
     cfg = config or IdentityGraphSolverConfig()
+
+    eligible_anchors = (
+        frozenset(
+            unit.key
+            for unit in units
+        )
+        if eligible_anchor_keys is None
+        else frozenset(
+            eligible_anchor_keys
+        )
+    )
 
     if not units:
         raise ValueError(
@@ -525,6 +567,31 @@ def solve_identity_graphs(
     if cfg.identity_count > len(units):
         raise ValueError(
             "identity_count exceeds unit count"
+        )
+
+    unknown_anchors = (
+        eligible_anchors
+        - {
+            unit.key
+            for unit in units
+        }
+    )
+    if unknown_anchors:
+        raise ValueError(
+            "eligible_anchor_keys contains unknown units: "
+            + ", ".join(
+                sorted(
+                    unknown_anchors
+                )
+            )
+        )
+
+    if len(
+        eligible_anchors
+    ) < cfg.identity_count:
+        raise ValueError(
+            "not enough inside-eligible anchor units to build "
+            f"{cfg.identity_count} canonical identities"
         )
 
     unit_by_key = {
@@ -543,6 +610,7 @@ def solve_identity_graphs(
         units,
         pair_evidence,
         transitions,
+        eligible_anchor_keys=eligible_anchors,
         config=cfg,
     )
 
@@ -874,12 +942,22 @@ def _score_candidate_graph(
         tuple[str, str],
         HybridIdentityEdge,
     ],
+    eligible_anchor_keys: frozenset[str],
     config: IdentityGraphSolverConfig,
 ) -> CandidateIdentityGraph | None:
     if _has_internal_veto(
         members,
         pair_evidence=pair_evidence,
         transitions=transitions,
+    ):
+        return None
+
+    # An outside-only person/fragment can never ESTABLISH a canonical roster
+    # identity.  It may still be attached to an identity graph when at least
+    # one other member has genuine OBSERVED history inside the strict pitch.
+    if not any(
+        key in eligible_anchor_keys
+        for key in members
     ):
         return None
 

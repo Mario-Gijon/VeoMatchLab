@@ -333,3 +333,80 @@ def test_high_realness_survives_before_low_quality_junk():
 
     assert "4:0" in solution.junk_keys
     assert "3:0" not in solution.junk_keys
+
+
+def test_outside_only_unit_cannot_establish_canonical_identity():
+    units = [
+        unit("1:0", quality=0.90),
+        unit("2:0", quality=0.85),
+        unit("3:0", quality=0.80),
+    ]
+    pairs = {}
+    transitions = {}
+
+    solution = solve_identity_graphs(
+        units,
+        pairs,
+        transitions,
+        eligible_anchor_keys={
+            "1:0",
+            "2:0",
+        },
+        config=IdentityGraphSolverConfig(
+            identity_count=2,
+        ),
+    )
+
+    assert "3:0" in solution.junk_keys
+    assert all(
+        "3:0" not in identity.member_keys
+        for identity in solution.identities
+    )
+
+
+def test_outside_only_fragment_may_attach_to_inside_established_identity():
+    units = [
+        unit("1:0", quality=0.90),
+        unit("2:0", quality=0.85),
+        unit("3:0", quality=0.55),
+    ]
+    pairs = dict(
+        [
+            pair(
+                "1:0",
+                "3:0",
+                support=0.90,
+            ),
+        ]
+    )
+    transitions = dict(
+        [
+            transition(
+                "1:0",
+                "3:0",
+                score=0.90,
+                verdict="support",
+            ),
+        ]
+    )
+
+    solution = solve_identity_graphs(
+        units,
+        pairs,
+        transitions,
+        eligible_anchor_keys={
+            "1:0",
+            "2:0",
+        },
+        config=IdentityGraphSolverConfig(
+            identity_count=2,
+        ),
+    )
+
+    first = identity_for(
+        solution,
+        "1:0",
+    )
+
+    assert "3:0" in first.member_keys
+    assert "3:0" not in solution.junk_keys

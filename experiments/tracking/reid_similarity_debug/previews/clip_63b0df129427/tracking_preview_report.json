@@ -5,18 +5,23 @@
     "junk_unit_count": 13,
     "input_frame_count": 451,
     "input_sample_count": 12376,
-    "mapped_sample_count": 10521,
+    "mapped_sample_count": 9304,
     "ignored_junk_sample_count": 1534,
     "ignored_unmapped_sample_count": 321,
-    "collision_frame_count": 373,
-    "collision_sample_count": 373,
-    "observed_collision_frame_count": 60,
+    "ignored_outside_sample_count": 1217,
+    "canonical_ids_without_observed_inside": [
+      14
+    ],
+    "final_outside_sample_count_removed": 194,
+    "collision_frame_count": 324,
+    "collision_sample_count": 324,
+    "observed_collision_frame_count": 25,
     "max_collision_distance_m": 15.539141912076087,
-    "pre_smoothing_track_count": 23,
-    "final_track_count": 23,
+    "pre_smoothing_track_count": 22,
+    "final_track_count": 22,
     "final_frame_count": 900,
-    "final_sample_count": 20250,
-    "inserted_sample_count": 10102
+    "final_sample_count": 17967,
+    "inserted_sample_count": 9181
   },
   "canonical_members": {
     "1": [

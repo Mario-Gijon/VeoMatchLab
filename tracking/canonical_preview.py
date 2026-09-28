@@ -58,23 +58,57 @@ class CanonicalUnit:
 
 @dataclass(frozen=True)
 class PreviewFieldBounds:
-    """Exact football-pitch bounds used by the V2.8B inside-only preview."""
+    """Pitch bounds plus a continuation corridor for established players.
+
+    The strict pitch decides whether an identity has ever been established as
+    an on-field participant.
+
+    The allowed pitch is wider by ``continuation_margin_m`` and is used only to
+    KEEP samples belonging to an already-established canonical identity.  It
+    never establishes a new identity by itself.
+    """
 
     field_length_m: float = 105.0
     field_width_m: float = 68.0
-    margin_m: float = 0.0
+    continuation_margin_m: float = 1.5
 
     def __post_init__(self) -> None:
         if self.field_length_m <= 0.0:
             raise ValueError("field_length_m must be > 0")
         if self.field_width_m <= 0.0:
             raise ValueError("field_width_m must be > 0")
-        if self.margin_m < 0.0:
-            raise ValueError("margin_m must be >= 0")
+        if self.continuation_margin_m < 0.0:
+            raise ValueError(
+                "continuation_margin_m must be >= 0"
+            )
 
-    def contains(self, x: float, z: float) -> bool:
-        half_length = self.field_length_m / 2.0 + self.margin_m
-        half_width = self.field_width_m / 2.0 + self.margin_m
+    def contains_strict(
+        self,
+        x: float,
+        z: float,
+    ) -> bool:
+        half_length = self.field_length_m / 2.0
+        half_width = self.field_width_m / 2.0
+
+        return (
+            -half_length <= x <= half_length
+            and -half_width <= z <= half_width
+        )
+
+    def contains_allowed(
+        self,
+        x: float,
+        z: float,
+    ) -> bool:
+        half_length = (
+            self.field_length_m / 2.0
+            + self.continuation_margin_m
+        )
+        half_width = (
+            self.field_width_m / 2.0
+            + self.continuation_margin_m
+        )
+
         return (
             -half_length <= x <= half_length
             and -half_width <= z <= half_width
@@ -94,6 +128,7 @@ class PreviewReconstructionReport:
     ignored_junk_sample_count: int
     ignored_unmapped_sample_count: int
     ignored_outside_sample_count: int
+    continued_outside_sample_count: int
 
     canonical_ids_without_observed_inside: tuple[int, ...]
     final_outside_sample_count_removed: int
@@ -244,6 +279,9 @@ def build_canonical_preview(
         ],
         ignored_outside_sample_count=reconstruction[
             "ignored_outside_sample_count"
+        ],
+        continued_outside_sample_count=reconstruction[
+            "continued_outside_sample_count"
         ],
         canonical_ids_without_observed_inside=tuple(
             reconstruction[
@@ -567,6 +605,7 @@ def _reconstruct_trajectories(
     ignored_junk_sample_count = 0
     ignored_unmapped_sample_count = 0
     ignored_outside_sample_count = 0
+    continued_outside_sample_count = 0
 
     for row in rows:
         frame_index = int(
@@ -621,15 +660,23 @@ def _reconstruct_trajectories(
             raw_x = float(raw["x"])
             raw_z = float(raw["z"])
 
-            # V2.8B is deliberately INSIDE-only.  TEMP_OUTSIDE is a later,
-            # explicit state transition and must never be approximated by
-            # blindly publishing arbitrary sideline detections.
-            if not field_bounds.contains(
+            # Late boundary filtering:
+            # - anything beyond the continuation corridor is discarded;
+            # - samples just outside the strict field are retained provisionally
+            #   and will only survive if this canonical identity has at least
+            #   one OBSERVED sample inside the strict pitch.
+            if not field_bounds.contains_allowed(
                 raw_x,
                 raw_z,
             ):
                 ignored_outside_sample_count += 1
                 continue
+
+            if not field_bounds.contains_strict(
+                raw_x,
+                raw_z,
+            ):
+                continued_outside_sample_count += 1
 
             sample = _track_sample(
                 raw,
@@ -661,6 +708,10 @@ def _reconstruct_trajectories(
         for (canonical_id, _frame_index), rows_for_frame in candidates.items()
         if any(
             item.sample.position_kind is PositionKind.OBSERVED
+            and field_bounds.contains_strict(
+                item.sample.x,
+                item.sample.z,
+            )
             for item in rows_for_frame
         )
     }
@@ -785,6 +836,9 @@ def _reconstruct_trajectories(
             "ignored_outside_sample_count": (
                 ignored_outside_sample_count
             ),
+            "continued_outside_sample_count": (
+                continued_outside_sample_count
+            ),
             "canonical_ids_without_observed_inside": (
                 canonical_ids_without_observed_inside
             ),
@@ -815,11 +869,11 @@ def _filter_final_inside(
     dict[int, tuple[TrackSample, ...]],
     int,
 ]:
-    """Guarantee that the INSIDE-only preview never publishes an outside point.
+    """Keep established players inside the configured continuation corridor.
 
-    Smoothing can overshoot slightly near a boundary even when its input samples
-    are inside, so the field constraint is re-applied after smoothing and
-    interpolation as a final invariant.
+    Smoothing can overshoot near a boundary, so the outer corridor is re-applied
+    after smoothing/interpolation.  Establishment itself is checked separately
+    against the strict pitch.
     """
 
     removed = 0
@@ -832,7 +886,7 @@ def _filter_final_inside(
         kept = []
 
         for sample in samples:
-            if field_bounds.contains(
+            if field_bounds.contains_allowed(
                 sample.x,
                 sample.z,
             ):

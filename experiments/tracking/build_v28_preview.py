@@ -79,12 +79,12 @@ def parse_args():
         help="Pitch width in metres.",
     )
     parser.add_argument(
-        "--field-margin",
+        "--continuation-margin",
         type=float,
-        default=0.0,
+        default=1.5,
         help=(
-            "Extra preview margin in metres. Keep 0.0 for strict "
-            "inside-only V2.8B."
+            "Outer corridor in metres retained only for canonical identities "
+            "that have OBSERVED history inside the strict pitch."
         ),
     )
     return parser.parse_args()
@@ -126,7 +126,7 @@ def main():
         field_bounds=PreviewFieldBounds(
             field_length_m=args.field_length,
             field_width_m=args.field_width,
-            margin_m=args.field_margin,
+            continuation_margin_m=args.continuation_margin,
         ),
     )
 
@@ -197,8 +197,12 @@ def main():
         f"{summary.junk_unit_count}"
     )
     print(
-        f"outside raw samples removed: "
+        f"outside beyond corridor removed: "
         f"{summary.ignored_outside_sample_count}"
+    )
+    print(
+        f"outside continuation samples kept: "
+        f"{summary.continued_outside_sample_count}"
     )
     print(
         f"canonicals with no observed inside: "
@@ -212,7 +216,7 @@ def main():
         )
     )
     print(
-        f"postprocess outside removed: "
+        f"postprocess beyond corridor removed: "
         f"{summary.final_outside_sample_count_removed}"
     )
     print(

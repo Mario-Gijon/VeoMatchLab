@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V2.8A-V5 audit: hybrid identity graphs.
+"""V2.8A-V5.2 audit: hybrid identity graphs with inside-field eligibility.
 
 This reuses the same cached units, pair identity evidence, and V4.1 temporal
 tri-state evidence, but removes the strict linear-path requirement.
@@ -92,14 +92,49 @@ def parse_args():
         default=23,
     )
     parser.add_argument(
+        "--field-length",
+        type=float,
+        default=105.0,
+    )
+    parser.add_argument(
+        "--field-width",
+        type=float,
+        default=68.0,
+    )
+    parser.add_argument(
+        "--min-inside-observed",
+        type=int,
+        default=3,
+        help=(
+            "Minimum OBSERVED samples inside the strict pitch needed for a "
+            "unit to establish a canonical roster identity."
+        ),
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path(
             "experiments/tracking/reid_similarity_debug/"
-            "identity_graph_solution_v28a_v5.json"
+            "identity_graph_solution_v28a_v5_2.json"
         ),
     )
     return parser.parse_args()
+
+
+def strict_inside_count(
+    rows,
+    *,
+    field_length_m: float,
+    field_width_m: float,
+) -> int:
+    half_length = field_length_m / 2.0
+    half_width = field_width_m / 2.0
+
+    return sum(
+        -half_length <= point.x <= half_length
+        and -half_width <= point.z <= half_width
+        for point in rows
+    )
 
 
 def main():
@@ -153,6 +188,23 @@ def main():
         role_anchors=role_anchors,
     )
 
+    inside_observed_count = {
+        unit.key: strict_inside_count(
+            unit_points[
+                unit.key
+            ],
+            field_length_m=args.field_length,
+            field_width_m=args.field_width,
+        )
+        for unit in units
+    }
+
+    eligible_anchor_keys = {
+        key
+        for key, count in inside_observed_count.items()
+        if count >= args.min_inside_observed
+    }
+
     pair_evidence = build_pair_evidence(
         units=units,
         unit_points=unit_points,
@@ -180,6 +232,7 @@ def main():
         units,
         pair_evidence,
         transitions,
+        eligible_anchor_keys=eligible_anchor_keys,
         config=solver_config,
     )
 
@@ -187,6 +240,7 @@ def main():
         units,
         pair_evidence,
         transitions,
+        eligible_anchor_keys=eligible_anchor_keys,
         config=solver_config,
     )
 
@@ -196,7 +250,7 @@ def main():
     }
 
     print()
-    print("V2.8A-V5 HYBRID IDENTITY GRAPH AUDIT")
+    print("V2.8A-V5.2 INSIDE-ELIGIBLE IDENTITY GRAPH AUDIT")
     print(f"raw tracks             : {len(segmentations)}")
     print(f"identity units         : {len(units)}")
     print(f"pair relations         : {len(pair_evidence)}")
@@ -204,6 +258,17 @@ def main():
     print(f"hybrid graph edges     : {len(hybrid_edges)}")
     print(f"candidate graphs       : {len(candidates)}")
     print(f"required identities    : {args.identity_count}")
+    print(f"inside-eligible units  : {len(eligible_anchor_keys)}")
+    print(
+        "outside-only units     : "
+        + ", ".join(
+            sorted(
+                key
+                for key in inside_observed_count
+                if key not in eligible_anchor_keys
+            )
+        )
+    )
     print(f"clip span              : {clip_span_s:.2f}s")
 
     print()
@@ -264,6 +329,36 @@ def main():
             )
     else:
         print("(none)")
+
+    print()
+    print("INSIDE ELIGIBILITY")
+    print(
+        f"{'UNIT':>7} {'INSIDE-OBS':>10} {'ELIGIBLE':>9} "
+        f"{'SELECTED':>9} {'JUNK':>6}"
+    )
+    print("-" * 50)
+
+    selected_units = {
+        key
+        for identity in solution.identities
+        for key in identity.member_keys
+    }
+
+    for key in sorted(
+        inside_observed_count,
+        key=lambda value: (
+            value.split(":")[0].isdigit(),
+            int(value.split(":")[0]) if value.split(":")[0].isdigit() else value,
+            value,
+        ),
+    ):
+        print(
+            f"{key:>7} "
+            f"{inside_observed_count[key]:>10} "
+            f"{str(key in eligible_anchor_keys):>9} "
+            f"{str(key in selected_units):>9} "
+            f"{str(key in solution.junk_keys):>6}"
+        )
 
     identity_of = {}
     for identity in solution.identities:
@@ -366,13 +461,20 @@ def main():
     )
 
     payload = {
-        "version": "tracking-identity-graph-v28a-v5",
+        "version": "tracking-identity-graph-v28a-v5.2",
         "solver_config": {
             field: getattr(solver_config, field)
             for field in solver_config.__dataclass_fields__
         },
         "clip_span_s": clip_span_s,
         "max_observed_count": max_observed_count,
+        "field_length_m": args.field_length,
+        "field_width_m": args.field_width,
+        "min_inside_observed": args.min_inside_observed,
+        "inside_observed_count": inside_observed_count,
+        "eligible_anchor_keys": sorted(
+            eligible_anchor_keys
+        ),
         "units": {
             unit.key: unit.to_dict()
             for unit in units
