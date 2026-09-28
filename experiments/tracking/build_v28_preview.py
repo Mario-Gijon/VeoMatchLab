@@ -31,6 +31,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tracking.canonical_preview import (  # noqa: E402
+    PreviewFieldBounds,
     build_canonical_preview,
     json_safe,
 )
@@ -64,6 +65,27 @@ def parse_args():
         "--out-dir",
         type=Path,
         default=None,
+    )
+    parser.add_argument(
+        "--field-length",
+        type=float,
+        default=105.0,
+        help="Pitch length in metres.",
+    )
+    parser.add_argument(
+        "--field-width",
+        type=float,
+        default=68.0,
+        help="Pitch width in metres.",
+    )
+    parser.add_argument(
+        "--field-margin",
+        type=float,
+        default=0.0,
+        help=(
+            "Extra preview margin in metres. Keep 0.0 for strict "
+            "inside-only V2.8B."
+        ),
     )
     return parser.parse_args()
 
@@ -101,6 +123,11 @@ def main():
     result = build_canonical_preview(
         raw_rows,
         identity_solution,
+        field_bounds=PreviewFieldBounds(
+            field_length_m=args.field_length,
+            field_width_m=args.field_width,
+            margin_m=args.field_margin,
+        ),
     )
 
     out_dir = (
@@ -168,6 +195,25 @@ def main():
     print(
         f"junk identity units        : "
         f"{summary.junk_unit_count}"
+    )
+    print(
+        f"outside raw samples removed: "
+        f"{summary.ignored_outside_sample_count}"
+    )
+    print(
+        f"canonicals with no observed inside: "
+        + (
+            ", ".join(
+                str(value)
+                for value in summary.canonical_ids_without_observed_inside
+            )
+            if summary.canonical_ids_without_observed_inside
+            else "(none)"
+        )
+    )
+    print(
+        f"postprocess outside removed: "
+        f"{summary.final_outside_sample_count_removed}"
     )
     print(
         f"input frames               : "

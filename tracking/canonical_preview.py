@@ -57,6 +57,31 @@ class CanonicalUnit:
 
 
 @dataclass(frozen=True)
+class PreviewFieldBounds:
+    """Exact football-pitch bounds used by the V2.8B inside-only preview."""
+
+    field_length_m: float = 105.0
+    field_width_m: float = 68.0
+    margin_m: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.field_length_m <= 0.0:
+            raise ValueError("field_length_m must be > 0")
+        if self.field_width_m <= 0.0:
+            raise ValueError("field_width_m must be > 0")
+        if self.margin_m < 0.0:
+            raise ValueError("margin_m must be >= 0")
+
+    def contains(self, x: float, z: float) -> bool:
+        half_length = self.field_length_m / 2.0 + self.margin_m
+        half_width = self.field_width_m / 2.0 + self.margin_m
+        return (
+            -half_length <= x <= half_length
+            and -half_width <= z <= half_width
+        )
+
+
+@dataclass(frozen=True)
 class PreviewReconstructionReport:
     canonical_identity_count: int
     selected_unit_count: int
@@ -68,6 +93,10 @@ class PreviewReconstructionReport:
     mapped_sample_count: int
     ignored_junk_sample_count: int
     ignored_unmapped_sample_count: int
+    ignored_outside_sample_count: int
+
+    canonical_ids_without_observed_inside: tuple[int, ...]
+    final_outside_sample_count_removed: int
 
     collision_frame_count: int
     collision_sample_count: int
@@ -133,9 +162,12 @@ def build_canonical_preview(
     raw_rows: Iterable[Mapping[str, Any]],
     identity_solution: Mapping[str, Any],
     *,
+    field_bounds: PreviewFieldBounds | None = None,
     smoothing_config: SmoothingConfig | None = None,
     interpolation_config: InterpolationConfig | None = None,
 ) -> PreviewBuildResult:
+    bounds = field_bounds or PreviewFieldBounds()
+
     rows = tuple(
         sorted(
             (dict(row) for row in raw_rows),
@@ -164,6 +196,7 @@ def build_canonical_preview(
         rows,
         units=units,
         junk_keys=junk_keys,
+        field_bounds=bounds,
     )
 
     smoothed, smoothing_report = smooth_trajectories(
@@ -173,6 +206,11 @@ def build_canonical_preview(
     final, interpolation_report = interpolate_trajectories(
         smoothed,
         config=interpolation_config,
+    )
+
+    final, final_outside_removed = _filter_final_inside(
+        final,
+        field_bounds=bounds,
     )
 
     preview_rows = _trajectories_to_rows(
@@ -204,6 +242,17 @@ def build_canonical_preview(
         ignored_unmapped_sample_count=reconstruction[
             "ignored_unmapped_sample_count"
         ],
+        ignored_outside_sample_count=reconstruction[
+            "ignored_outside_sample_count"
+        ],
+        canonical_ids_without_observed_inside=tuple(
+            reconstruction[
+                "canonical_ids_without_observed_inside"
+            ]
+        ),
+        final_outside_sample_count_removed=(
+            final_outside_removed
+        ),
         collision_frame_count=reconstruction[
             "collision_frame_count"
         ],
@@ -471,6 +520,7 @@ def _reconstruct_trajectories(
     *,
     units: Mapping[str, CanonicalUnit],
     junk_keys: frozenset[str],
+    field_bounds: PreviewFieldBounds,
 ) -> tuple[
     dict[int, tuple[TrackSample, ...]],
     dict[str, Any],
@@ -516,6 +566,7 @@ def _reconstruct_trajectories(
     mapped_sample_count = 0
     ignored_junk_sample_count = 0
     ignored_unmapped_sample_count = 0
+    ignored_outside_sample_count = 0
 
     for row in rows:
         frame_index = int(
@@ -566,6 +617,20 @@ def _reconstruct_trajectories(
                 continue
 
             unit = matching[0]
+
+            raw_x = float(raw["x"])
+            raw_z = float(raw["z"])
+
+            # V2.8B is deliberately INSIDE-only.  TEMP_OUTSIDE is a later,
+            # explicit state transition and must never be approximated by
+            # blindly publishing arbitrary sideline detections.
+            if not field_bounds.contains(
+                raw_x,
+                raw_z,
+            ):
+                ignored_outside_sample_count += 1
+                continue
+
             sample = _track_sample(
                 raw,
                 canonical_id=unit.canonical_id,
@@ -587,6 +652,40 @@ def _reconstruct_trajectories(
             )
 
             mapped_sample_count += 1
+
+    # A canonical player must have been OBSERVED inside the pitch at least once.
+    # Predicted-only leakage from an external person is not enough to establish
+    # roster membership.
+    observed_inside_ids = {
+        canonical_id
+        for (canonical_id, _frame_index), rows_for_frame in candidates.items()
+        if any(
+            item.sample.position_kind is PositionKind.OBSERVED
+            for item in rows_for_frame
+        )
+    }
+
+    all_selected_canonical_ids = {
+        unit.canonical_id
+        for unit in units.values()
+    }
+
+    canonical_ids_without_observed_inside = tuple(
+        sorted(
+            all_selected_canonical_ids
+            - observed_inside_ids
+        )
+    )
+
+    if canonical_ids_without_observed_inside:
+        rejected = set(
+            canonical_ids_without_observed_inside
+        )
+        candidates = {
+            key: value
+            for key, value in candidates.items()
+            if key[0] not in rejected
+        }
 
     trajectories: dict[
         int,
@@ -683,6 +782,12 @@ def _reconstruct_trajectories(
             "ignored_unmapped_sample_count": (
                 ignored_unmapped_sample_count
             ),
+            "ignored_outside_sample_count": (
+                ignored_outside_sample_count
+            ),
+            "canonical_ids_without_observed_inside": (
+                canonical_ids_without_observed_inside
+            ),
             "collision_frame_count": (
                 collision_frame_count
             ),
@@ -696,6 +801,57 @@ def _reconstruct_trajectories(
                 max_collision_distance_m
             ),
         },
+    )
+
+
+def _filter_final_inside(
+    trajectories: Mapping[
+        int,
+        Sequence[TrackSample],
+    ],
+    *,
+    field_bounds: PreviewFieldBounds,
+) -> tuple[
+    dict[int, tuple[TrackSample, ...]],
+    int,
+]:
+    """Guarantee that the INSIDE-only preview never publishes an outside point.
+
+    Smoothing can overshoot slightly near a boundary even when its input samples
+    are inside, so the field constraint is re-applied after smoothing and
+    interpolation as a final invariant.
+    """
+
+    removed = 0
+    output: dict[
+        int,
+        tuple[TrackSample, ...]
+    ] = {}
+
+    for canonical_id, samples in trajectories.items():
+        kept = []
+
+        for sample in samples:
+            if field_bounds.contains(
+                sample.x,
+                sample.z,
+            ):
+                kept.append(
+                    sample
+                )
+            else:
+                removed += 1
+
+        if kept:
+            output[
+                canonical_id
+            ] = tuple(
+                kept
+            )
+
+    return (
+        output,
+        removed,
     )
 
 
