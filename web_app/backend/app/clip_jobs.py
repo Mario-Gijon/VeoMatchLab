@@ -247,15 +247,19 @@ class ClipAnalysisService:
         )
         self.artifacts.save_run(run)
 
-    def _runner_args(self, source: dict, calibration: dict, output_dir: Path, clip: dict) -> Namespace:
+    def _detection_cache_dir(self, match_id: str, clip_id: str) -> Path:
+        return self.store.asset_dir(match_id, "clips") / clip_id / "tracking" / "detections"
+
+    def _runner_args(self, source: dict, calibration: dict, output_dir: Path, clip: dict, job: ClipJob) -> Namespace:
         return Namespace(
             video=Path(source["path"]), calibration=Path(calibration["path"]),
             weights=Path("person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/c2_football_images_plus_veo/best.pth"),
             device=None, start_s=0.0, duration_s=clip["duration_s"],
-            sample_period_s=SAMPLE_PERIOD_S, threshold=0.40, width=1280, height=720,
+            sample_period_s=SAMPLE_PERIOD_S, threshold=job.detection_threshold, width=1280, height=720,
             split_fraction=0.50, guard_margin_m=0.50,
             grid_step_m=0.50, field_margin_m=0.60,
-            rescue_confirm_threshold=0.40, rescue_confirm_max_world_distance_m=2.50,
+            rescue_confirm_threshold=job.detection_threshold, rescue_confirm_max_world_distance_m=2.50,
+            detection_cache_dir=self._detection_cache_dir(job.match_id, clip["id"]),
             out_dir=output_dir,
         )
 
@@ -323,7 +327,7 @@ class ClipAnalysisService:
         with job._lock:
             job.stage, job.processed_frames = "v8-completed", job.total_frames
 
-    def _run_all(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
+    def _run_all(self, job: ClipJob, match: dict, clip: dict, source: dict, *, render_ultra: bool = True) -> None:
         # Keep the web API importable in lightweight environments. Detection
         # dependencies are only needed by the worker that actually runs a clip.
         from experiments.tracking.run_global_tracker import PipelineProfile, run as run_tracker
@@ -337,7 +341,7 @@ class ClipAnalysisService:
         ultra_path = output_dir / "ultra_base.mp4"
         ultra_intermediate_path = output_dir / "ultra_base.intermediate.mp4"
         pipeline_profile: Any = PipelineProfile()
-        args = self._runner_args(source, calibration, output_dir, clip)
+        args = self._runner_args(source, calibration, output_dir, clip, job)
         job_started = time.perf_counter()
 
         def detected(**data: Any) -> None:
@@ -351,15 +355,17 @@ class ClipAnalysisService:
 
         print(f"[clip-analysis] clip={clip['id']} source={source['path']} duration={clip['duration_s']:.3f} sample_period={SAMPLE_PERIOD_S:.7f} expected_frames={job.total_frames}")
         run_tracker(args, measurement_callback=detected, analysis_callback=analysed, profile=pipeline_profile)
-        with job._lock:
-            job.stage = "rendering"
-        ultra_presentation = render_ultra_presentation(
+        ultra_presentation = None
+        if render_ultra:
+            with job._lock:
+                job.stage = "rendering"
+            ultra_presentation = render_ultra_presentation(
             video=Path(source["path"]), calibration=Path(calibration["path"]), output=ultra_intermediate_path,
             start_s=0.0, duration_s=float(clip["duration_s"]), check_cancelled=lambda: self._check_cancelled(job),
         )
-        pipeline_profile.ultra_render_seconds += ultra_presentation.render_seconds
-        pipeline_profile.video_encode_seconds += ultra_presentation.encode_seconds
-        if ultra_intermediate_path.exists():
+            pipeline_profile.ultra_render_seconds += ultra_presentation.render_seconds
+            pipeline_profile.video_encode_seconds += ultra_presentation.encode_seconds
+        if render_ultra and ultra_intermediate_path.exists():
             started = time.perf_counter()
             _transcode_web_video(ultra_intermediate_path, ultra_path)
             pipeline_profile.video_encode_seconds += time.perf_counter() - started
@@ -373,7 +379,7 @@ class ClipAnalysisService:
             pipeline_profile.persist_seconds += time.perf_counter() - started
         job.detection_artifact_id = detection["id"]
         self._save_run(job, stage="person_detection", status="completed", source_media_id=source["id"],
-                       configuration={"clip_id": clip["id"], "threshold": .40, "sample_period_s": SAMPLE_PERIOD_S}, outputs=[detection["id"], association_debug["id"]])
+                       configuration={"clip_id": clip["id"], "detection_threshold": job.detection_threshold, "detector_cache_floor": .20, "sample_period_s": SAMPLE_PERIOD_S}, outputs=[detection["id"], association_debug["id"]])
         with job._lock:
             job.stage, job.processed_frames = "postprocessing", job.total_frames
         raw_track_rows = []
@@ -396,7 +402,7 @@ class ClipAnalysisService:
             "status": "completed", "detection_artifact_id": detection["id"], "tracking_artifact_id": tracks["id"],
             "association_artifact_id": association_debug["id"],
             "run_id": job.job_id,
-            "ultra_base": f"clips/{clip['id']}/{job.job_id}/ultra_base.mp4",
+            **({"ultra_base": f"clips/{clip['id']}/{job.job_id}/ultra_base.mp4"} if render_ultra else ({"ultra_base": (clip.get("analysis") or {}).get("ultra_base")} if (clip.get("analysis") or {}).get("ultra_base") else {})),
         }))
         if pipeline_profile is not None:
             pipeline_profile.persist_seconds += time.perf_counter() - started
@@ -404,7 +410,7 @@ class ClipAnalysisService:
             summary_path = output_dir / "tracking_summary.json"
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
             summary["profile"] = pipeline_profile.as_dict()
-            summary["ultra_presentation"] = {"fps": ultra_presentation.fps, "frames": ultra_presentation.frames}
+            if ultra_presentation is not None: summary["ultra_presentation"] = {"fps": ultra_presentation.fps, "frames": ultra_presentation.frames}
             started = time.perf_counter()
             summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
             pipeline_profile.persist_seconds += time.perf_counter() - started
@@ -413,6 +419,12 @@ class ClipAnalysisService:
             job.stage, job.processed_frames = "rendering", job.total_frames
 
     def _run_cached_tracking(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
+        # Rebuild measurements, association and tracks from the shared RF-DETR
+        # candidate cache; old PersonMeasurements cannot represent a new threshold.
+        if match.get("calibration"):
+            return self._run_all(job, match, clip, source, render_ultra=False)
+        # Legacy fixtures/old clips without calibration retain the former
+        # PersonMeasurement-only diagnostic behavior.
         from tracking import GlobalTracker, TrackingMeasurement
         analysis = clip.get("analysis") or {}
         detection_id = analysis.get("detection_artifact_id")
