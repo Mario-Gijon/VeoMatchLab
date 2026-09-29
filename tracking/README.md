@@ -1,11 +1,17 @@
 # Tracking
 
-This directory intentionally starts empty after the V0 freeze.  The historical
-implementation lives in `tracking_v0/` and is retained only for compatibility
-with existing Baseline, V2.8, and V8 workflows.
+This directory starts the clean Tracking V1 architecture. The historical
+implementation remains isolated in `tracking_v0/`; do not automatically reuse
+it from this namespace.
 
-New tracking must begin from a clean architecture:
+`CanonicalDetection` is one physical person at one instant, with no temporal
+identity. The pipeline is:
 
-`detections -> short-term tracklets -> identity evidence -> global offline identity reconstruction`
+`detections -> tracklets -> appearance/evidence -> identities -> final`
 
-Do not automatically reuse V0 code from the new tracking namespace.
+Fragmentation is preferable to contaminating a tracklet with different people.
+V1 explicitly expects missed detections, players entering/leaving the FOV,
+occlusions, and dense corners or free kicks. Local MOT must not force an
+identity across long disappearances: later global reconstruction joins
+tracklets only with sufficient evidence. Veo X/Z geometry is fundamental
+evidence for that reconstruction.
