@@ -82,6 +82,8 @@ class CreateClipRequest(BaseModel):
 
 class StartClipAnalysisRequest(BaseModel):
     action: Literal["all", "tracking"] = "all"
+    tracking_mode: Literal["baseline", "v8_canonical"] = "baseline"
+    detection_threshold: float = Field(default=0.40, ge=0.20, le=0.70)
 
 
 class ApiError(BaseModel):

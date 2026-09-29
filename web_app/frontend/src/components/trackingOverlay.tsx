@@ -30,6 +30,9 @@ export default function TrackingOverlay({ mode, context, cameraRef, tracks, fram
     return projected ? { track, ...projected } : null
   }).filter((value): value is { track: OverlayTrack; u: number; v: number } => value !== null)
   return <svg ref={surface} viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
-    {points.map(({ track, u, v }) => <circle key={track.track_id} cx={u} cy={v} r="0.003" fill="#f6cf4a" stroke="#101820" strokeWidth="0.001" />)}
+    {points.map(({ track, u, v }) => <g key={track.track_id}>
+      <circle cx={u} cy={v} r="0.003" fill="#f6cf4a" stroke="#101820" strokeWidth="0.001" />
+      <text x={u} y={v} textAnchor="middle" dominantBaseline="central" fontSize="0.010" fontWeight="700" fill="#ffffff" paintOrder="stroke" stroke="#101820" strokeWidth="0.0015" strokeLinejoin="round">{track.track_id}</text>
+    </g>)}
   </svg>
 }

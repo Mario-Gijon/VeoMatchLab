@@ -32,7 +32,7 @@ def test_debug_frames_serves_v28_preview_without_changing_actual_artifacts(tmp_p
     preview_path = tmp_path / "experiments" / "tracking" / "reid_similarity_debug" / "previews" / clip["id"] / "tracking_frames_v28_preview.jsonl"
     preview_path.parent.mkdir(parents=True)
     preview_path.write_text(json.dumps({"timestamp_s": 0.0, "frame_index": 0, "tracks": [{"track_id": 1, "x": 3.0, "z": 4.0}]}) + "\n", encoding="utf-8")
-    v8_path = tmp_path / "experiments" / "tracking" / "reid_similarity_debug_margin15" / "preview_v8_frames.jsonl"
+    v8_path = main.store.asset_dir(match["id"], "clips") / clip["id"] / "tracking" / "v8" / "preview_frames.jsonl"
     v8_path.parent.mkdir(parents=True)
     v8_person = {"canonical_id": 8, "track_id": 8, "role": "referee", "x": 5.0, "z": 6.0, "position_kind": "predicted", "lifecycle": "active"}
     v8_path.write_text(json.dumps({"timestamp_s": 0.0, "frame_index": 0, "tracks": {"person": [v8_person]}}) + "\n", encoding="utf-8")

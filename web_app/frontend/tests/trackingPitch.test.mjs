@@ -18,3 +18,9 @@ test('tracking pitch deliberately renders all position kinds with one marker sty
   const source = readFileSync(new URL('../src/components/TrackingPitch.tsx', import.meta.url), 'utf8')
   assert.equal(source.includes('position_kind'), false)
 })
+test('video tracking markers label the displayed track id, never the raw source id', () => {
+  const source = readFileSync(new URL('../src/components/trackingOverlay.tsx', import.meta.url), 'utf8')
+  assert.equal(source.includes('<text'), true)
+  assert.equal(source.includes('{track.track_id}'), true)
+  assert.equal(source.includes('source_raw_track_id'), false)
+})

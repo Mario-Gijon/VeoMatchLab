@@ -47,6 +47,8 @@ class ClipJob:
     clip_id: str
     action: str
     total_frames: int
+    tracking_mode: str = "baseline"
+    detection_threshold: float = .40
     status: str = "queued"
     stage: str = "detection"
     processed_frames: int = 0
@@ -62,6 +64,7 @@ class ClipJob:
             return {
                 "job_id": self.job_id, "match_id": self.match_id,
                 "clip_id": self.clip_id, "status": self.status, "stage": self.stage,
+                "tracking_mode": self.tracking_mode, "detection_threshold": self.detection_threshold,
                 "processed_frames": self.processed_frames, "total_frames": self.total_frames,
                 "progress": self.processed_frames / self.total_frames if self.total_frames else 0.0,
                 "error": self.error, "detection_artifact_id": self.detection_artifact_id,
@@ -116,7 +119,8 @@ class ClipAnalysisService:
         for job in jobs:
             self.cancel(job.job_id)
 
-    def start(self, match: dict, clip: dict, source: dict, *, action: str) -> ClipJob:
+    def start(self, match: dict, clip: dict, source: dict, *, action: str,
+              tracking_mode: str = "baseline", detection_threshold: float = .40) -> ClipJob:
         from experiments.tracking.run_global_tracker import sample_timestamps
         total = len(sample_timestamps(0.0, float(clip["duration_s"]), SAMPLE_PERIOD_S))
         with self._lock:
@@ -124,7 +128,8 @@ class ClipAnalysisService:
             existing = self._analysis_jobs.get(key)
             if existing and existing.status in {"queued", "running"}:
                 return existing
-            job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total)
+            job = ClipJob(self.store.new_id("job"), match["id"], clip["id"], action, total,
+                          tracking_mode=tracking_mode, detection_threshold=detection_threshold)
             self._jobs[job.job_id] = job
             self._analysis_jobs[key] = job
         threading.Thread(target=self._run, args=(job, match, clip, source), daemon=True).start()
@@ -276,7 +281,9 @@ class ClipAnalysisService:
         try:
             with job._lock:
                 job.status = "running"
-            if job.action == "tracking":
+            if job.tracking_mode == "v8_canonical":
+                self._run_v8(job, match, clip, source)
+            elif job.action == "tracking":
                 self._run_cached_tracking(job, match, clip, source)
             else:
                 self._run_all(job, match, clip, source)
@@ -293,6 +300,28 @@ class ClipAnalysisService:
             with self._lock:
                 if self._analysis_jobs.get((job.match_id, job.clip_id)) is job:
                     self._analysis_jobs.pop((job.match_id, job.clip_id), None)
+
+    def _run_v8(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
+        from tracking.v8_pipeline import run_v8_pipeline
+
+        output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / "tracking" / "v8"
+        with job._lock:
+            job.stage = "v8-starting"
+        result = run_v8_pipeline(
+            video=Path(source["path"]), calibration=Path(match["calibration"]["path"]),
+            detector_weights=Path("person_detect/model_weights/rfdetr_finetuned/veomatch_person_v1/c2_football_images_plus_veo/best.pth"),
+            detection_threshold=job.detection_threshold, output_dir=output_dir,
+            progress=lambda stage: setattr(job, "stage", stage),
+        )
+        def publish(value: dict) -> None:
+            analysis = dict(value.get("analysis") or {})
+            analysis["v8"] = {"status": "completed", "run_id": job.job_id,
+                              "preview_frames": str(result["preview_frames"].relative_to(self.store.asset_dir(job.match_id, "clips"))),
+                              "detection_threshold": job.detection_threshold}
+            value["analysis"] = analysis
+        self.store.update_clip(job.match_id, clip["id"], publish)
+        with job._lock:
+            job.stage, job.processed_frames = "v8-completed", job.total_frames
 
     def _run_all(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
         # Keep the web API importable in lightweight environments. Detection

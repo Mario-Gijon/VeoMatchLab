@@ -362,7 +362,9 @@ def start_clip_analysis(match_id: str, clip_id: str, payload: StartClipAnalysisR
     source = clip_source(match, clip)
     if source is None or not match.get("calibration"):
         raise api_error(409, "Clip analysis requires dual_lens media and calibration.", "clip_analysis_unavailable")
-    job = active_clip_jobs().start(match, clip, source, action=payload.action)
+    job = active_clip_jobs().start(match, clip, source, action=payload.action,
+                                   tracking_mode=payload.tracking_mode,
+                                   detection_threshold=payload.detection_threshold)
     return job.public_dict()
 
 
@@ -459,7 +461,7 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
     clip = store.clip(match_id, clip_id)
     analysis = (clip or {}).get("analysis") or {}
     tracking_id, association_id = analysis.get("tracking_artifact_id"), analysis.get("association_artifact_id")
-    if not association_id or (tracking_mode == "actual" and not tracking_id):
+    if tracking_mode in {"actual", "v28_preview"} and (not association_id or (tracking_mode == "actual" and not tracking_id)):
         raise api_error(404, "Detection association and tracking artifacts are required.", "clip_debug_missing")
     artifacts = LocalArtifactStore(store)
     end = float(clip["duration_s"])
@@ -472,7 +474,7 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
             raise api_error(404, "The V2.8 preview is not available for this clip.", "clip_v28_preview_missing")
         tracks = [json.loads(line) for line in preview_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     else:
-        preview_path = ROOT / "experiments" / "tracking" / "reid_similarity_debug_margin15" / "preview_v8_frames.jsonl"
+        preview_path = store.asset_dir(match_id, "clips") / clip["id"] / "tracking" / "v8" / "preview_frames.jsonl"
         if not preview_path.is_file():
             raise api_error(404, "The V8 Canonical preview is not available for this clip.", "clip_v8_canonical_missing")
         # Preserve every published V8 tracks.person object; only adapt its outer
@@ -485,7 +487,7 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
         ]
     return {
         "tracks": tracks,
-        "association": list(artifacts.read_window(match_id, association_id, 0.0, end)),
+        "association": list(artifacts.read_window(match_id, association_id, 0.0, end)) if association_id else [],
         "camera_specs": {spec.name: {"longitude": spec.longitude, "latitude": spec.latitude, "vfov": spec.vfov} for spec in specs},
     }
 

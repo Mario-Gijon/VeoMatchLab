@@ -29,7 +29,7 @@ export const api = {
   clips: (id: string) => request<Clip[]>(`/api/matches/${id}/clips`),
   createClip: (matchId: string, sourceMediaId: string, startS: number, durationS: number, name: string) => request<ClipJob>(`/api/matches/${matchId}/clips`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source_media_id: sourceMediaId, start_s: startS, duration_s: durationS, name }) }),
   materializeClip: (matchId: string, clipId: string) => request<ClipJob>(`/api/matches/${matchId}/clips/${clipId}/materialize`, { method: 'POST' }),
-  startClipAnalysis: (matchId: string, clipId: string, action: 'all' | 'tracking') => request<ClipJob>(`/api/matches/${matchId}/clips/${clipId}/analysis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) }),
+  startClipAnalysis: (matchId: string, clipId: string, action: 'all' | 'tracking', trackingMode: 'baseline' | 'v8_canonical' = 'baseline', detectionThreshold = 0.40) => request<ClipJob>(`/api/matches/${matchId}/clips/${clipId}/analysis`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, tracking_mode: trackingMode, detection_threshold: detectionThreshold }) }),
   clipJob: (jobId: string) => request<ClipJob>(`/api/clip-jobs/${jobId}`),
   cancelClipJob: (jobId: string) => request<ClipJob>(`/api/clip-jobs/${jobId}`, { method: 'DELETE' }),
   deleteClip: (matchId: string, clipId: string) => request<{ deleted: boolean }>(`/api/matches/${matchId}/clips/${clipId}`, { method: 'DELETE' }),
