@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from tracking.global_role_selection import (
+from tracking_v0.global_role_selection import (
     GlobalRoleSelectionConfig,
     select_global_unique_roles,
 )
-from tracking.role_inference import (
+from tracking_v0.role_inference import (
     FootballRole,
     RoleInferenceResult,
     RoleScores,
@@ -12,7 +12,7 @@ from tracking.role_inference import (
     TrackRoleDecision,
     TrackRoleGeometry,
 )
-from tracking.team_appearance import AppearanceLabel
+from tracking_v0.team_appearance import AppearanceLabel
 
 
 def geometry(track_id: int):

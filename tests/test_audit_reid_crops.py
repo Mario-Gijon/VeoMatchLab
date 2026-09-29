@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from experiments.tracking import audit_reid_crops
+from experiments.tracking_v0 import audit_reid_crops
 
 
 @pytest.mark.parametrize("field_margin_m", [0.60, 1.5])

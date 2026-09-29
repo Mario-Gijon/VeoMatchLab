@@ -1,5 +1,5 @@
 from pathlib import Path
-from tracking.detection_cache import BaseDetectionCache
+from tracking_v0.detection_cache import BaseDetectionCache
 
 class Detection:
     def __init__(self, confidence): self.xyxy=(1., 2., 3., 4.); self.confidence=confidence

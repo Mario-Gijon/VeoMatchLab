@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from tracking.global_identity_solver import (
+from tracking_v0.global_identity_solver import (
     IdentityUnit,
 )
-from tracking.identity_graph_counterfactual import (
+from tracking_v0.identity_graph_counterfactual import (
     CounterfactualConstraints,
     solve_counterfactual_partition,
 )
-from tracking.identity_graph_solver import (
+from tracking_v0.identity_graph_solver import (
     CandidateIdentityGraph,
     HybridIdentityEdge,
     IdentityGraphSolverConfig,
 )
-from tracking.team_appearance import AppearanceLabel
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_appearance import AppearanceLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def unit(key, quality):

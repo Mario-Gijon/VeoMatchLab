@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-import tracking.fixed_roster as fixed_roster
-from tracking.fixed_roster import (
+import tracking_v0.fixed_roster as fixed_roster
+from tracking_v0.fixed_roster import (
     FixedRosterConfig,
     FixedRosterInfeasibleError,
     IdentityPairEvidence,
@@ -11,7 +11,7 @@ from tracking.fixed_roster import (
     identity_pair_evidence,
     resolve_fixed_roster,
 )
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
 
 
 DT = 1.0 / 15.0

@@ -1,4 +1,4 @@
-from tracking.final_publication import (
+from tracking_v0.final_publication import (
     CanonicalIdentitySpec,
     DuplicateAttachment,
     SegmentWindow,

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-from tracking.identity_consolidation import (
+from tracking_v0.identity_consolidation import (
     IdentityConsolidationConfig,
     consolidate_identities,
     handover_candidate,
 )
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.quality import analyze_trajectories
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.quality import analyze_trajectories
 
 
 DT = 1.0 / 15.0

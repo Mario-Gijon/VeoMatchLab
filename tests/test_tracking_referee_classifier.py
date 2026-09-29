@@ -1,16 +1,16 @@
 import numpy as np
 
-from tracking.physical_identity_solver import (
+from tracking_v0.physical_identity_solver import (
     PhysicalIdentity,
     PhysicalObservation,
     PhysicalSegmentQuality,
     PhysicalTrackSegment,
 )
-from tracking.referee_classifier import (
+from tracking_v0.referee_classifier import (
     RefereeClassifierConfig,
     classify_referee_identity,
 )
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def unit(x, y):

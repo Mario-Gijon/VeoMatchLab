@@ -4,12 +4,12 @@ from math import hypot, isfinite
 
 import pytest
 
-from tracking.interpolation import (
+from tracking_v0.interpolation import (
     InterpolationConfig,
     interpolate_trajectories,
     interpolate_trajectory,
 )
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
 
 
 FPS = 30.0

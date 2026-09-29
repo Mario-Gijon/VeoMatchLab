@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.appearance_bank import (
+from tracking_v0.appearance_bank import (
     AppearanceBankConfig,
     ReIDEmbedding,
     build_appearance_banks,

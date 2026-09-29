@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from tracking.canonical_preview import (
+from tracking_v0.canonical_preview import (
     PreviewFieldBounds,
     build_canonical_preview,
 )
-from tracking.interpolation import InterpolationConfig
+from tracking_v0.interpolation import InterpolationConfig
 
 
 def solution():

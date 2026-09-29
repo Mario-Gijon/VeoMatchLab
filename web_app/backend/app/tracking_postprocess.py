@@ -10,11 +10,11 @@ from numbers import Integral, Real
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from tracking.identity_resolution import resolve_identities
-from tracking.interpolation import interpolate_trajectories
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.participant_validation import filter_participants, validate_participants
-from tracking.smoothing import smooth_trajectories
+from tracking_v0.identity_resolution import resolve_identities
+from tracking_v0.interpolation import interpolate_trajectories
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.participant_validation import filter_participants, validate_participants
+from tracking_v0.smoothing import smooth_trajectories
 
 
 FIELD_LENGTH_M = 105.0

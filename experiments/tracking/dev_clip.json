@@ -1,0 +1,19 @@
+{
+  "purpose": "Development clip for the clean post-V0 tracking architecture.",
+  "note": "Real Jaén VS Hispania kickoff clip; this is the 90-second C1 clip, not the historical 30-second Alcalá clip.",
+  "match_id": "match_629890153a11",
+  "match_name": "Veo | Real Jaén VS Hispania",
+  "clip_id": "clip_310595951690",
+  "clip_label": "C1",
+  "duration_s": 90.0,
+  "source_start_s": 159.0,
+  "source_end_s": 249.0,
+  "source_media_id": "media_e1736da88ed3",
+  "source_video": "data/matches/match_629890153a11/media/dual_lens.mp4",
+  "clip_video": "data/matches/match_629890153a11/clips/clip_310595951690/source.mp4",
+  "calibration": "data/matches/match_629890153a11/calibration/camera_alignment.veo",
+  "width": 2048,
+  "height": 2048,
+  "fps": 29.97002997002997,
+  "frame_count": 2698
+}

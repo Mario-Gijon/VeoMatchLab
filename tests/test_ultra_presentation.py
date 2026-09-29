@@ -1,6 +1,6 @@
 import inspect
 
-from experiments.tracking.run_global_tracker import sample_timestamps
+from experiments.tracking_v0.run_global_tracker import sample_timestamps
 from web_app.backend.app.clip_jobs import ClipAnalysisService
 from web_app.backend.app.ultra_presentation import source_frame_indices
 

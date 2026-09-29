@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.identity_segmentation import (
+from tracking_v0.identity_segmentation import (
     IdentityAppearanceSample,
     IdentitySegmentationConfig,
     SegmentIdentityQuality,
     segment_track_identity,
 )
-from tracking.team_appearance import AppearanceLabel
+from tracking_v0.team_appearance import AppearanceLabel
 
 
 def unit(x, y):

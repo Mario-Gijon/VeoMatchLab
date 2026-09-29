@@ -4,19 +4,19 @@ import math
 
 import pytest
 
-from tracking.models import (
+from tracking_v0.models import (
     PositionKind,
     TrackLifecycle,
     TrackSample,
 )
-from tracking.role_inference import (
+from tracking_v0.role_inference import (
     FootballRole,
     RoleInferenceConfig,
     TrackAppearanceEvidence,
     compute_track_role_geometry,
     infer_roles,
 )
-from tracking.team_appearance import AppearanceLabel
+from tracking_v0.team_appearance import AppearanceLabel
 
 
 DT = 1.0 / 15.0

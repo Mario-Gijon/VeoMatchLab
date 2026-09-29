@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from tracking.team_appearance import (
+from tracking_v0.team_appearance import (
     AppearanceLabel,
     KitAppearanceConfig,
     appearance_similarity,

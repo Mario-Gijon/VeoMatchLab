@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.appearance_bank import (
+from tracking_v0.appearance_bank import (
     AppearanceBankConfig,
     ReIDEmbedding,
     TrackAppearanceBank,
 )
-from tracking.appearance_segments import (
+from tracking_v0.appearance_segments import (
     segment_appearance_bank,
 )
-from tracking.identity_evidence import (
+from tracking_v0.identity_evidence import (
     IdentityEvidenceLabel,
     ObservedTrackPoint,
     build_identity_pair_evidence,
     compute_geometry_pair_evidence_from_points,
 )
-from tracking.team_appearance import AppearanceLabel
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_appearance import AppearanceLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def emb(track, frame, vector):

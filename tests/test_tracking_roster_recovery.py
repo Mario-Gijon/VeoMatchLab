@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from tracking.roster_recovery import (
+from tracking_v0.roster_recovery import (
     RawTracklet,
     RosterClass,
     RosterObservation,
     RosterRecoveryConfig,
     recover_roster_identities,
 )
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def obs(

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.team_appearance import (
+from tracking_v0.team_appearance import (
     AppearanceCluster,
     AppearanceLabel,
     CropAppearance,
     KitAppearanceResult,
     TrackAppearanceDecision,
 )
-from tracking.team_similarity import (
+from tracking_v0.team_similarity import (
     RelativeTeamLabel,
     TeamSimilarityConfig,
     compute_team_similarity,

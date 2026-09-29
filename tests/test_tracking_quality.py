@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.quality import (
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.quality import (
     TrackQualityDecision,
     analyze_track_quality,
     analyze_trajectories,

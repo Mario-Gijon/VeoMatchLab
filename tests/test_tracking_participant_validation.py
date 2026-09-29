@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.participant_validation import (
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.participant_validation import (
     ParticipantDecision,
     filter_participants,
     validate_participants,

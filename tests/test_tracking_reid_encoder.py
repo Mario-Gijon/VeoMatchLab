@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from tracking.reid_encoder import (
+from tracking_v0.reid_encoder import (
     ReIDEncoderConfig,
     TorchreidEncoder,
     l2_normalize_rows,

@@ -1,6 +1,6 @@
 import pytest
 
-from experiments.tracking.run_global_tracker import sample_timestamps
+from experiments.tracking_v0.run_global_tracker import sample_timestamps
 from web_app.backend.app.clip_jobs import ClipAnalysisService, SAMPLE_PERIOD_S
 from web_app.backend.app.storage import WorkspaceStore
 

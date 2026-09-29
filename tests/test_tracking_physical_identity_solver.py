@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.physical_identity_solver import (
+from tracking_v0.physical_identity_solver import (
     PhysicalIdentitySolverConfig,
     PhysicalObservation,
     PhysicalRelationKind,
@@ -10,7 +10,7 @@ from tracking.physical_identity_solver import (
     PhysicalTrackSegment,
     solve_physical_identities,
 )
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def obs(frame, t, x, z=0.0):

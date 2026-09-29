@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-import tracking.evidence_roster as evidence_roster
-from tracking.evidence_roster import (
+import tracking_v0.evidence_roster as evidence_roster
+from tracking_v0.evidence_roster import (
     EvidenceRosterConfig,
     EvidenceRosterInfeasibleError,
     TrackAssignmentKind,
@@ -11,11 +11,11 @@ from tracking.evidence_roster import (
     resolve_evidence_roster,
     trim_unsupported_prediction_edges,
 )
-from tracking.fixed_roster import (
+from tracking_v0.fixed_roster import (
     IdentityPairEvidence,
     PairEvidenceMode,
 )
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
 
 
 DT = 1.0 / 15.0

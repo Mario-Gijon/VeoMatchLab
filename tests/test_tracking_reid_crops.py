@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import pytest
 
-from tracking.reid_crops import (
+from tracking_v0.reid_crops import (
     ReIDCrop,
     ReIDCropConfig,
     ReIDCropMetrics,

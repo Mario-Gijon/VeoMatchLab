@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from experiments.tracking.run_global_tracker import PipelineProfile
+from experiments.tracking_v0.run_global_tracker import PipelineProfile
 from experiments.virtual_camera_coverage import ultra_panorama_overlay
 from geometry.reproduce_veo_panorama import build_panorama_maps, render, render_panorama_with_maps
 

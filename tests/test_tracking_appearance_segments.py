@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import numpy as np
 
-from tracking.appearance_bank import (
+from tracking_v0.appearance_bank import (
     ReIDEmbedding,
     TrackAppearanceBank,
 )
-from tracking.appearance_segments import (
+from tracking_v0.appearance_segments import (
     AppearanceSegmentationConfig,
     segment_appearance_bank,
 )
-from tracking.team_appearance import AppearanceLabel
+from tracking_v0.team_appearance import AppearanceLabel
 
 
 def e(frame, vector, quality=0.9):

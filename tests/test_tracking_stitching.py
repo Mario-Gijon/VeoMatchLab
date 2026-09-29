@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.stitching import (
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.stitching import (
     StitchingConfig,
     candidate_between,
     stitch_trajectories,

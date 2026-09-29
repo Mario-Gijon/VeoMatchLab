@@ -85,6 +85,7 @@ export interface ClipJob {
   processed_frames: number
   total_frames: number
   progress: number
+  tracking_mode?: 'baseline' | 'v8_canonical'
   error: string | null
   detection_artifact_id?: string | null
   tracking_artifact_id?: string | null

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from tracking.global_identity_solver import (
+from tracking_v0.global_identity_solver import (
     ClusterSolverConfig,
     IdentityUnit,
     PairConflict,
     UnitPairEvidence,
     solve_identity_clusters,
 )
-from tracking.team_appearance import AppearanceLabel
-from tracking.team_similarity import RelativeTeamLabel
+from tracking_v0.team_appearance import AppearanceLabel
+from tracking_v0.team_similarity import RelativeTeamLabel
 
 
 def unit(

@@ -121,7 +121,7 @@ class ClipAnalysisService:
 
     def start(self, match: dict, clip: dict, source: dict, *, action: str,
               tracking_mode: str = "baseline", detection_threshold: float = .40) -> ClipJob:
-        from experiments.tracking.run_global_tracker import sample_timestamps
+        from experiments.tracking_v0.run_global_tracker import sample_timestamps
         total = len(sample_timestamps(0.0, float(clip["duration_s"]), SAMPLE_PERIOD_S))
         with self._lock:
             key = (match["id"], clip["id"])
@@ -239,7 +239,7 @@ class ClipAnalysisService:
         run = AnalysisRun(
             id=f"run_{job.job_id}_{stage}", match_id=job.match_id,
             pipeline="clip_detection_tracking_v1", stage_id=stage,
-            implementation="experiments.tracking", version="1", status=status,
+            implementation="experiments.tracking_v0", version="1", status=status,
             source_media_ids=[source_media_id], configuration=configuration,
             created_at=self.store.now(), started_at=self.store.now() if status != "queued" else None,
             completed_at=self.store.now() if status in {"completed", "failed", "cancelled"} else None,
@@ -306,7 +306,7 @@ class ClipAnalysisService:
                     self._analysis_jobs.pop((job.match_id, job.clip_id), None)
 
     def _run_v8(self, job: ClipJob, match: dict, clip: dict, source: dict) -> None:
-        from tracking.v8_pipeline import run_v8_pipeline
+        from tracking_v0.v8_pipeline import run_v8_pipeline
 
         output_dir = self.store.asset_dir(job.match_id, "clips") / clip["id"] / "tracking" / "v8"
         with job._lock:
@@ -330,7 +330,7 @@ class ClipAnalysisService:
     def _run_all(self, job: ClipJob, match: dict, clip: dict, source: dict, *, render_ultra: bool = True) -> None:
         # Keep the web API importable in lightweight environments. Detection
         # dependencies are only needed by the worker that actually runs a clip.
-        from experiments.tracking.run_global_tracker import PipelineProfile, run as run_tracker
+        from experiments.tracking_v0.run_global_tracker import PipelineProfile, run as run_tracker
         from .ultra_presentation import render_ultra_presentation
 
         calibration = match["calibration"]
@@ -429,7 +429,7 @@ class ClipAnalysisService:
             return self._run_all(job, match, clip, source, render_ultra=False)
         # Legacy fixtures/old clips without calibration retain the former
         # PersonMeasurement-only diagnostic behavior.
-        from tracking import GlobalTracker, TrackingMeasurement
+        from tracking_v0 import GlobalTracker, TrackingMeasurement
         analysis = clip.get("analysis") or {}
         detection_id = analysis.get("detection_artifact_id")
         if not detection_id:

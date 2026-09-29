@@ -4,8 +4,8 @@ from math import hypot, isfinite
 
 import pytest
 
-from tracking.models import PositionKind, TrackLifecycle, TrackSample
-from tracking.smoothing import (
+from tracking_v0.models import PositionKind, TrackLifecycle, TrackSample
+from tracking_v0.smoothing import (
     SmoothingConfig,
     smooth_trajectories,
     smooth_trajectory,
