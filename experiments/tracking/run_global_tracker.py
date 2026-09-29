@@ -207,20 +207,22 @@ def run(
     spec_by_name = {spec.name: spec for spec in tight_specs}
     maps = {spec.name: build_map(metadata, spec, args.width, args.height) for spec in tight_specs}
     backend = RFDETR2XLBackend(args.weights, device=args.device)
-    cache = BaseDetectionCache(args.detection_cache_dir, {
+    detection_cache_dir = getattr(args, "detection_cache_dir", None)
+    cache = BaseDetectionCache(detection_cache_dir, {
         "video": [str(Path(args.video).resolve()), Path(args.video).stat().st_size, Path(args.video).stat().st_mtime_ns],
         "calibration": [str(Path(args.calibration).resolve()), Path(args.calibration).stat().st_size, Path(args.calibration).stat().st_mtime_ns],
         "weights": [str(Path(args.weights).resolve()), Path(args.weights).stat().st_size, Path(args.weights).stat().st_mtime_ns],
-        "width": args.width, "height": args.height, "sample_period_s": args.sample_period_s,
+        "width": args.width, "height": args.height, "sample_period_s": args.sample_period_s, "start_s": args.start_s, "duration_s": args.duration_s,
         "split_fraction": args.split_fraction, "guard_margin_m": args.guard_margin_m, "grid_step_m": args.grid_step_m,
         "far_cameras": DEFAULT_FAR_CAMERAS, "near_cameras": DEFAULT_NEAR_CAMERAS,
-    }, args.threshold) if args.detection_cache_dir else None
+    }, args.threshold) if detection_cache_dir else None
     print(f"[clip-analysis] detector={backend.name} device={backend.device} weights={args.weights}")
     tracker = GlobalTracker()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     frames_path = args.out_dir / "tracking_frames.jsonl"
     total_measurements = 0
+    base_candidates_total = base_candidates_after_threshold = 0
     observed_samples = 0
     predicted_samples = 0
     max_confirmed = 0
@@ -251,6 +253,8 @@ def run(
                     detections = predict_persons(backend, image, threshold=args.threshold)
                     profile.base_detector_calls += 1
                 profile.detector_base_seconds += time.perf_counter() - started
+                base_candidates_total += len(detections) if not cache else len([row for row in (cache._rows or cache._pending) if row["frame_index"] == frame_index and row["virtual_camera"] == spec.name])
+                base_candidates_after_threshold += len(detections)
                 for detection in detections:
                     observations.append(build_observation(
                         observation_id=observation_id, frame_number=frame_index,
@@ -366,6 +370,13 @@ def run(
         "skipped_measurements_without_position": skipped_no_position,
         "detector_inference_seconds": profile.detector_base_seconds,
         "sample_period_seconds": args.sample_period_s,
+        "base_cache_status": "HIT" if cache and cache.hit else "MISS" if cache else "DISABLED",
+        "detector_cache_floor": DETECTOR_CACHE_FLOOR if cache else None,
+        "requested_threshold": args.threshold,
+        "base_candidates_total": base_candidates_total,
+        "base_candidates_after_threshold": base_candidates_after_threshold,
+        "base_detector_calls": profile.base_detector_calls,
+        "rescue_detector_calls": profile.rescue_detector_calls,
     }
     profile.total_seconds = time.perf_counter() - started_total
     summary["profile"] = profile.as_dict()
