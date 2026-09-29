@@ -58,6 +58,7 @@ from experiments.virtual_camera_coverage.detect import (  # noqa: E402
 from geometry.veo_metadata import load_veo_metadata  # noqa: E402
 from person_detect.models.rfdetr_2xl import RFDETR2XLBackend  # noqa: E402
 from tracking import GlobalTracker, PositionKind, TrackLifecycle  # noqa: E402
+from tracking.detection_cache import BaseDetectionCache, DETECTOR_CACHE_FLOOR  # noqa: E402
 
 
 DEFAULT_OUT_DIR = Path("experiments/tracking/output")
@@ -173,6 +174,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--rescue-confirm-max-world-distance-m", type=float, default=DEFAULT_RESCUE_CONFIRM_MAX_WORLD_DISTANCE_M)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--detection-cache-dir", type=Path, default=None)
     args = parser.parse_args()
     if not args.video.is_file() or not args.calibration.is_file() or not args.weights.is_file():
         parser.error("--video, --calibration, and --weights must name existing files")
@@ -205,6 +207,14 @@ def run(
     spec_by_name = {spec.name: spec for spec in tight_specs}
     maps = {spec.name: build_map(metadata, spec, args.width, args.height) for spec in tight_specs}
     backend = RFDETR2XLBackend(args.weights, device=args.device)
+    cache = BaseDetectionCache(args.detection_cache_dir, {
+        "video": [str(Path(args.video).resolve()), Path(args.video).stat().st_size, Path(args.video).stat().st_mtime_ns],
+        "calibration": [str(Path(args.calibration).resolve()), Path(args.calibration).stat().st_size, Path(args.calibration).stat().st_mtime_ns],
+        "weights": [str(Path(args.weights).resolve()), Path(args.weights).stat().st_size, Path(args.weights).stat().st_mtime_ns],
+        "width": args.width, "height": args.height, "sample_period_s": args.sample_period_s,
+        "split_fraction": args.split_fraction, "guard_margin_m": args.guard_margin_m, "grid_step_m": args.grid_step_m,
+        "far_cameras": DEFAULT_FAR_CAMERAS, "near_cameras": DEFAULT_NEAR_CAMERAS,
+    }, args.threshold) if args.detection_cache_dir else None
     print(f"[clip-analysis] detector={backend.name} device={backend.device} weights={args.weights}")
     tracker = GlobalTracker()
 
@@ -234,9 +244,13 @@ def run(
                 profile.virtual_camera_render_seconds += time.perf_counter() - started
                 rendered[spec.name] = image
                 started = time.perf_counter()
-                detections = predict_persons(backend, image, threshold=args.threshold)
+                if cache:
+                    detections = [type("CachedDetection", (), {"xyxy": tuple(row["bbox_xyxy"]), "confidence": row["confidence"]})() for row in cache.candidates(frame_index, timestamp, spec.name, lambda: predict_persons(backend, image, threshold=DETECTOR_CACHE_FLOOR))]
+                    if not cache.hit: profile.base_detector_calls += 1
+                else:
+                    detections = predict_persons(backend, image, threshold=args.threshold)
+                    profile.base_detector_calls += 1
                 profile.detector_base_seconds += time.perf_counter() - started
-                profile.base_detector_calls += 1
                 for detection in detections:
                     observations.append(build_observation(
                         observation_id=observation_id, frame_number=frame_index,
@@ -338,6 +352,7 @@ def run(
             profile.persist_seconds += time.perf_counter() - started
             print(f"frame={frame_index} t={timestamp:.3f}s measurements={len(measurements)} tracks={len(tracking_frame.tracks)}")
 
+    if cache: cache.commit()
     lifecycles = [tracker.track_lifecycle(track_id) for track_id in tracker.trajectories()]
     summary = {
         "frames_processed": len(_timestamps(args.start_s, args.duration_s, args.sample_period_s)),
