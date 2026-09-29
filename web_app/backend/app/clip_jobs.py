@@ -398,12 +398,16 @@ class ClipAnalysisService:
         self._save_run(job, stage="person_tracking", status="completed", source_media_id=source["id"],
                        configuration={"clip_id": clip["id"], "sample_period_s": SAMPLE_PERIOD_S}, upstream=[detection["id"]], outputs=[tracks["id"]])
         started = time.perf_counter()
-        self.store.update_clip(job.match_id, clip["id"], lambda value: value.update(analysis={
+        def publish_baseline(value: dict) -> None:
+            analysis = dict(value.get("analysis") or {})
+            analysis.update({
             "status": "completed", "detection_artifact_id": detection["id"], "tracking_artifact_id": tracks["id"],
             "association_artifact_id": association_debug["id"],
             "run_id": job.job_id,
             **({"ultra_base": f"clips/{clip['id']}/{job.job_id}/ultra_base.mp4"} if render_ultra else ({"ultra_base": (clip.get("analysis") or {}).get("ultra_base")} if (clip.get("analysis") or {}).get("ultra_base") else {})),
-        }))
+            })
+            value["analysis"] = analysis
+        self.store.update_clip(job.match_id, clip["id"], publish_baseline)
         if pipeline_profile is not None:
             pipeline_profile.persist_seconds += time.perf_counter() - started
             pipeline_profile.total_seconds = time.perf_counter() - job_started

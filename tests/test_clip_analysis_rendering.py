@@ -1,4 +1,5 @@
 import inspect
+from pathlib import Path
 
 from web_app.backend.app.clip_jobs import ClipAnalysisService, ClipJob
 from web_app.backend.app.match_data import Provenance
@@ -51,3 +52,24 @@ def test_cached_tracking_uses_only_cached_measurements_and_preserves_existing_ar
     assert (output_dir / "tracking_postprocess_report.json").is_file()
     tracks = list(service.artifacts.read_window(match["id"], updated["analysis"]["tracking_artifact_id"]))
     assert len(tracks) == len(rows)
+
+
+def test_calibrated_cached_tracking_uses_stable_detection_cache_and_preserves_v8(tmp_path, monkeypatch):
+    store = WorkspaceStore(tmp_path)
+    calibration = tmp_path / "camera_alignment.veo"
+    calibration.write_text("{}")
+    match = store.create_match("Modern", "", {"path": str(calibration)})
+    clip = store.create_clip(match["id"], "source", 0.0, 1.0, "Modern clip")
+    store.update_clip(match["id"], clip["id"], lambda value: value.update(analysis={"ultra_base": "clips/old/ultra_base.mp4", "v8": {"status": "completed", "preview_frames": "v8/preview_frames.jsonl"}}))
+    service = ClipAnalysisService(store)
+    job = ClipJob("job_modern", match["id"], clip["id"], "tracking", total_frames=1, detection_threshold=.30)
+    seen = {}
+    def fake_run_all(received_job, received_match, received_clip, received_source, *, render_ultra):
+        seen.update(job=received_job, match=received_match, clip=received_clip, render_ultra=render_ultra,
+                    args=service._runner_args(received_source, received_match["calibration"], tmp_path / "out", received_clip, received_job))
+    monkeypatch.setattr(service, "_run_all", fake_run_all)
+    service._run_cached_tracking(job, store.match(match["id"]), store.clip(match["id"], clip["id"]), {"id": "source", "path": str(tmp_path / "source.mp4")})
+    assert seen["render_ultra"] is False
+    assert seen["args"].threshold == .30 and seen["args"].rescue_confirm_threshold == .30
+    assert seen["args"].detection_cache_dir == store.asset_dir(match["id"], "clips") / clip["id"] / "tracking" / "detections"
+    assert store.clip(match["id"], clip["id"])["analysis"]["v8"] == {"status": "completed", "preview_frames": "v8/preview_frames.jsonl"}
