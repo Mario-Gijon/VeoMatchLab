@@ -25,5 +25,5 @@ test('review seek uses its published timestamp and does not invent one from a fr
 test('Tracking Debug connects its presentation clock after FINAL mounts the video', () => {
   const source = readFileSync(new URL('../src/components/TrackingDebugWorkspace.tsx', import.meta.url), 'utf8')
   assert.equal(source.includes('if (!artifact) return'), true)
-  assert.equal(source.includes('}, [artifact, source?.id])'), true)
+  assert.equal(source.includes('}, [artifact, masterVideo, source?.id, clip.ultra_base_url, context])'), true)
 })
