@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import { nearestFinalFrame, reviewSeekTimestamp, trajectorySegments } from '../src/components/trackingFinalDebug.ts'
 
 const point = (frame, time, segment = 'segment-a') => ({ identity_id: 'identity-001', segment_id: segment, frame_index: frame, timestamp_s: time, measurement_x: 1, measurement_z: 2, smoothed_x: 1.1, smoothed_z: 2.1, origin: 'observed', speed_mps: 1, acceleration_mps2: 0, position_adjustment_m: 0, position_std_m: .1, kinematics_quality: 'rts_cv' })
@@ -19,4 +20,10 @@ test('review seek uses its published timestamp and does not invent one from a fr
   assert.equal(reviewSeekTimestamp({ identity_id: 'identity-001', frame_index: 30, timestamp_s: 1.001 }), 1.001)
   assert.equal(reviewSeekTimestamp({ identity_id: 'identity-001', start_frame_index: 30, start_timestamp_s: 1.001 }), 1.001)
   assert.equal(reviewSeekTimestamp({ identity_id: 'identity-001', frame_index: 30 }), null)
+})
+
+test('Tracking Debug connects its presentation clock after FINAL mounts the video', () => {
+  const source = readFileSync(new URL('../src/components/TrackingDebugWorkspace.tsx', import.meta.url), 'utf8')
+  assert.equal(source.includes('if (!artifact) return'), true)
+  assert.equal(source.includes('}, [artifact, source?.id])'), true)
 })

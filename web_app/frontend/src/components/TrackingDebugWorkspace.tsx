@@ -39,9 +39,11 @@ export default function TrackingDebugWorkspace({ matchId, clip, source, fieldLen
     return () => { active = false }
   }, [clip.id, matchId])
   useEffect(() => {
+    if (!artifact) return
     const element = video.current
-    return element ? startVideoPresentationClock(element, (next) => setTime(next)) : undefined
-  }, [source?.id])
+    if (!element) return
+    return startVideoPresentationClock(element, (next) => setTime(next))
+  }, [artifact, source?.id])
   const seek = useCallback((next: number) => {
     const target = Math.max(0, Math.min(duration, next))
     setTime(target)
