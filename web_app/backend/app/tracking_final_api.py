@@ -97,3 +97,42 @@ def tracking_final_router(store_provider: Callable[[], Any]) -> APIRouter:
         return published_json(final_root(match_id, clip_id), "review_queue.json")
 
     return router
+
+
+def persistent_tracking_router(store_provider: Callable[[], Any]) -> APIRouter:
+    """Expose published Persistent V1 diagnostics without executing tracking."""
+    router = APIRouter(prefix="/api/tracking/matches/{match_id}/clips/{clip_id}/persistent")
+
+    def persistent_root(match_id: str, clip_id: str) -> Path:
+        store = store_provider()
+        if store.match(match_id) is None:
+            raise _error(404, "Workspace not found.", "match_not_found")
+        if store.clip(match_id, clip_id) is None:
+            raise _error(404, "Clip not found.", "clip_not_found")
+        clips_root = store.asset_dir(match_id, "clips").resolve()
+        root = (clips_root / clip_id / "tracking" / "v1" / "diagnostics" / "persistent_actor_trajectories" / "persistent-trajectory-v1").resolve()
+        if not root.is_relative_to(clips_root) or not (root / "index.json").is_file():
+            raise _error(404, "Persistent V1 has not been published for this clip.", "tracking_persistent_missing")
+        index = _json_object(root / "index.json")
+        if index.get("trajectory_version") != "persistent-trajectory-v1":
+            raise _error(409, "Persistent V1 has an unexpected trajectory version.", "tracking_persistent_invalid")
+        return root
+
+    @router.get("")
+    def persistent_tracking(match_id: str, clip_id: str) -> dict[str, Any]:
+        root = persistent_root(match_id, clip_id)
+        required = {name: root / name for name in ("trajectories.jsonl", "gaps.jsonl", "summary.json")}
+        if any(not path.is_file() for path in required.values()):
+            raise _error(404, "Persistent V1 is incomplete.", "tracking_persistent_missing")
+        audit_root = (root.parent.parent / "persistent_population_audit" / "persistent-population-audit-v1").resolve()
+        clips_root = store_provider().asset_dir(match_id, "clips").resolve()
+        audit = _json_object(audit_root / "summary.json") if audit_root.is_relative_to(clips_root) and (audit_root / "summary.json").is_file() else None
+        return {
+            "index": _json_object(root / "index.json"),
+            "summary": _json_object(required["summary.json"]),
+            "audit": audit,
+            "trajectories": read_final_jsonl(required["trajectories.jsonl"]),
+            "gaps": read_final_jsonl(required["gaps.jsonl"]),
+        }
+
+    return router

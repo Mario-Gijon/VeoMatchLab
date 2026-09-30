@@ -7,6 +7,14 @@ export interface DebugPresentation {
 }
 
 export interface DebugPresentations { original: DebugPresentation | null; ultra: DebugPresentation | null; interactive: DebugPresentation | null }
+export interface DebugViewAvailability { hasSource: boolean; hasUltra: boolean; hasContext: boolean; ultraFailed: boolean }
+
+/** Availability is based only on the active visualisation's resources, never selection/follow state. */
+export function hasActivePresentation(view: TrackingDebugView, availability: DebugViewAvailability) {
+  if (view === 'original') return availability.hasSource
+  if (view === 'ultra') return availability.hasUltra && !availability.ultraFailed
+  return availability.hasSource && availability.hasContext
+}
 
 export function activePresentation(view: TrackingDebugView, presentations: DebugPresentations) {
   return presentations[view]

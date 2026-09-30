@@ -1,5 +1,5 @@
 import type { Calibration, Clip, ClipJob, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
-import type { TrackingFinalArtifact, TrackingReviews } from '../types/trackingFinal'
+import type { TrackingFinalArtifact, TrackingPersistentArtifact, TrackingReviews } from '../types/trackingFinal'
 
 // Production and LAN development use the Vite origin. The optional override
 // remains useful for isolated development or an externally hosted API.
@@ -40,6 +40,7 @@ export const api = {
   trackingFinal: (matchId: string, clipId: string) => request<TrackingFinalArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/final`),
   trackingFinalSummary: (matchId: string, clipId: string) => request<Record<string, unknown>>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/summary`),
   trackingFinalReviews: (matchId: string, clipId: string) => request<TrackingReviews>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/reviews`),
+  trackingPersistent: (matchId: string, clipId: string) => request<TrackingPersistentArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/persistent`),
   renameMatch: (id: string, name: string) => request<MatchWorkspace>(`/api/matches/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }),
   deleteMatch: (id: string) => request(`/api/matches/${id}`, { method: 'DELETE' }),
   removeMedia: (id: string) => request(`/api/media/${id}`, { method: 'DELETE' }),

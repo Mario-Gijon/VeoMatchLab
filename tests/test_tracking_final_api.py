@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 from web_app.backend.app import main
 from web_app.backend.app.storage import WorkspaceStore
-from web_app.backend.app.tracking_final_api import read_final_jsonl, tracking_final_router
+from web_app.backend.app.tracking_final_api import persistent_tracking_router, read_final_jsonl, tracking_final_router
 
 
 def _point(frame: int, timestamp: float, segment: str) -> dict:
@@ -68,6 +68,7 @@ def test_final_tracking_routes_are_registered_on_the_application():
     assert "/api/tracking/matches/{match_id}/clips/{clip_id}/final" in paths
     assert "/api/tracking/matches/{match_id}/clips/{clip_id}/final/summary" in paths
     assert "/api/tracking/matches/{match_id}/clips/{clip_id}/final/reviews" in paths
+    assert "/api/tracking/matches/{match_id}/clips/{clip_id}/persistent" in paths
 
 
 def test_final_tracking_is_clear_when_final_is_not_published(final_context):
@@ -90,3 +91,44 @@ def test_final_tracking_rejects_noncanonical_or_invalid_jsonl(final_context):
     with pytest.raises(HTTPException) as invalid:
         read_final_jsonl(root / "trajectories.jsonl")
     assert invalid.value.status_code == 422
+
+
+def _publish_persistent(store: WorkspaceStore, match_id: str, clip_id: str, actor_count: int = 23) -> None:
+    root = store.asset_dir(match_id, "clips") / clip_id / "tracking" / "v1" / "diagnostics" / "persistent_actor_trajectories" / "persistent-trajectory-v1"
+    root.mkdir(parents=True)
+    (root / "index.json").write_text(json.dumps({"trajectory_version": "persistent-trajectory-v1", "actor_count": actor_count, "provisional": True}), encoding="utf-8")
+    (root / "summary.json").write_text(json.dumps({"actor_count": actor_count, "frame_count": 150, "represented_coverage_fraction": .999}), encoding="utf-8")
+    rows = []
+    for index in range(1, actor_count + 1):
+        actor_id = f"actor-{index:03d}"
+        rows.append({"actor_id": actor_id, "points": [{"actor_id": actor_id, "segment_id": f"{actor_id}:segment-001", "frame_index": 0, "timestamp_s": 0.0, "x": 1.0, "z": 2.0, "measurement_x": 1.1, "measurement_z": 2.1, "origin": "observed"}]})
+    (root / "trajectories.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    (root / "gaps.jsonl").write_text("", encoding="utf-8")
+
+
+@pytest.fixture
+def persistent_context(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "store", WorkspaceStore(tmp_path))
+    match = main.store.create_match("Persistent", "", None)
+    clip = main.store.create_clip(match["id"], "source", 0.0, 1.0, "Persistent clip")
+    endpoint = persistent_tracking_router(lambda: main.store).routes[0].endpoint
+    return endpoint, match["id"], clip["id"]
+
+
+def test_persistent_tracking_serves_published_actor_trajectories(persistent_context):
+    endpoint, match_id, clip_id = persistent_context
+    _publish_persistent(main.store, match_id, clip_id)
+    payload = endpoint(match_id, clip_id)
+    assert payload["summary"]["actor_count"] == 23
+    assert len(payload["trajectories"]) == 23
+    assert payload["trajectories"][0]["points"][0]["actor_id"] == "actor-001"
+
+
+def test_persistent_tracking_missing_and_path_like_clip_ids_are_not_read(persistent_context):
+    endpoint, match_id, clip_id = persistent_context
+    with pytest.raises(HTTPException) as missing:
+        endpoint(match_id, clip_id)
+    assert missing.value.status_code == 404
+    with pytest.raises(HTTPException) as invalid:
+        endpoint(match_id, "../persistent-trajectory-v1")
+    assert invalid.value.status_code == 404
