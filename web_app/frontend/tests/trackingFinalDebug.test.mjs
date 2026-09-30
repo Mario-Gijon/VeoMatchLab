@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { nearestFinalFrame, reviewSeekTimestamp, trajectorySegments } from '../src/components/trackingFinalDebug.ts'
+import { nearestFinalFrame, pointCoordinates, reviewSeekTimestamp, trajectoryRenderSegments, trajectorySegments } from '../src/components/trackingFinalDebug.ts'
 
 const point = (frame, time, segment = 'segment-a') => ({ identity_id: 'identity-001', segment_id: segment, frame_index: frame, timestamp_s: time, measurement_x: 1, measurement_z: 2, smoothed_x: 1.1, smoothed_z: 2.1, origin: 'observed', speed_mps: 1, acceleration_mps2: 0, position_adjustment_m: 0, position_std_m: .1, kinematics_quality: 'rts_cv' })
 const actorPoint = (actor, frame, time, segment = `${actor}:segment-001`) => ({ actor_id: actor, segment_id: segment, frame_index: frame, timestamp_s: time, x: 1, z: 2, measurement_x: 1.1, measurement_z: 2.1, origin: 'observed' })
@@ -27,6 +27,21 @@ test('Persistent trails keep actor ids and split on published segments', () => {
   const segments = trajectorySegments([actorPoint('actor-001', 0, 0, 'one'), actorPoint('actor-001', 3, .1, 'one'), actorPoint('actor-001', 9, .3, 'two')], [])
   assert.deepEqual(segments.map((segment) => segment.map((item) => item.frame_index)), [[0, 3], [9]])
   assert.equal(segments[0][0].actor_id, 'actor-001')
+})
+
+test('Persistent raw omits synthetic null measurements without emitting invalid coordinates', () => {
+  const observed = actorPoint('actor-001', 0, 0)
+  const interpolated = { ...actorPoint('actor-001', 3, .1), origin: 'interpolated', measurement_x: null, measurement_z: null }
+  const predicted = { ...actorPoint('actor-001', 6, .2), origin: 'predicted', measurement_x: null, measurement_z: null }
+
+  assert.deepEqual(pointCoordinates(observed, 'measurement'), { x: 1.1, z: 2.1 })
+  assert.equal(pointCoordinates(interpolated, 'measurement'), null)
+  assert.equal(pointCoordinates(predicted, 'measurement'), null)
+  assert.deepEqual(pointCoordinates(interpolated, 'smoothed'), { x: 1, z: 2 })
+
+  const rawSegments = trajectoryRenderSegments([observed, interpolated, predicted], [], 'measurement')
+  assert.deepEqual(rawSegments.map((segment) => segment.map(({ point }) => point.frame_index)), [[0]])
+  assert.equal(rawSegments.flat().every(({ coordinates }) => Number.isFinite(coordinates.x) && Number.isFinite(coordinates.z)), true)
 })
 
 test('review seek uses its published timestamp and does not invent one from a frame', () => {

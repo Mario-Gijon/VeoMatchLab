@@ -1,5 +1,5 @@
 export type FinalPositionMode = 'smoothed' | 'measurement'
-export type PointOrigin = 'observed' | 'fused' | 'interpolated' | string
+export type PointOrigin = 'observed' | 'fused' | 'interpolated' | 'predicted' | (string & {})
 
 export interface FinalPoint {
   identity_id: string
@@ -23,7 +23,7 @@ export interface SegmentBreak { identity_id: string; left_frame_index: number; r
 export interface TrackingFinalArtifact { index: Record<string, unknown>; summary: Record<string, unknown>; trajectories: FinalTrajectory[]; segment_breaks: SegmentBreak[] }
 export interface PersistentPoint {
   actor_id: string; segment_id: string; frame_index: number; timestamp_s: number
-  x: number; z: number; measurement_x: number; measurement_z: number; origin: PointOrigin
+  x: number; z: number; measurement_x: number | null; measurement_z: number | null; origin: PointOrigin
   speed_mps?: number | null; position_std_m?: number | null; quality?: string | null
 }
 export interface PersistentTrajectory { actor_id: string; points: PersistentPoint[]; [key: string]: unknown }
