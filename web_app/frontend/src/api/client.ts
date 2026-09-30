@@ -1,4 +1,5 @@
 import type { Calibration, Clip, ClipJob, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
+import type { TrackingFinalArtifact, TrackingReviews } from '../types/trackingFinal'
 
 // Production and LAN development use the Vite origin. The optional override
 // remains useful for isolated development or an externally hosted API.
@@ -36,6 +37,9 @@ export const api = {
   clipViews: (matchId: string, clipId: string, timestamp: number, view: 'cameras' | 'ultra') => request<{ timestamp_s: number; cameras: Record<string, string>; ultra_panorama: string | null }>(`/api/matches/${matchId}/clips/${clipId}/development-views?timestamp_s=${encodeURIComponent(timestamp)}&view=${view}`),
   clipTracks: (matchId: string, clipId: string, timestamp: number) => request<{ timestamp_s: number; field_length: number; field_width: number; tracks: Array<{ track_id: number; x: number; z: number; lifecycle: string; position_kind: string }> }>(`/api/matches/${matchId}/clips/${clipId}/tracks?timestamp_s=${encodeURIComponent(timestamp)}`),
   clipDebugFrames: (matchId: string, clipId: string, trackingMode: 'actual' | 'v28_preview' | 'v8_canonical' = 'actual') => request<{ tracks: Array<{ timestamp_s: number; frame_index?: number; tracks: Array<{ track_id: number; x: number; z: number; lifecycle: string; position_kind: string; measurement_id?: string | null; vx?: number; vz?: number; hits?: number; missed_seconds?: number }> }>; association: Array<{ timestamp_s: number; frame_index: number; observations: Array<{ observation_id: number; view_name: string; xyxy: number[]; confidence: number; ownership_role: string; status: string; source_lenses: Array<{ lens: string; x_min: number; y_min: number; x_max: number; y_max: number }> }>; measurements: Array<{ measurement_id: number; primary_observation_id: number; observation_ids: number[] }> }>; camera_specs: Record<string, { longitude: number; latitude: number; vfov: number }> }>(`/api/matches/${matchId}/clips/${clipId}/debug-frames?tracking_mode=${encodeURIComponent(trackingMode)}`),
+  trackingFinal: (matchId: string, clipId: string) => request<TrackingFinalArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/final`),
+  trackingFinalSummary: (matchId: string, clipId: string) => request<Record<string, unknown>>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/summary`),
+  trackingFinalReviews: (matchId: string, clipId: string) => request<TrackingReviews>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/reviews`),
   renameMatch: (id: string, name: string) => request<MatchWorkspace>(`/api/matches/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }),
   deleteMatch: (id: string) => request(`/api/matches/${id}`, { method: 'DELETE' }),
   removeMedia: (id: string) => request(`/api/media/${id}`, { method: 'DELETE' }),

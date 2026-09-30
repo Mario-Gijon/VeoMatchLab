@@ -19,6 +19,7 @@ import EventsPanel from '../components/EventsPanel'
 import MatchTimeline from '../components/MatchTimeline'
 import ClipsPanel from '../components/ClipsPanel'
 import ClipWorkspace from '../components/ClipWorkspace'
+import TrackingDebugWorkspace from '../components/TrackingDebugWorkspace'
 import { useMatchEvents } from '../hooks/useMatchEvents'
 import type { MatchEvent } from '../types/matchData'
 import type { Calibration, Clip, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, ViewContext } from '../types'
@@ -46,6 +47,7 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
   const [highlightsOpen, setHighlightsOpen] = useState(false)
   const [section, setSection] = useState<'visualization' | 'clips'>('visualization')
   const [openClip, setOpenClip] = useState<Clip | null>(null)
+  const [trackingDebugClip, setTrackingDebugClip] = useState<Clip | null>(null)
   const highlightsVideo = useRef<HTMLVideoElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const interactiveCamera = useRef<InteractiveCamera | null>(null)
@@ -124,7 +126,7 @@ export default function WorkspacePage({ matchId, calibrations, onBack }: Props) 
     {error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}{busy && <LinearProgress />}
     {filesOpen && <ManageFilesDialog match={match} calibrations={calibrations} onClose={() => setFilesOpen(false)} onUpdated={(result) => { video.current?.pause(); setPlaying(false); setFrameRender(null); setStillImage(null); setMatch(result); generation.current++ }} onImage={(item) => { video.current?.pause(); setPlaying(false); setStillImage(item); setFrameRender(null); setFilesOpen(false) }} onRender={(item) => { setFilesOpen(false); void run(() => renderImage(item)) }} />}
     <ToggleButtonGroup size="small" exclusive value={section} onChange={(_, value: 'visualization' | 'clips' | null) => value && setSection(value)} sx={{ mb: 1 }}><ToggleButton value="visualization">Visualización</ToggleButton><ToggleButton value="clips">Clips</ToggleButton></ToggleButtonGroup>
-    {section === 'clips' ? (openClip ? <ClipWorkspace matchId={matchId} clip={openClip} source={match.media.find((item) => item.id === openClip.clip_media_id)} context={context} onBack={() => setOpenClip(null)} onChanged={() => { void api.match(matchId).then((next) => { setMatch(next); setOpenClip(next.clips?.find((item) => item.id === openClip.id) ?? null) }).catch((reason: Error) => setError(reason.message)) }} /> : <ClipsPanel matchId={matchId} source={match.media.find((item) => item.role === 'dual_lens')} time={time} clips={match.clips ?? []} onOpen={setOpenClip} onChanged={() => { void api.match(matchId).then(setMatch).catch((reason: Error) => setError(reason.message)) }} />) : <>
+    {section === 'clips' ? (trackingDebugClip ? <TrackingDebugWorkspace matchId={matchId} clip={trackingDebugClip} source={match.media.find((item) => item.id === trackingDebugClip.clip_media_id)} fieldLength={context?.field_length} fieldWidth={context?.field_width} onBack={() => setTrackingDebugClip(null)} /> : openClip ? <ClipWorkspace matchId={matchId} clip={openClip} source={match.media.find((item) => item.id === openClip.clip_media_id)} context={context} onBack={() => setOpenClip(null)} onChanged={() => { void api.match(matchId).then((next) => { setMatch(next); setOpenClip(next.clips?.find((item) => item.id === openClip.id) ?? null) }).catch((reason: Error) => setError(reason.message)) }} /> : <ClipsPanel matchId={matchId} source={match.media.find((item) => item.role === 'dual_lens')} time={time} clips={match.clips ?? []} onOpen={setOpenClip} onTrackingDebug={setTrackingDebugClip} onChanged={() => { void api.match(matchId).then(setMatch).catch((reason: Error) => setError(reason.message)) }} />) : <>
     <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1} mb={1}>
       <ToggleButtonGroup size="small" exclusive value={mode} onChange={(_, value: ViewMode | null) => value && switchView(value)}>{VIEW_MODES.map((view) => <ToggleButton key={view} value={view}>{viewLabel(view)}</ToggleButton>)}</ToggleButtonGroup>
       <ToggleButton size="small" value="select" selected={selectionEnabled} onChange={() => setSelectionEnabled((value) => !value)}>Seleccionar</ToggleButton>
