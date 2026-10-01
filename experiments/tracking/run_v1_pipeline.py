@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Run the clean Tracking V1 detections -> tracklets pipeline on a Veo clip.
 
-The default input is ``experiments/tracking/dev_clip.json``. The runner uses
-the already-validated six-view same-frame detection/association layer, converts
-the resulting physical-person hypotheses to ``CanonicalDetectionFrame`` and
-then hands those frames to the pure V1 pipeline.
+The primary input is a materialized ``--match-id`` + ``--clip-id`` resolved by
+``tracking.clip_context``. ``--dev-config`` remains only as a legacy
+development fallback. The runner uses the already-validated six-view same-frame
+detection/association layer, converts the resulting physical-person hypotheses
+to ``CanonicalDetectionFrame`` and then hands those frames to the pure V1
+pipeline.
 
 No Tracking V0 temporal tracker is imported or used.
 
@@ -28,6 +30,29 @@ if str(ROOT) not in sys.path:
 
 
 DEFAULT_DEV_CONFIG = ROOT / "experiments" / "tracking" / "dev_clip.json"
+
+
+def resolve_runner_clip_context(args: argparse.Namespace):
+    """Resolve CLI clip input without importing models or running detection."""
+    from tracking.clip_context import resolve_tracking_clip_context
+
+    explicit_match = args.match_id is not None
+    explicit_clip = args.clip_id is not None
+    if explicit_match != explicit_clip:
+        raise ValueError("--match-id and --clip-id must be provided together")
+
+    data_root = _repo_path(args.data_root)
+    if explicit_match:
+        return resolve_tracking_clip_context(data_root, args.match_id, args.clip_id), "explicit"
+
+    # Legacy/development fallback. Its IDs are resolved through the same
+    # generic context; old paths and duration constants are not trusted.
+    config_path = _repo_path(args.dev_config)
+    dev = load_dev_config(config_path)
+    return (
+        resolve_tracking_clip_context(data_root, dev["match_id"], dev["clip_id"]),
+        f"legacy dev-config {config_path}",
+    )
 
 
 def sample_times(
@@ -232,10 +257,19 @@ def canonical_frames_from_veo(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--match-id", help="Materialized match identifier.")
+    parser.add_argument("--clip-id", help="Materialized clip identifier.")
+    parser.add_argument(
+        "--data-root",
+        type=Path,
+        default=ROOT / "data",
+        help="Workspace data root containing matches/.",
+    )
     parser.add_argument(
         "--dev-config",
         type=Path,
         default=DEFAULT_DEV_CONFIG,
+        help="Legacy/development fallback when --match-id and --clip-id are omitted.",
     )
     parser.add_argument("--start-s", type=float, default=0.0)
     parser.add_argument(
@@ -274,11 +308,10 @@ def main() -> None:
     from tracking.tracklets.builder import TrackletBuilderConfig
 
     args = parse_args()
-    config_path = _repo_path(args.dev_config)
-    dev = load_dev_config(config_path)
+    context, input_mode = resolve_runner_clip_context(args)
 
-    video = _repo_path(dev["clip_video"])
-    calibration = _repo_path(dev["calibration"])
+    video = context.clip_video
+    calibration = context.calibration
     weights = _repo_path(DEFAULT_C2_WEIGHTS)
 
     for path, label in (
@@ -289,7 +322,7 @@ def main() -> None:
         if not path.is_file():
             raise FileNotFoundError(f"{label} does not exist: {path}")
 
-    clip_duration_s = float(dev["duration_s"])
+    clip_duration_s = context.duration_s
     if args.start_s >= clip_duration_s:
         raise ValueError(
             f"start_s={args.start_s} is outside the {clip_duration_s}s clip"
@@ -311,10 +344,15 @@ def main() -> None:
     if args.width <= 0 or args.height <= 0:
         raise ValueError("width and height must be positive")
 
-    store = TrackingArtifactStore(
-        ROOT / "data",
-        dev["match_id"],
-        dev["clip_id"],
+    store = TrackingArtifactStore(context.data_root, context.match_id, context.clip_id)
+
+    print(
+        "[tracking-v1] "
+        f"match={context.match_id} clip={context.clip_id} "
+        f"video={context.clip_video} calibration={context.calibration} "
+        f"duration={context.duration_s:.6f}s fps={context.fps:.6f} "
+        f"frames={context.frame_count} size={context.width}x{context.height} "
+        f"input={input_mode}"
     )
 
     frame_stream = canonical_frames_from_veo(
@@ -332,6 +370,14 @@ def main() -> None:
 
     tracklet_config = TrackletBuilderConfig()
 
+    detection_metadata = {
+        "input": input_mode,
+        "video": str(video),
+        "calibration": str(calibration),
+    }
+    if args.match_id is None:
+        detection_metadata["dev_config"] = str(_repo_path(args.dev_config))
+
     result = run_detection_and_tracklet_stages(
         store,
         frame_stream,
@@ -345,11 +391,7 @@ def main() -> None:
             "sample_period_s": float(args.sample_period_s),
             "rescue_enabled": not bool(args.skip_rescue),
         },
-        detection_metadata={
-            "dev_config": str(config_path.relative_to(ROOT)),
-            "video": str(video.relative_to(ROOT)),
-            "calibration": str(calibration.relative_to(ROOT)),
-        },
+        detection_metadata=detection_metadata,
         tracklet_config=tracklet_config,
     )
 
