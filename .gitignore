@@ -41,3 +41,6 @@ person_detect/training/veomatch_person_v1/datasets/*
 person_detect/training/veomatch_person_v1/runs/*
 !person_detect/training/veomatch_person_v1/runs/.gitkeep
 person_detect/training/veomatch_person_v1/.staging/
+
+# Local Python environments
+.venv-jersey/
