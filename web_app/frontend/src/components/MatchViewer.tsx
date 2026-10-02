@@ -1,6 +1,7 @@
 import { Alert, Box } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
+import type { ReactNode } from 'react'
 import type { GroundPoint, MediaItem, ViewContext } from '../types'
 import { api } from '../api/client'
 import { createPanoramaGL } from './panoramaGL'
@@ -18,10 +19,10 @@ interface Props {
   cameraRef: RefObject<InteractiveCamera | null>
   onTime: (value: number) => void; onPlayback: (value: boolean) => void
   points: GroundPoint[]; selectionEnabled: boolean
-  onClick: (x: number, y: number, pick: ViewerPick) => void; trackingAvailable?: boolean
+  onClick: (x: number, y: number, pick: ViewerPick) => void; trackingAvailable?: boolean; overlay?: ReactNode
 }
 
-export default function MatchViewer({ media, mode, crop, context, width, videoRef, initialTime, cameraRef, onTime, onPlayback, points, selectionEnabled, onClick, trackingAvailable }: Props) {
+export default function MatchViewer({ media, mode, crop, context, width, videoRef, initialTime, cameraRef, onTime, onPlayback, points, selectionEnabled, onClick, trackingAvailable, overlay }: Props) {
   // One decoder, one persistent WebGL canvas and one RAW 2D canvas per source.
   const canvas = useRef<HTMLCanvasElement>(null)
   const raw = useRef<HTMLCanvasElement>(null)
@@ -185,6 +186,7 @@ export default function MatchViewer({ media, mode, crop, context, width, videoRe
           aspectRatio: mode === 'ultra_panorama' ? `${outputWidth} / ${outputHeight}` : '16 / 9', height: mode === 'interactive' ? 'auto' : undefined, maxHeight: mode === 'interactive' ? '65vh' : undefined }} />
       <canvas ref={raw} aria-label="Vista de doble lente" width={2048} height={crop === 'stacked' ? 2048 : 1024}
         style={{ width: '100%', display: mode === 'dual_lens' ? 'block' : 'none', background: '#080a0c' }} />
+      {overlay}
       {selectionEnabled && mode !== 'interactive' && <svg aria-label={mode === 'dual_lens' ? 'Marcadores de doble lente' : mode === 'ultra_panorama' ? 'Marcadores ultra panorámicos' : 'Marcadores panorámicos'} viewBox={`0 0 ${outputWidth} ${outputHeight}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {points.map((point) => {
           const y = point.pixel_y - (mode === 'dual_lens' && crop === 'right' ? 1024 : 0)
