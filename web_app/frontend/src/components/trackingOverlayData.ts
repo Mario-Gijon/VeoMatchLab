@@ -13,6 +13,13 @@ export interface VisualAnchor { frame_index: number; timestamp_s: number; direct
 
 export const VISUAL_ANCHOR_MAX_GAP_S = .5
 
+/** Canonical representative-view bbox -> presentation ray, shared by V1 overlays. */
+export function presentationDirectionForObservation(viewName: string | null | undefined, xyxy: readonly number[] | null | undefined, cameraSpecs: Record<string, VirtualCameraSpec>) {
+  const spec = viewName ? cameraSpecs[viewName] : undefined
+  if (!spec || !xyxy || xyxy.length !== 4 || !Array.from(xyxy).every(Number.isFinite)) return null
+  return presentationDirectionFromVirtualPixel(spec, (xyxy[0] + xyxy[2]) / 2, xyxy[3], 1280, 720)
+}
+
 export function representativeObservation(track: { position_kind: string; measurement_id?: string | null }, association: OverlayAssociationSample[]): RepresentativeObservation | null {
   if (track.position_kind !== 'observed' || !track.measurement_id) return null
   const separator = track.measurement_id.indexOf(':')
@@ -34,9 +41,7 @@ export function visualAnchorsByTrack(trackFrames: OverlayTrackFrame[], associati
     if (typeof frameIndex !== 'number' || !Number.isInteger(frameIndex)) continue
     for (const track of frame.tracks) {
       const representative = representativeObservation(track, association)
-      const spec = representative && cameraSpecs[representative.view_name]
-      const foot = representative && { x: (representative.xyxy[0] + representative.xyxy[2]) / 2, y: representative.xyxy[3] }
-      const direction = spec && foot ? presentationDirectionFromVirtualPixel(spec, foot.x, foot.y, 1280, 720) : null
+      const direction = representative ? presentationDirectionForObservation(representative.view_name, representative.xyxy, cameraSpecs) : null
       if (!direction) continue
       const anchors = result.get(track.track_id) ?? []
       anchors.push({ frame_index: frameIndex, timestamp_s: frame.timestamp_s, direction: [direction[0], direction[1], direction[2]] })

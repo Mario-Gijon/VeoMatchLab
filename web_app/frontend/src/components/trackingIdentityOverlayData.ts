@@ -40,15 +40,13 @@ function interpolate(first: TrackingIdentityObservation, second: TrackingIdentit
     z: first.z + (second.z - first.z) * ratio,
     bbox,
     source_lens: bbox ? first.source_lens : null,
+    representative_view: null,
+    virtual_bbox: null,
   }
 }
 
-function observationAtTime(observations: TrackingIdentityObservation[], time: number, fps?: number | null) {
-  if (fps && fps > 0) {
-    const frame = Math.round(time * fps)
-    const exact = observations.find((observation) => observation.frame_index === frame)
-    if (exact) return { observation: exact, interpolated: false }
-  }
+function observationAtTime(observations: TrackingIdentityObservation[], time: number, _fps?: number | null) {
+  void _fps // Artifact timestamp_s is canonical; FPS is deliberately not used for selection.
   let left = 0, right = observations.length
   while (left < right) {
     const middle = Math.floor((left + right) / 2)
@@ -72,4 +70,24 @@ export function activeIdentityObservations(tracks: TrackingIdentityTracklet[], t
     if (active) result.push({ ...active.observation, identityId: track.identity_id, trackletId: track.tracklet_id, assignmentStatus: track.assignment_status, interpolated: active.interpolated })
   }
   return result
+}
+
+/** Fixed roster is actor-centric: collapse simultaneous tracklet evidence per actor. */
+export function activeFixedRosterObservations(tracks: TrackingIdentityTracklet[], time: number, fps?: number | null): ActiveIdentityObservation[] {
+  const raw = activeIdentityObservations(tracks, time, fps)
+  const chosen = new Map<string, ActiveIdentityObservation>()
+  const unassigned: ActiveIdentityObservation[] = []
+  const better = (candidate: ActiveIdentityObservation, current: ActiveIdentityObservation) => {
+    if (candidate.interpolated !== current.interpolated) return !candidate.interpolated
+    const candidateDistance = Math.abs(candidate.timestamp_s - time), currentDistance = Math.abs(current.timestamp_s - time)
+    return candidateDistance !== currentDistance ? candidateDistance < currentDistance : candidate.trackletId < current.trackletId
+  }
+  for (const observation of raw) {
+    if (observation.assignmentStatus === 'unassigned') { unassigned.push(observation); continue }
+    const current = chosen.get(observation.identityId)
+    if (!current || better(observation, current)) chosen.set(observation.identityId, observation)
+  }
+  return [...chosen.values(), ...unassigned].sort((left, right) => left.assignmentStatus !== right.assignmentStatus
+    ? left.assignmentStatus === 'assigned' ? -1 : 1
+    : left.identityId === right.identityId ? left.trackletId.localeCompare(right.trackletId) : left.identityId.localeCompare(right.identityId))
 }

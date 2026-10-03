@@ -8,6 +8,8 @@ export interface TrackingIdentityObservation {
   z: number
   bbox: [number, number, number, number] | null
   source_lens: string | null
+  representative_view: string | null
+  virtual_bbox: [number, number, number, number] | null
 }
 
 export interface TrackingIdentityTracklet {

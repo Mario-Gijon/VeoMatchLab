@@ -62,7 +62,7 @@ def test_overlay_resolves_numeric_latest_and_uses_source_bbox_without_lens_offse
     assert payload["state_id"] == "round-10-v1"
     assert payload["source_kind"] == "round_state"
     assert payload["identity_count"] == 1
-    assert payload["tracks"] == [{"tracklet_id": "trk-1", "identity_id": "person-0001", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]}]
+    assert payload["tracks"] == [{"tracklet_id": "trk-1", "identity_id": "person-0001", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right", "representative_view": None, "virtual_bbox": [900.0, 1.0, 950.0, 50.0]}]}]
 
 
 def test_overlay_rejects_missing_or_incomplete_state_and_outside_paths(overlay_context, tmp_path):
@@ -100,8 +100,8 @@ def test_fixed_roster_is_default_and_keeps_unassigned_outside_the_actor_roster(o
     assert payload["assigned_tracklet_count"] == 1
     assert payload["unassigned_tracklet_count"] == 1
     assert payload["tracks"] == [
-        {"tracklet_id": "trk-1", "identity_id": "actor-0007", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]},
-        {"tracklet_id": "trk-2", "identity_id": "UNASSIGNED", "assignment_status": "unassigned", "observations": [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": [40.0, 50.0, 70.0, 100.0], "source_lens": "left"}]},
+        {"tracklet_id": "trk-1", "identity_id": "actor-0007", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right", "representative_view": None, "virtual_bbox": [900.0, 1.0, 950.0, 50.0]}]},
+        {"tracklet_id": "trk-2", "identity_id": "UNASSIGNED", "assignment_status": "unassigned", "observations": [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": [40.0, 50.0, 70.0, 100.0], "source_lens": "left", "representative_view": None, "virtual_bbox": [800.0, 2.0, 850.0, 60.0]}]},
     ]
 
 
@@ -115,7 +115,7 @@ def test_fixed_roster_keeps_spatial_observations_when_the_source_bbox_is_missing
     ]}])
     payload = endpoint(match_id, clip_id)
     pending = next(track for track in payload["tracks"] if track["assignment_status"] == "unassigned")
-    assert pending["observations"] == [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": None, "source_lens": None}]
+    assert pending["observations"] == [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": None, "source_lens": None, "representative_view": None, "virtual_bbox": None}]
 
 
 @pytest.mark.parametrize(("assignment_actor_id", "assigned_tracklet", "unassigned_tracklet"), [

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { presentationDirectionFromVirtualPixel } from '../src/components/trackingProjection.ts'
-import { representativeObservation, visualAnchorsByTrack, visualDirectionForTrack } from '../src/components/trackingOverlayData.ts'
+import { presentationDirectionForObservation, representativeObservation, visualAnchorsByTrack, visualDirectionForTrack } from '../src/components/trackingOverlayData.ts'
 
 const association = [{ frame_index: 12, observations: [
   { observation_id: 7, view_name: 'tight_far_c1', xyxy: [100, 200, 120, 260] },
@@ -35,6 +35,12 @@ test('observed final samples retain their exact representative visual ray', () =
   const anchors = visualAnchorsByTrack(visualFrames, visualAssociation, specs)
   const expected = presentationDirectionFromVirtualPixel(specs.left, 640, 600, 1280, 720)
   assert.deepEqual(visualDirectionForTrack(visualFrames[0].tracks[0], 100, 100 / 30, anchors), expected)
+})
+
+test('fixed roster representative evidence uses the same canonical visual ray helper', () => {
+  const expected = presentationDirectionFromVirtualPixel(specs.left, 640, 600, 1280, 720)
+  assert.deepEqual(presentationDirectionForObservation('left', [600, 400, 680, 600], specs), expected)
+  assert.equal(presentationDirectionForObservation(null, [600, 400, 680, 600], specs), null)
 })
 
 test('interpolated final samples receive an nlerp visual ray between observed anchors', () => {

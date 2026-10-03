@@ -108,10 +108,12 @@ def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, A
             if not isinstance(detection_id, str) or not detection_id or detection_id in detections:
                 raise _error(422, "Tracking V1 overlay detections are invalid.", "tracking_identity_overlay_invalid")
             bbox = _bbox(detection.get("source_bbox_xyxy"))
+            virtual_bbox = _bbox(detection.get("virtual_bbox_xyxy"))
+            representative_view = detection.get("representative_view") if isinstance(detection.get("representative_view"), str) else None
             if bbox is not None:
-                detections[detection_id] = {"bbox": bbox, "source_lens": detection.get("source_lens") if isinstance(detection.get("source_lens"), str) else None}
+                detections[detection_id] = {"bbox": bbox, "source_lens": detection.get("source_lens") if isinstance(detection.get("source_lens"), str) else None, "representative_view": representative_view, "virtual_bbox": virtual_bbox}
             else:
-                detections[detection_id] = {"bbox": None, "source_lens": None}
+                detections[detection_id] = {"bbox": None, "source_lens": None, "representative_view": representative_view, "virtual_bbox": virtual_bbox}
 
     tracklet_observations: dict[str, list[dict[str, Any]]] = {}
     detection_owner: set[str] = set()
@@ -132,7 +134,7 @@ def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, A
             seen.add(detection_id)
             detection_owner.add(detection_id)
             source = detections[detection_id]
-            resolved.append({"frame_index": frame_index, "timestamp_s": float(timestamp), "x": float(x), "z": float(z), "bbox": source["bbox"], "source_lens": source["source_lens"]})
+            resolved.append({"frame_index": frame_index, "timestamp_s": float(timestamp), "x": float(x), "z": float(z), "bbox": source["bbox"], "source_lens": source["source_lens"], "representative_view": source["representative_view"], "virtual_bbox": source["virtual_bbox"]})
         tracklet_observations[tracklet_id] = resolved
     return detections, tracklet_observations
 

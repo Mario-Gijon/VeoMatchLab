@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { activeIdentityObservations, identityColor, identityOverlayStyle } from '../src/components/trackingIdentityOverlayData.ts'
+import { activeFixedRosterObservations, activeIdentityObservations, identityColor, identityOverlayStyle } from '../src/components/trackingIdentityOverlayData.ts'
 
-const observation = (time, bbox, lens = 'left', frame = Math.round(time * 30), x = time * 10, z = -time * 10) => ({ frame_index: frame, timestamp_s: time, x, z, bbox, source_lens: lens })
+const observation = (time, bbox, lens = 'left', frame = Math.round(time * 30), x = time * 10, z = -time * 10) => ({ frame_index: frame, timestamp_s: time, x, z, bbox, source_lens: lens, representative_view: null, virtual_bbox: null })
 const track = (id, observations, identity = 'actor-0007', assignmentStatus = 'assigned') => ({ tracklet_id: id, identity_id: identity, assignment_status: assignmentStatus, observations })
 
 test('interpolates only within one tracklet and lens over a short gap', () => {
@@ -38,6 +38,16 @@ test('uses exact physical frames, keeps bbox-null spatial observations, and neve
   const between = activeIdentityObservations([spatial], 1.1)[0]
   assert.deepEqual([Number(between.x.toFixed(6)), Number(between.z.toFixed(6)), between.bbox], [9, -5, null])
   assert.equal(activeIdentityObservations([spatial], 1.7).length, 0)
+})
+
+test('fixed roster emits no more than one marker per assigned actor', () => {
+  const actorA = track('trk-b', [observation(2, [1, 1, 2, 2], 'left', 60, 30, 10)], 'actor-0007')
+  const actorB = track('trk-a', [observation(2, [3, 3, 4, 4], 'left', 60, -30, -10)], 'actor-0007')
+  const pendingA = track('trk-u1', [observation(2, null)], 'UNASSIGNED', 'unassigned')
+  const pendingB = track('trk-u2', [observation(2, null)], 'UNASSIGNED', 'unassigned')
+  const active = activeFixedRosterObservations([actorA, actorB, pendingA, pendingB], 2)
+  assert.deepEqual(active.map((item) => item.trackletId), ['trk-a', 'trk-u1', 'trk-u2'])
+  assert.equal(active.filter((item) => item.identityId === 'actor-0007').length, 1)
 })
 
 test('the source view keeps playback usable when Tracking V1 is unavailable', () => {

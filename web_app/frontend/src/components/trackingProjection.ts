@@ -32,23 +32,6 @@ export function projectPresentationDirectionToUltra(context: ViewContext, direct
   return [u, v].every(Number.isFinite) && u >= 0 && u <= 1 && v >= 0 && v <= 1 ? { u, v } : null
 }
 
-/** Project a physical field point through the captured presentation transform. */
-export function projectGroundPointToUltra(context: ViewContext, x: number, z: number) {
-  const camera2world = context.uniforms.camera2world?.value as number[] | undefined
-  const camera2presentation = context.uniforms.camera2presentation?.value as number[] | undefined
-  if (!camera2world || !camera2presentation || camera2world.length !== 16 || camera2presentation.length !== 16 || ![x, z].every(Number.isFinite)) return null
-  const presentationToWorld = multiplyMatrix(camera2world, camera2presentation)
-  const worldToPresentation = inverseMatrix(presentationToWorld)
-  const origin = camera2world.slice(12, 15)
-  if (!worldToPresentation || !origin.every(Number.isFinite)) return null
-  const worldDirection = [x - origin[0], -origin[1], z - origin[2], 0]
-  const presentationDirection = [0, 1, 2].map((row) => worldDirection.reduce((sum, component, column) => sum + worldToPresentation[column * 4 + row] * component, 0))
-  const norm = Math.hypot(...presentationDirection)
-  return norm > 1e-12 && presentationDirection.every(Number.isFinite)
-    ? projectPresentationDirectionToUltra(context, presentationDirection.map((value) => value / norm))
-    : null
-}
-
 export function projectVirtualRayToInteractive(context: ViewContext, viewToWorld: number[], fov: number, direction: number[], aspect: number) {
   if (direction.length !== 3 || !(aspect > 0) || !Number.isFinite(fov) || !direction.every(Number.isFinite)) return null
   const camera2world = context.uniforms.camera2world?.value as number[] | undefined

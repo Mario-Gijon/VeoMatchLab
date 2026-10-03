@@ -1,24 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ViewContext } from '../types'
-import type { TrackingIdentityOverlayArtifact } from '../types/trackingIdentityOverlay'
-import { initialCamera, interactiveTransform, projectGroundPoint } from './interactiveCamera'
+import { initialCamera, interactiveTransform } from './interactiveCamera'
 import type { InteractiveCamera } from './interactiveCamera'
-import { projectGroundPointToUltra } from './trackingProjection'
-import { activeIdentityObservations, identityOverlayStyle } from './trackingIdentityOverlayData'
+import { projectPresentationDirectionToUltra, projectVirtualRayToInteractive, type VirtualCameraSpec } from './trackingProjection'
+import { identityOverlayStyle, type ActiveIdentityObservation } from './trackingIdentityOverlayData'
+import { presentationDirectionForObservation } from './trackingOverlayData'
 
 interface Props {
-  artifact: TrackingIdentityOverlayArtifact
+  observations: ActiveIdentityObservation[]
   mode: 'ultra' | 'interactive'
   context: ViewContext
   cameraRef: { current: InteractiveCamera | null }
-  time: number
-  fps?: number | null
+  cameraSpecs: Record<string, VirtualCameraSpec>
 }
 
-export default function FixedRosterTrackingOverlay({ artifact, mode, context, cameraRef, time, fps }: Props) {
+export default function FixedRosterTrackingOverlay({ observations, mode, context, cameraRef, cameraSpecs }: Props) {
   const surface = useRef<SVGSVGElement>(null)
   const [, redraw] = useState(0)
-  const observations = useMemo(() => activeIdentityObservations(artifact.tracks, time, fps), [artifact.tracks, fps, time])
   useEffect(() => {
     let frame = 0
     if (mode !== 'interactive') {
@@ -34,9 +32,10 @@ export default function FixedRosterTrackingOverlay({ artifact, mode, context, ca
   const aspect = bounds && bounds.height > 0 ? bounds.width / bounds.height : 0
   return <svg ref={surface} viewBox="0 0 1 1" preserveAspectRatio="none" aria-label="Fixed roster Tracking V1" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
     {observations.map((observation) => {
-      const projection = mode === 'ultra'
-        ? projectGroundPointToUltra(context, observation.x, observation.z)
-        : aspect > 0 ? projectGroundPoint(interactiveTransform(context, camera), camera.fov, aspect, observation.x, observation.z) : null
+      const direction = presentationDirectionForObservation(observation.representative_view, observation.virtual_bbox, cameraSpecs)
+      const projection = direction && (mode === 'ultra'
+        ? projectPresentationDirectionToUltra(context, direction)
+        : aspect > 0 ? projectVirtualRayToInteractive(context, interactiveTransform(context, camera), camera.fov, direction, aspect) : null)
       if (!projection) return null
       const style = identityOverlayStyle(observation.identityId, observation.assignmentStatus)
       const label = observation.assignmentStatus === 'unassigned' ? 'U' : observation.identityId.slice(-2)
