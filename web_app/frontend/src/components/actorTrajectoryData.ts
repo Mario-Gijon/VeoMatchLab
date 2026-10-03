@@ -19,7 +19,8 @@ function closestPoint(points: ActorTrajectoryPoint[], mediaTime: number, fps?: n
       if (points[middle].frame_index < frame) left = middle + 1
       else right = middle
     }
-    if (points[left]?.frame_index === frame) return points[left]
+    const exact = points[left]
+    if (exact?.frame_index === frame && Math.abs(exact.timestamp_s - mediaTime) <= TIME_TOLERANCE_S) return exact
   }
   let low = 0, high = points.length
   while (low < high) {
@@ -28,7 +29,8 @@ function closestPoint(points: ActorTrajectoryPoint[], mediaTime: number, fps?: n
     else high = middle
   }
   const candidates = [points[low - 1], points[low]].filter((point): point is ActorTrajectoryPoint => !!point)
-  return candidates.reduce<ActorTrajectoryPoint | null>((best, point) => !best || Math.abs(point.timestamp_s - mediaTime) < Math.abs(best.timestamp_s - mediaTime) ? point : best, null)
+  const closest = candidates.reduce<ActorTrajectoryPoint | null>((best, point) => !best || Math.abs(point.timestamp_s - mediaTime) < Math.abs(best.timestamp_s - mediaTime) ? point : best, null)
+  return closest && Math.abs(closest.timestamp_s - mediaTime) <= TIME_TOLERANCE_S ? closest : null
 }
 
 /** Lookup is exact by video frame when available and never carries an actor through a preserved gap. */
@@ -36,7 +38,7 @@ export function activeActorTrajectoryPoints(actors: ActorTrajectory[], mediaTime
   const active: ActiveActorTrajectoryPoint[] = []
   for (const actor of actors) {
     const point = closestPoint(actor.points, mediaTime, fps)
-    if (!point || Math.abs(point.timestamp_s - mediaTime) > TIME_TOLERANCE_S) continue
+    if (!point) continue
     active.push({ ...point, actorId: actor.actor_id, trackletIds: actor.tracklet_ids })
   }
   return active.sort((left, right) => left.actorId.localeCompare(right.actorId))

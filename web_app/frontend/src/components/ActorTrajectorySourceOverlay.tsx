@@ -6,7 +6,8 @@ import { identityColor } from './trackingIdentityOverlayData'
 interface Props { artifact: ActorTrajectoryArtifact; time: number; fps?: number | null }
 
 export default function ActorTrajectorySourceOverlay({ artifact, time, fps }: Props) {
-  const points = useMemo(() => activeActorTrajectoryPoints(artifact.actors, time, fps), [artifact.actors, fps, time])
+  const timelineFps = artifact.estimated_fps ?? fps
+  const points = useMemo(() => activeActorTrajectoryPoints(artifact.actors, time, timelineFps), [artifact.actors, time, timelineFps])
   return <svg aria-label="Actor trajectories 7I.7" viewBox="0 0 2048 2048" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
     {points.map((point) => {
       const bbox = sourceBboxForActorPoint(point)

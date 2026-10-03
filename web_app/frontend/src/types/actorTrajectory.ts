@@ -53,5 +53,6 @@ export interface ActorTrajectoryArtifact {
   estimated_fps: number | null
   frame_step: number | null
   time_step_s: number | null
+  camera_specs: Record<string, { longitude: number; latitude: number; vfov: number }>
   actors: ActorTrajectory[]
 }

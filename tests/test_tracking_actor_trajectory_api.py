@@ -39,7 +39,11 @@ def trajectory_context(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "store", WorkspaceStore(tmp_path))
     match = main.store.create_match("Trajectories", "", None)
     clip = main.store.create_clip(match["id"], "source", 0.0, 1.0, "Trajectory clip")
-    return tracking_actor_trajectory_router(lambda: main.store).routes[0].endpoint, match["id"], clip["id"]
+    specs = {
+        "tight_near_c1": {"longitude": 0.1, "latitude": -0.2, "vfov": 0.7},
+        "tight_near_c2": {"longitude": -0.1, "latitude": -0.2, "vfov": 0.7},
+    }
+    return tracking_actor_trajectory_router(lambda: main.store, lambda _match: specs).routes[0].endpoint, match["id"], clip["id"]
 
 
 def test_actor_trajectory_endpoint_reads_only_artifact_rows_and_visual_evidence(trajectory_context):
@@ -52,10 +56,14 @@ def test_actor_trajectory_endpoint_reads_only_artifact_rows_and_visual_evidence(
     assert payload["display_point_count"] == 3
     assert payload["observed_point_count"] == 2
     assert payload["interpolated_point_count"] == 1
+    assert payload["camera_specs"]
+    assert all(set(spec) == {"longitude", "latitude", "vfov"} for spec in payload["camera_specs"].values())
     assert all(point["origin"] in {"observed", "interpolated"} and isinstance(point["x"], float) and isinstance(point["z"], float) for actor in payload["actors"] for point in actor["points"])
     interpolated = payload["actors"][0]["points"][1]
     assert interpolated["visual_interpolation"]["left"]["representative_view"] == "tight_near_c1"
     assert interpolated["visual_interpolation"]["right"]["representative_view"] == "tight_near_c2"
+    views = {endpoint["representative_view"] for actor in payload["actors"] for point in actor["points"] for endpoint in ([point["visual_anchor"]] if point["visual_anchor"] else [point["visual_interpolation"]["left"], point["visual_interpolation"]["right"]])}
+    assert views <= set(payload["camera_specs"])
 
 
 def test_actor_trajectory_endpoint_rejects_missing_and_invalid_rows(trajectory_context):

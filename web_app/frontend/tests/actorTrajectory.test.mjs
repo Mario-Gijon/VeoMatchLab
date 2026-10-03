@@ -16,6 +16,16 @@ test('selects exact frame points, uses smoothed x/z, and does not carry through 
   assert.equal(activeActorTrajectoryPoints([actor([observed(0, 0), observed(10, 10 / 30)])], 5 / 30, 30).length, 0)
 })
 
+test('accepts an artifact-FPS frame only when its timestamp fits, then falls back by timestamp', () => {
+  const artifactFps = 29.970029970030676
+  const staleExactFrame = observed(61, 1.5)
+  const timestampPoint = observed(62, 61 / artifactFps)
+  const active = activeActorTrajectoryPoints([actor([staleExactFrame, timestampPoint])], 61 / artifactFps, artifactFps)
+  assert.equal(active.length, 1)
+  assert.equal(active[0].frame_index, 62)
+  assert.equal(activeActorTrajectoryPoints([actor([staleExactFrame])], 61 / artifactFps, artifactFps).length, 0)
+})
+
 test('creates observed and cross-camera interpolated presentation rays without virtual-bbox interpolation', () => {
   assert.ok(presentationDirectionForActorPoint(observed(0, 0), specs))
   const direction = presentationDirectionForActorPoint(interpolated(1, 1 / 30), specs)
@@ -40,5 +50,8 @@ test('workspace exposes 7I.7 as a read-only actor mode without a second decoder'
   assert.equal(source.includes('ActorTrajectoryOverlay'), true)
   assert.equal(source.includes('ActorTrajectorySourceOverlay'), true)
   assert.equal(source.includes('actorTrajectorySelected} variant="outlined"'), true)
+  assert.equal(source.includes('cameraSpecs={actorTrajectory.camera_specs}'), true)
+  assert.equal(source.includes('fps={actorTrajectory.estimated_fps ?? source.fps}'), true)
+  assert.equal(source.includes("view === 'source' && !actorTrajectorySelected"), true)
   assert.equal(source.includes('startVideoPresentationClock'), true)
 })

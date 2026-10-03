@@ -71,7 +71,7 @@ app.include_router(data_router(lambda: store))
 app.include_router(tracking_final_router(lambda: store))
 app.include_router(persistent_tracking_router(lambda: store))
 app.include_router(tracking_identity_overlay_router(lambda: store))
-app.include_router(tracking_actor_trajectory_router(lambda: store))
+app.include_router(tracking_actor_trajectory_router(lambda: store, lambda match: clip_camera_specs(match)))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("VEO_FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
@@ -178,6 +178,12 @@ def cached_clip_view_geometry(match: dict[str, Any], width: int = 1280, height: 
         cached = (metadata, ordered, {spec.name: build_map(metadata, spec, width, height) for spec in ordered})
         clip_view_geometry_cache[key] = cached
         return cached
+
+
+def clip_camera_specs(match: dict[str, Any]) -> dict[str, dict[str, float]]:
+    """Public virtual-camera geometry shared by debug and actor trajectory views."""
+    _, specs, _ = cached_clip_view_geometry(match, 1280, 720)
+    return {spec.name: {"longitude": spec.longitude, "latitude": spec.latitude, "vfov": spec.vfov} for spec in specs}
 
 
 def active_clip_jobs() -> ClipAnalysisService:
@@ -472,7 +478,6 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
         raise api_error(404, "Detection association and tracking artifacts are required.", "clip_debug_missing")
     artifacts = LocalArtifactStore(store)
     end = float(clip["duration_s"])
-    _, specs, _ = cached_clip_view_geometry(match, 1280, 720)
     if tracking_mode == "actual":
         tracks = list(artifacts.read_window(match_id, tracking_id, 0.0, end))
     elif tracking_mode == "v28_preview":
@@ -495,7 +500,7 @@ def clip_debug_frames(match_id: str, clip_id: str, tracking_mode: str = "actual"
     return {
         "tracks": tracks,
         "association": list(artifacts.read_window(match_id, association_id, 0.0, end)) if association_id else [],
-        "camera_specs": {spec.name: {"longitude": spec.longitude, "latitude": spec.latitude, "vfov": spec.vfov} for spec in specs},
+        "camera_specs": clip_camera_specs(match),
     }
 
 

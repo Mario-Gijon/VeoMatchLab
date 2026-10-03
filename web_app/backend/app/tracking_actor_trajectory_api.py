@@ -194,18 +194,21 @@ def build_actor_trajectories(clip_root: Path, root: Path) -> dict[str, Any]:
     }
 
 
-def tracking_actor_trajectory_router(store_provider: Callable[[], Any]) -> APIRouter:
+def tracking_actor_trajectory_router(store_provider: Callable[[], Any], camera_specs_provider: Callable[[dict[str, Any]], dict[str, Any]]) -> APIRouter:
     router = APIRouter(prefix="/api/tracking/matches/{match_id}/clips/{clip_id}/actor-trajectories")
 
     @router.get("")
     def actor_trajectories(match_id: str, clip_id: str) -> dict[str, Any]:
         store = store_provider()
-        if store.match(match_id) is None:
+        match = store.match(match_id)
+        if match is None:
             raise _error(404, "Workspace not found.", "match_not_found")
         if store.clip(match_id, clip_id) is None:
             raise _error(404, "Clip not found.", "clip_not_found")
         clips_root = store.asset_dir(match_id, "clips").resolve()
         clip_root = _inside(clips_root / clip_id, clips_root)
-        return build_actor_trajectories(clip_root, _artifact_root(clip_root))
+        payload = build_actor_trajectories(clip_root, _artifact_root(clip_root))
+        payload["camera_specs"] = camera_specs_provider(match)
+        return payload
 
     return router
