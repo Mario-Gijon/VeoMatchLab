@@ -42,6 +42,7 @@ from .artifacts import LocalArtifactStore
 from .data_api import data_router
 from .tracking_final_api import persistent_tracking_router, tracking_final_router
 from .tracking_identity_overlay_api import tracking_identity_overlay_router
+from .tracking_actor_trajectory_api import tracking_actor_trajectory_router
 from .schemas import MediaRoleRequest, ViewPointRequest, RenameMatchRequest, TrackingPointRequest
 from .view_geometry import view_context, contexts
 from geometry.raw_ground import raw_pixel_to_ground
@@ -70,6 +71,7 @@ app.include_router(data_router(lambda: store))
 app.include_router(tracking_final_router(lambda: store))
 app.include_router(persistent_tracking_router(lambda: store))
 app.include_router(tracking_identity_overlay_router(lambda: store))
+app.include_router(tracking_actor_trajectory_router(lambda: store))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("VEO_FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(","),
