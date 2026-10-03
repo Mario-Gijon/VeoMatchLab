@@ -90,7 +90,7 @@ def _bbox(value: Any) -> list[float] | None:
     return [float(item) for item in parsed]
 
 
-def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
+def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     """Read physical evidence once; callers only decide the artifact assignment."""
     paths = {
         "frames": _inside(clip_root / "tracking" / "v1" / "detections" / "frames.jsonl", clip_root),
@@ -105,44 +105,47 @@ def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, A
             raise _error(422, "Tracking V1 overlay detections are invalid.", "tracking_identity_overlay_invalid")
         for detection in values:
             detection_id = detection.get("detection_id") if isinstance(detection, dict) else None
-            timestamp = detection.get("timestamp_s") if isinstance(detection, dict) else None
-            if not isinstance(detection_id, str) or not detection_id or detection_id in detections or _finite_number(timestamp) is None:
+            if not isinstance(detection_id, str) or not detection_id or detection_id in detections:
                 raise _error(422, "Tracking V1 overlay detections are invalid.", "tracking_identity_overlay_invalid")
             bbox = _bbox(detection.get("source_bbox_xyxy"))
             if bbox is not None:
-                detections[detection_id] = {"timestamp_s": float(timestamp), "bbox": bbox, "source_lens": detection.get("source_lens") if isinstance(detection.get("source_lens"), str) else None}
+                detections[detection_id] = {"bbox": bbox, "source_lens": detection.get("source_lens") if isinstance(detection.get("source_lens"), str) else None}
             else:
-                detections[detection_id] = {"timestamp_s": float(timestamp), "bbox": None, "source_lens": None}
+                detections[detection_id] = {"bbox": None, "source_lens": None}
 
-    tracklet_detections: dict[str, list[str]] = {}
+    tracklet_observations: dict[str, list[dict[str, Any]]] = {}
     detection_owner: set[str] = set()
     for row in _read_jsonl(paths["tracklets"]):
         tracklet_id, observations = row.get("tracklet_id"), row.get("observations")
-        if not isinstance(tracklet_id, str) or not tracklet_id or tracklet_id in tracklet_detections or not isinstance(observations, list):
+        if not isinstance(tracklet_id, str) or not tracklet_id or tracklet_id in tracklet_observations or not isinstance(observations, list):
             raise _error(422, "Tracking V1 overlay tracklets are invalid.", "tracking_identity_overlay_invalid")
-        ids: list[str] = []
+        resolved: list[dict[str, Any]] = []
         seen: set[str] = set()
         for observation in observations:
             detection_id = observation.get("detection_id") if isinstance(observation, dict) else None
-            if not isinstance(detection_id, str) or detection_id not in detections or detection_id in seen or detection_id in detection_owner:
+            frame_index = observation.get("frame_index") if isinstance(observation, dict) else None
+            timestamp, x, z = (observation.get("timestamp_s"), observation.get("x"), observation.get("z")) if isinstance(observation, dict) else (None, None, None)
+            if (not isinstance(detection_id, str) or detection_id not in detections or detection_id in seen or detection_id in detection_owner
+                    or isinstance(frame_index, bool) or not isinstance(frame_index, int) or frame_index < 0
+                    or _finite_number(timestamp) is None or float(timestamp) < 0 or _finite_number(x) is None or _finite_number(z) is None):
                 raise _error(422, "Tracking V1 overlay tracklets are invalid.", "tracking_identity_overlay_invalid")
             seen.add(detection_id)
             detection_owner.add(detection_id)
-            ids.append(detection_id)
-        tracklet_detections[tracklet_id] = ids
-    return detections, tracklet_detections
+            source = detections[detection_id]
+            resolved.append({"frame_index": frame_index, "timestamp_s": float(timestamp), "x": float(x), "z": float(z), "bbox": source["bbox"], "source_lens": source["source_lens"]})
+        tracklet_observations[tracklet_id] = resolved
+    return detections, tracklet_observations
 
 
-def _tracks_for_assignments(assignments: dict[str, tuple[str, str]], detections: dict[str, dict[str, Any]], tracklet_detections: dict[str, list[str]]) -> list[dict[str, Any]]:
-    if set(assignments) - set(tracklet_detections):
+def _tracks_for_assignments(assignments: dict[str, tuple[str, str]], _detections: dict[str, dict[str, Any]], tracklet_observations: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    if set(assignments) - set(tracklet_observations):
         raise _error(422, "Tracking V1 overlay assignments reference missing tracklets.", "tracking_identity_overlay_invalid")
 
     tracks: list[dict[str, Any]] = []
     for tracklet_id, (identity_id, assignment_status) in sorted(assignments.items()):
-        observations = [detections[detection_id] for detection_id in tracklet_detections[tracklet_id] if detections[detection_id]["bbox"] is not None]
+        observations = tracklet_observations[tracklet_id]
         observations.sort(key=lambda item: item["timestamp_s"])
-        if observations:
-            tracks.append({"tracklet_id": tracklet_id, "identity_id": identity_id, "assignment_status": assignment_status, "observations": observations})
+        tracks.append({"tracklet_id": tracklet_id, "identity_id": identity_id, "assignment_status": assignment_status, "observations": observations})
     return tracks
 
 

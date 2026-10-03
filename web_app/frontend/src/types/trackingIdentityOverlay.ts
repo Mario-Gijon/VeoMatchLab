@@ -2,8 +2,11 @@ export type TrackingIdentityOverlaySource = 'fixed_roster' | 'round_state'
 export type TrackingAssignmentStatus = 'assigned' | 'unassigned'
 
 export interface TrackingIdentityObservation {
+  frame_index: number
   timestamp_s: number
-  bbox: [number, number, number, number]
+  x: number
+  z: number
+  bbox: [number, number, number, number] | null
   source_lens: string | null
 }
 

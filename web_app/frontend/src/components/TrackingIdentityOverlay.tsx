@@ -5,15 +5,17 @@ import { activeIdentityObservations, identityOverlayStyle } from './trackingIden
 interface Props {
   artifact: TrackingIdentityOverlayArtifact
   time: number
+  fps?: number | null
   showTrackletId?: boolean
   showLens?: boolean
   markInterpolation?: boolean
 }
 
-export default function TrackingIdentityOverlay({ artifact, time, showTrackletId = false, showLens = false, markInterpolation = false }: Props) {
-  const observations = useMemo(() => activeIdentityObservations(artifact.tracks, time), [artifact.tracks, time])
+export default function TrackingIdentityOverlay({ artifact, time, fps, showTrackletId = false, showLens = false, markInterpolation = false }: Props) {
+  const observations = useMemo(() => activeIdentityObservations(artifact.tracks, time, fps), [artifact.tracks, fps, time])
   return <svg aria-label="IDs Tracking V1" viewBox={`0 0 ${artifact.source_width} ${artifact.source_height}`} preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
     {observations.map((observation) => {
+      if (!observation.bbox) return null
       const [x1, y1, x2, y2] = observation.bbox
       const style = identityOverlayStyle(observation.identityId, observation.assignmentStatus)
       const color = style.color

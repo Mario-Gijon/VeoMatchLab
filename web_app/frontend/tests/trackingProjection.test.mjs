@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { initialCamera, interactiveTransform, inverseMatrix, multiplyMatrix } from '../src/components/interactiveCamera.ts'
-import { presentationDirectionFromVirtualPixel, projectVirtualPixelToUltra, projectVirtualRayToInteractive } from '../src/components/trackingProjection.ts'
+import { presentationDirectionFromVirtualPixel, projectGroundPointToUltra, projectVirtualPixelToUltra, projectVirtualRayToInteractive } from '../src/components/trackingProjection.ts'
 
 const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 const context = { uniforms: {
@@ -43,6 +43,13 @@ test('Ultra projection rejects virtual pixels outside the presentation span', ()
 test('Ultra projection preserves the visual downward Y inversion', () => {
   const point = projectVirtualPixelToUltra(context, { longitude: 0, latitude: 0, vfov: Math.PI / 2 }, 50, 75, 100, 100)
   assert.ok(point && Number.isFinite(point.v) && point.v > .5)
+})
+
+test('fixed roster ground points project deterministically without invalid values', () => {
+  assert.deepEqual(projectGroundPointToUltra(context, 0, 10), { u: .5, v: .5 })
+  assert.equal(projectGroundPointToUltra(context, 100, 10), null)
+  const point = projectGroundPointToUltra(context, 2, 10)
+  assert.ok(point && Number.isFinite(point.u) && Number.isFinite(point.v))
 })
 
 test('interactive projection converts presentation rays to world before applying the view', () => {

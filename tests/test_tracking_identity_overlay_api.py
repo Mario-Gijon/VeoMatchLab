@@ -21,7 +21,7 @@ def _overlay_artifacts(store, match_id, clip_id, round_name="round-10-v1"):
     _write_jsonl(root / "detections" / "frames.jsonl", [{"detections": [
         {"detection_id": "det-1", "timestamp_s": 1.0, "source_lens": "right", "source_bbox_xyxy": [10, 1100, 30, 1140], "virtual_bbox_xyxy": [900, 1, 950, 50]},
     ]}])
-    _write_jsonl(root / "tracklets" / "tracklets.jsonl", [{"tracklet_id": "trk-1", "observations": [{"detection_id": "det-1"}]}])
+    _write_jsonl(root / "tracklets" / "tracklets.jsonl", [{"tracklet_id": "trk-1", "observations": [{"detection_id": "det-1", "frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0}]}])
     _write_jsonl(state / "final_tracklet_assignments.jsonl", [{"tracklet_id": "trk-1", "identity_id": "person-0001"}])
     _write_jsonl(state / "final_identities.jsonl", [{"identity_id": "person-0001", "tracklet_ids": ["trk-1"]}])
 
@@ -34,8 +34,8 @@ def _fixed_roster_artifacts(store, match_id, clip_id, *, actor_id="actor-0007", 
         {"detection_id": "det-2", "timestamp_s": 1.1, "source_lens": "left", "source_bbox_xyxy": [40, 50, 70, 100], "virtual_bbox_xyxy": [800, 2, 850, 60]},
     ]}])
     _write_jsonl(root / "tracklets" / "tracklets.jsonl", [
-        {"tracklet_id": "trk-1", "observations": [{"detection_id": "det-1"}]},
-        {"tracklet_id": "trk-2", "observations": [{"detection_id": "det-2"}]},
+        {"tracklet_id": "trk-1", "observations": [{"detection_id": "det-1", "frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0}]},
+        {"tracklet_id": "trk-2", "observations": [{"detection_id": "det-2", "frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0}]},
     ])
     _write_jsonl(roster / "actors.jsonl", [{"actor_id": actor_id}])
     _write_jsonl(roster / "tracklet_assignments.jsonl", [{"tracklet_id": assigned_tracklet, "actor_id": assignment_actor_id or actor_id}])
@@ -62,7 +62,7 @@ def test_overlay_resolves_numeric_latest_and_uses_source_bbox_without_lens_offse
     assert payload["state_id"] == "round-10-v1"
     assert payload["source_kind"] == "round_state"
     assert payload["identity_count"] == 1
-    assert payload["tracks"] == [{"tracklet_id": "trk-1", "identity_id": "person-0001", "assignment_status": "assigned", "observations": [{"timestamp_s": 1.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]}]
+    assert payload["tracks"] == [{"tracklet_id": "trk-1", "identity_id": "person-0001", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]}]
 
 
 def test_overlay_rejects_missing_or_incomplete_state_and_outside_paths(overlay_context, tmp_path):
@@ -100,9 +100,22 @@ def test_fixed_roster_is_default_and_keeps_unassigned_outside_the_actor_roster(o
     assert payload["assigned_tracklet_count"] == 1
     assert payload["unassigned_tracklet_count"] == 1
     assert payload["tracks"] == [
-        {"tracklet_id": "trk-1", "identity_id": "actor-0007", "assignment_status": "assigned", "observations": [{"timestamp_s": 1.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]},
-        {"tracklet_id": "trk-2", "identity_id": "UNASSIGNED", "assignment_status": "unassigned", "observations": [{"timestamp_s": 1.1, "bbox": [40.0, 50.0, 70.0, 100.0], "source_lens": "left"}]},
+        {"tracklet_id": "trk-1", "identity_id": "actor-0007", "assignment_status": "assigned", "observations": [{"frame_index": 30, "timestamp_s": 1.0, "x": 3.0, "z": -2.0, "bbox": [10.0, 1100.0, 30.0, 1140.0], "source_lens": "right"}]},
+        {"tracklet_id": "trk-2", "identity_id": "UNASSIGNED", "assignment_status": "unassigned", "observations": [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": [40.0, 50.0, 70.0, 100.0], "source_lens": "left"}]},
     ]
+
+
+def test_fixed_roster_keeps_spatial_observations_when_the_source_bbox_is_missing(overlay_context):
+    endpoint, match_id, clip_id = overlay_context
+    _fixed_roster_artifacts(main.store, match_id, clip_id)
+    frames = main.store.asset_dir(match_id, "clips") / clip_id / "tracking" / "v1" / "detections" / "frames.jsonl"
+    _write_jsonl(frames, [{"detections": [
+        {"detection_id": "det-1", "source_lens": "right", "source_bbox_xyxy": [10, 1100, 30, 1140]},
+        {"detection_id": "det-2", "source_lens": None, "source_bbox_xyxy": None},
+    ]}])
+    payload = endpoint(match_id, clip_id)
+    pending = next(track for track in payload["tracks"] if track["assignment_status"] == "unassigned")
+    assert pending["observations"] == [{"frame_index": 33, "timestamp_s": 1.1, "x": 4.0, "z": -1.0, "bbox": None, "source_lens": None}]
 
 
 @pytest.mark.parametrize(("assignment_actor_id", "assigned_tracklet", "unassigned_tracklet"), [

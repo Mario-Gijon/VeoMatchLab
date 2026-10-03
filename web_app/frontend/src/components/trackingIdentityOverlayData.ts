@@ -27,17 +27,28 @@ export function identityOverlayStyle(identityId: string, assignmentStatus: Track
 
 function interpolate(first: TrackingIdentityObservation, second: TrackingIdentityObservation, time: number): TrackingIdentityObservation | null {
   const gap = second.timestamp_s - first.timestamp_s
-  if (gap <= 0 || gap > interpolationGapS || first.source_lens !== second.source_lens) return null
+  if (gap <= 0 || gap > interpolationGapS) return null
   const ratio = (time - first.timestamp_s) / gap
   if (ratio < 0 || ratio > 1) return null
+  const bbox = first.bbox && second.bbox && first.source_lens === second.source_lens
+    ? first.bbox.map((value, index) => value + (second.bbox![index] - value) * ratio) as TrackingIdentityObservation['bbox']
+    : null
   return {
+    frame_index: Math.round(first.frame_index + (second.frame_index - first.frame_index) * ratio),
     timestamp_s: time,
-    bbox: first.bbox.map((value, index) => value + (second.bbox[index] - value) * ratio) as TrackingIdentityObservation['bbox'],
-    source_lens: first.source_lens,
+    x: first.x + (second.x - first.x) * ratio,
+    z: first.z + (second.z - first.z) * ratio,
+    bbox,
+    source_lens: bbox ? first.source_lens : null,
   }
 }
 
-function observationAtTime(observations: TrackingIdentityObservation[], time: number) {
+function observationAtTime(observations: TrackingIdentityObservation[], time: number, fps?: number | null) {
+  if (fps && fps > 0) {
+    const frame = Math.round(time * fps)
+    const exact = observations.find((observation) => observation.frame_index === frame)
+    if (exact) return { observation: exact, interpolated: false }
+  }
   let left = 0, right = observations.length
   while (left < right) {
     const middle = Math.floor((left + right) / 2)
@@ -53,11 +64,11 @@ function observationAtTime(observations: TrackingIdentityObservation[], time: nu
 }
 
 /** Lookup is bounded per tracklet; it never carries a box beyond its evidence. */
-export function activeIdentityObservations(tracks: TrackingIdentityTracklet[], time: number): ActiveIdentityObservation[] {
+export function activeIdentityObservations(tracks: TrackingIdentityTracklet[], time: number, fps?: number | null): ActiveIdentityObservation[] {
   if (!Number.isFinite(time)) return []
   const result: ActiveIdentityObservation[] = []
   for (const track of tracks) {
-    const active = observationAtTime(track.observations, time)
+    const active = observationAtTime(track.observations, time, fps)
     if (active) result.push({ ...active.observation, identityId: track.identity_id, trackletId: track.tracklet_id, assignmentStatus: track.assignment_status, interpolated: active.interpolated })
   }
   return result
