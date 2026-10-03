@@ -1,6 +1,6 @@
 import type { Calibration, Clip, ClipJob, GroundPoint, MatchWorkspace, MediaItem, RenderedPanorama, VeoInspection, VeoJob, ViewContext } from '../types'
 import type { TrackingFinalArtifact, TrackingPersistentArtifact, TrackingReviews } from '../types/trackingFinal'
-import type { TrackingIdentityOverlayArtifact } from '../types/trackingIdentityOverlay'
+import type { TrackingIdentityOverlayArtifact, TrackingIdentityOverlaySource } from '../types/trackingIdentityOverlay'
 
 // Production and LAN development use the Vite origin. The optional override
 // remains useful for isolated development or an externally hosted API.
@@ -42,7 +42,7 @@ export const api = {
   trackingFinalSummary: (matchId: string, clipId: string) => request<Record<string, unknown>>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/summary`),
   trackingFinalReviews: (matchId: string, clipId: string) => request<TrackingReviews>(`/api/tracking/matches/${matchId}/clips/${clipId}/final/reviews`),
   trackingPersistent: (matchId: string, clipId: string) => request<TrackingPersistentArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/persistent`),
-  trackingIdentityOverlay: (matchId: string, clipId: string, state = 'latest') => request<TrackingIdentityOverlayArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/identity-overlay?state=${encodeURIComponent(state)}`),
+  trackingIdentityOverlay: (matchId: string, clipId: string, source: TrackingIdentityOverlaySource = 'fixed_roster', state = 'latest') => request<TrackingIdentityOverlayArtifact>(`/api/tracking/matches/${matchId}/clips/${clipId}/identity-overlay?source=${encodeURIComponent(source)}&state=${encodeURIComponent(state)}`),
   renameMatch: (id: string, name: string) => request<MatchWorkspace>(`/api/matches/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }),
   deleteMatch: (id: string) => request(`/api/matches/${id}`, { method: 'DELETE' }),
   removeMedia: (id: string) => request(`/api/media/${id}`, { method: 'DELETE' }),

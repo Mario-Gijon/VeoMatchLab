@@ -1,3 +1,6 @@
+export type TrackingIdentityOverlaySource = 'fixed_roster' | 'round_state'
+export type TrackingAssignmentStatus = 'assigned' | 'unassigned'
+
 export interface TrackingIdentityObservation {
   timestamp_s: number
   bbox: [number, number, number, number]
@@ -7,13 +10,18 @@ export interface TrackingIdentityObservation {
 export interface TrackingIdentityTracklet {
   tracklet_id: string
   identity_id: string
+  assignment_status: TrackingAssignmentStatus
   observations: TrackingIdentityObservation[]
 }
 
 export interface TrackingIdentityOverlayArtifact {
+  source_id: string
+  source_kind: TrackingIdentityOverlaySource
   state_id: string
   provisional: boolean
   identity_count: number
+  assigned_tracklet_count: number
+  unassigned_tracklet_count: number
   source_width: number
   source_height: number
   tracks: TrackingIdentityTracklet[]

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { activeIdentityObservations, identityColor } from '../src/components/trackingIdentityOverlayData.ts'
+import { activeIdentityObservations, identityColor, identityOverlayStyle } from '../src/components/trackingIdentityOverlayData.ts'
 
 const observation = (time, bbox, lens = 'left') => ({ timestamp_s: time, bbox, source_lens: lens })
-const track = (id, observations, identity = 'person-0047') => ({ tracklet_id: id, identity_id: identity, observations })
+const track = (id, observations, identity = 'actor-0007', assignmentStatus = 'assigned') => ({ tracklet_id: id, identity_id: identity, assignment_status: assignmentStatus, observations })
 
 test('interpolates only within one tracklet and lens over a short gap', () => {
   const active = activeIdentityObservations([track('trk-a', [observation(1, [10, 20, 30, 40]), observation(1.2, [20, 30, 50, 60])])], 1.1)
@@ -20,8 +20,10 @@ test('does not interpolate across long gaps, lenses, or tracklets sharing an ide
 })
 
 test('identity colors are deterministic and native bboxes are unmodified', () => {
-  assert.equal(identityColor('person-0047'), identityColor('person-0047'))
-  assert.notEqual(identityColor('person-0047'), identityColor('person-0048'))
+  assert.equal(identityColor('actor-0007'), identityColor('actor-0007'))
+  assert.notEqual(identityColor('actor-0007'), identityColor('actor-0008'))
+  assert.equal(identityOverlayStyle('UNASSIGNED', 'unassigned').color, '#d7dce2')
+  assert.equal(identityOverlayStyle('UNASSIGNED', 'unassigned').dash, '7 5')
   const active = activeIdentityObservations([track('native', [observation(2, [100, 1100, 300, 1300], 'right')])], 2)
   assert.deepEqual(active[0].bbox, [100, 1100, 300, 1300])
 })
@@ -31,4 +33,11 @@ test('the source view keeps playback usable when Tracking V1 is unavailable', ()
   assert.equal(source.includes("value=\"source\""), true)
   assert.equal(source.includes('Tracking V1 no disponible'), true)
   assert.equal(source.includes('source ? <MatchViewer'), true)
+  assert.equal(source.includes("useState<TrackingIdentityOverlaySource>('fixed_roster')"), true)
+  assert.equal(source.includes('Fixed roster 7I.4'), true)
+  assert.equal(source.includes('Legacy round state'), true)
+  assert.equal(source.includes('api.trackingIdentityOverlay(matchId, clip.id, identityOverlaySource)'), true)
+  const changeSource = source.slice(source.indexOf('onChange={(_, source: TrackingIdentityOverlaySource'), source.indexOf('}}><ToggleButton value="fixed_roster"'))
+  assert.equal(changeSource.includes('setLocalTime('), false)
+  assert.equal(changeSource.includes('setPlaying('), false)
 })

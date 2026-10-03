@@ -15,6 +15,8 @@ from .tracking_final_api import _error
 
 ROUND_NAME = re.compile(r"round-(\d+)-v1$")
 REQUIRED_STATE_FILES = ("final_identities.jsonl", "final_tracklet_assignments.jsonl")
+FIXED_ROSTER_ID = "fixed-actor-roster-v1"
+FIXED_ROSTER_FILES = ("actors.jsonl", "tracklet_assignments.jsonl", "unassigned_tracklets.jsonl")
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -88,32 +90,14 @@ def _bbox(value: Any) -> list[float] | None:
     return [float(item) for item in parsed]
 
 
-def build_identity_overlay(clip_root: Path, state_id: str, state_root: Path, source_width: int, source_height: int) -> dict[str, Any]:
-    """Resolve detection -> tracklet -> provisional identity without deriving tracking."""
-    state_root = _inside(state_root, clip_root)
+def _detection_and_tracklet_data(clip_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
+    """Read physical evidence once; callers only decide the artifact assignment."""
     paths = {
         "frames": _inside(clip_root / "tracking" / "v1" / "detections" / "frames.jsonl", clip_root),
         "tracklets": _inside(clip_root / "tracking" / "v1" / "tracklets" / "tracklets.jsonl", clip_root),
-        "assignments": _inside(state_root / "final_tracklet_assignments.jsonl", clip_root),
-        "identities": _inside(state_root / "final_identities.jsonl", clip_root),
     }
     if any(not path.is_file() for path in paths.values()):
         raise _error(404, "Tracking V1 overlay artifacts are incomplete.", "tracking_identity_overlay_missing")
-
-    identities: set[str] = set()
-    for row in _read_jsonl(paths["identities"]):
-        identity_id = row.get("identity_id")
-        if not isinstance(identity_id, str) or not identity_id or identity_id in identities:
-            raise _error(422, "Tracking V1 overlay identities are invalid.", "tracking_identity_overlay_invalid")
-        identities.add(identity_id)
-
-    assignments: dict[str, str] = {}
-    for row in _read_jsonl(paths["assignments"]):
-        tracklet_id, identity_id = row.get("tracklet_id"), row.get("identity_id")
-        if not isinstance(tracklet_id, str) or not tracklet_id or not isinstance(identity_id, str) or identity_id not in identities or tracklet_id in assignments:
-            raise _error(422, "Tracking V1 overlay assignments are invalid.", "tracking_identity_overlay_invalid")
-        assignments[tracklet_id] = identity_id
-
     detections: dict[str, dict[str, Any]] = {}
     for frame in _read_jsonl(paths["frames"]):
         values = frame.get("detections")
@@ -146,24 +130,95 @@ def build_identity_overlay(clip_root: Path, state_id: str, state_root: Path, sou
             detection_owner.add(detection_id)
             ids.append(detection_id)
         tracklet_detections[tracklet_id] = ids
+    return detections, tracklet_detections
 
+
+def _tracks_for_assignments(assignments: dict[str, tuple[str, str]], detections: dict[str, dict[str, Any]], tracklet_detections: dict[str, list[str]]) -> list[dict[str, Any]]:
     if set(assignments) - set(tracklet_detections):
         raise _error(422, "Tracking V1 overlay assignments reference missing tracklets.", "tracking_identity_overlay_invalid")
 
     tracks: list[dict[str, Any]] = []
-    for tracklet_id, identity_id in sorted(assignments.items()):
+    for tracklet_id, (identity_id, assignment_status) in sorted(assignments.items()):
         observations = [detections[detection_id] for detection_id in tracklet_detections[tracklet_id] if detections[detection_id]["bbox"] is not None]
         observations.sort(key=lambda item: item["timestamp_s"])
         if observations:
-            tracks.append({"tracklet_id": tracklet_id, "identity_id": identity_id, "observations": observations})
-    return {"state_id": state_id, "provisional": True, "identity_count": len(identities), "source_width": source_width, "source_height": source_height, "tracks": tracks}
+            tracks.append({"tracklet_id": tracklet_id, "identity_id": identity_id, "assignment_status": assignment_status, "observations": observations})
+    return tracks
+
+
+def build_identity_overlay(clip_root: Path, state_id: str, state_root: Path, source_width: int, source_height: int) -> dict[str, Any]:
+    """Resolve legacy detection -> tracklet -> provisional identity evidence."""
+    state_root = _inside(state_root, clip_root)
+    assignments_path = _inside(state_root / "final_tracklet_assignments.jsonl", clip_root)
+    identities_path = _inside(state_root / "final_identities.jsonl", clip_root)
+    if not assignments_path.is_file() or not identities_path.is_file():
+        raise _error(404, "Tracking V1 overlay artifacts are incomplete.", "tracking_identity_overlay_missing")
+    identities: set[str] = set()
+    for row in _read_jsonl(identities_path):
+        identity_id = row.get("identity_id")
+        if not isinstance(identity_id, str) or not identity_id or identity_id in identities:
+            raise _error(422, "Tracking V1 overlay identities are invalid.", "tracking_identity_overlay_invalid")
+        identities.add(identity_id)
+    assignments: dict[str, tuple[str, str]] = {}
+    for row in _read_jsonl(assignments_path):
+        tracklet_id, identity_id = row.get("tracklet_id"), row.get("identity_id")
+        if not isinstance(tracklet_id, str) or not tracklet_id or not isinstance(identity_id, str) or identity_id not in identities or tracklet_id in assignments:
+            raise _error(422, "Tracking V1 overlay assignments are invalid.", "tracking_identity_overlay_invalid")
+        assignments[tracklet_id] = (identity_id, "assigned")
+    detections, tracklets = _detection_and_tracklet_data(clip_root)
+    return {
+        "source_id": state_id, "source_kind": "round_state", "state_id": state_id, "provisional": True,
+        "identity_count": len(identities), "assigned_tracklet_count": len(assignments), "unassigned_tracklet_count": 0,
+        "source_width": source_width, "source_height": source_height,
+        "tracks": _tracks_for_assignments(assignments, detections, tracklets),
+    }
+
+
+def _fixed_roster_root(clip_root: Path) -> Path:
+    root = _inside(clip_root / "tracking" / "v1" / "diagnostics" / "fixed_actor_roster" / FIXED_ROSTER_ID, clip_root)
+    if not root.is_dir() or any(not _inside(root / name, clip_root).is_file() for name in FIXED_ROSTER_FILES):
+        raise _error(404, "Fixed roster Tracking V1 overlay is not available for this clip.", "tracking_identity_overlay_missing")
+    return root
+
+
+def build_fixed_roster_overlay(clip_root: Path, roster_root: Path, source_width: int, source_height: int) -> dict[str, Any]:
+    roster_root = _inside(roster_root, clip_root)
+    actors_path = _inside(roster_root / "actors.jsonl", clip_root)
+    assignments_path = _inside(roster_root / "tracklet_assignments.jsonl", clip_root)
+    unassigned_path = _inside(roster_root / "unassigned_tracklets.jsonl", clip_root)
+    actors: set[str] = set()
+    for row in _read_jsonl(actors_path):
+        actor_id = row.get("actor_id")
+        if not isinstance(actor_id, str) or not actor_id or actor_id in actors:
+            raise _error(422, "Fixed roster actors are invalid.", "tracking_identity_overlay_invalid")
+        actors.add(actor_id)
+    assignments: dict[str, tuple[str, str]] = {}
+    for row in _read_jsonl(assignments_path):
+        tracklet_id, actor_id = row.get("tracklet_id"), row.get("actor_id")
+        if not isinstance(tracklet_id, str) or not tracklet_id or not isinstance(actor_id, str) or not actor_id or actor_id not in actors or tracklet_id in assignments:
+            raise _error(422, "Fixed roster assignments are invalid.", "tracking_identity_overlay_invalid")
+        assignments[tracklet_id] = (actor_id, "assigned")
+    assigned_count = len(assignments)
+    for row in _read_jsonl(unassigned_path):
+        tracklet_id = row.get("tracklet_id")
+        if not isinstance(tracklet_id, str) or not tracklet_id or tracklet_id in assignments:
+            raise _error(422, "Fixed roster unassigned tracklets are invalid.", "tracking_identity_overlay_invalid")
+        assignments[tracklet_id] = ("UNASSIGNED", "unassigned")
+    unassigned_count = len(assignments) - assigned_count
+    detections, tracklets = _detection_and_tracklet_data(clip_root)
+    return {
+        "source_id": FIXED_ROSTER_ID, "source_kind": "fixed_roster", "state_id": FIXED_ROSTER_ID, "provisional": True,
+        "identity_count": len(actors), "assigned_tracklet_count": assigned_count, "unassigned_tracklet_count": unassigned_count,
+        "source_width": source_width, "source_height": source_height,
+        "tracks": _tracks_for_assignments(assignments, detections, tracklets),
+    }
 
 
 def tracking_identity_overlay_router(store_provider: Callable[[], Any]) -> APIRouter:
     router = APIRouter(prefix="/api/tracking/matches/{match_id}/clips/{clip_id}/identity-overlay")
 
     @router.get("")
-    def identity_overlay(match_id: str, clip_id: str, state: str = "latest") -> dict[str, Any]:
+    def identity_overlay(match_id: str, clip_id: str, source: str = "fixed_roster", state: str = "latest") -> dict[str, Any]:
         store = store_provider()
         if store.match(match_id) is None:
             raise _error(404, "Workspace not found.", "match_not_found")
@@ -172,13 +227,17 @@ def tracking_identity_overlay_router(store_provider: Callable[[], Any]) -> APIRo
             raise _error(404, "Clip not found.", "clip_not_found")
         clips_root = store.asset_dir(match_id, "clips").resolve()
         clip_root = _inside(clips_root / clip_id, clips_root)
-        state_id, state_root = _state_root(clip_root, state)
         media_id = clip.get("clip_media_id")
         media_result = store.media(media_id) if isinstance(media_id, str) else None
         media = media_result[1] if media_result else None
         width, height = (media or {}).get("width"), (media or {}).get("height")
         if not isinstance(width, int) or not isinstance(height, int) or width <= 0 or height <= 0:
             raise _error(422, "Physical clip dimensions are unavailable for the Tracking V1 overlay.", "tracking_identity_overlay_invalid")
-        return build_identity_overlay(clip_root, state_id, state_root, width, height)
+        if source == "fixed_roster":
+            return build_fixed_roster_overlay(clip_root, _fixed_roster_root(clip_root), width, height)
+        if source == "round_state":
+            state_id, state_root = _state_root(clip_root, state)
+            return build_identity_overlay(clip_root, state_id, state_root, width, height)
+        raise _error(422, "Tracking V1 overlay source is invalid.", "tracking_identity_overlay_invalid")
 
     return router

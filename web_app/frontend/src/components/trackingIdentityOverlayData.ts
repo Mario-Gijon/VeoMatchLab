@@ -1,8 +1,9 @@
-import type { TrackingIdentityObservation, TrackingIdentityTracklet } from '../types/trackingIdentityOverlay'
+import type { TrackingAssignmentStatus, TrackingIdentityObservation, TrackingIdentityTracklet } from '../types/trackingIdentityOverlay'
 
 export interface ActiveIdentityObservation extends TrackingIdentityObservation {
   identityId: string
   trackletId: string
+  assignmentStatus: TrackingAssignmentStatus
   interpolated: boolean
 }
 
@@ -16,6 +17,12 @@ export function identityColor(identityId: string) {
     hash = Math.imul(hash, 16777619)
   }
   return `hsl(${(hash >>> 0) % 360} 78% 58%)`
+}
+
+export function identityOverlayStyle(identityId: string, assignmentStatus: TrackingAssignmentStatus) {
+  return assignmentStatus === 'unassigned'
+    ? { color: '#d7dce2', dash: '7 5' }
+    : { color: identityColor(identityId), dash: undefined }
 }
 
 function interpolate(first: TrackingIdentityObservation, second: TrackingIdentityObservation, time: number): TrackingIdentityObservation | null {
@@ -51,7 +58,7 @@ export function activeIdentityObservations(tracks: TrackingIdentityTracklet[], t
   const result: ActiveIdentityObservation[] = []
   for (const track of tracks) {
     const active = observationAtTime(track.observations, time)
-    if (active) result.push({ ...active.observation, identityId: track.identity_id, trackletId: track.tracklet_id, interpolated: active.interpolated })
+    if (active) result.push({ ...active.observation, identityId: track.identity_id, trackletId: track.tracklet_id, assignmentStatus: track.assignment_status, interpolated: active.interpolated })
   }
   return result
 }
