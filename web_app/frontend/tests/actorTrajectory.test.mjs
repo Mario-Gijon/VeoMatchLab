@@ -43,9 +43,15 @@ test('uses physical source bboxes directly and interpolates them only on the sam
   assert.equal(identityColor('actor-0007'), identityColor('actor-0007'))
 })
 
-test('workspace exposes 7I.7 as a read-only actor mode without a second decoder', () => {
+test('workspace exposes Baseline as the only selectable tracking version and preserves artifact helpers', () => {
   const source = readFileSync(new URL('../src/components/ClipWorkspace.tsx', import.meta.url), 'utf8')
-  assert.equal(source.includes('Actor trajectories 7I.7'), true)
+  const selectorStart = source.indexOf('<ToggleButtonGroup size="small" exclusive value={trackingDisplayMode}')
+  const selectorEnd = source.indexOf('</ToggleButtonGroup>', selectorStart)
+  assert.notEqual(selectorStart, -1)
+  assert.notEqual(selectorEnd, -1)
+  const versionSelector = source.slice(selectorStart, selectorEnd)
+  assert.match(versionSelector, /<ToggleButton value="actual">Baseline<\/ToggleButton>/)
+  assert.equal((versionSelector.match(/<ToggleButton value=/g) ?? []).length, 1)
   assert.equal(source.includes('api.actorTrajectories(matchId, clip.id)'), true)
   assert.equal(source.includes('ActorTrajectoryOverlay'), true)
   assert.equal(source.includes('ActorTrajectorySourceOverlay'), true)
